@@ -1,5 +1,4 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
@@ -8,140 +7,148 @@ from reportlab.pdfgen import canvas
 import io
 import urllib.parse
 
-# Sayfa Genişlik ve Tema Ayarları
-st.set_page_config(page_title="Interlock Global | International Brokerage", layout="wide", page_icon="🌐")
+# 1. PREMIUM TASARIM VE TEMA AYARLARI
+st.set_page_config(page_title="Interlock Global | Intelligence", layout="wide", page_icon="🌐")
 
-# SOL MENÜ (NAVİGASYON)
-st.sidebar.title("🌐 Interlock Global")
-st.sidebar.caption("Global Commodity Brokerage & Tech")
+# Şık CSS Kodları ile Tasarımı Özelleştirme
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    div.stButton > button:first-child { background-color: #0e1c36; color: white; border-radius: 5px; width: 100%; border: none; padding: 10px; font-weight: bold; }
+    div.stButton > button:first-child:hover { background-color: #1d3557; color: white; }
+    h1, h2, h3 { color: #0e1c36; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# Menü Seçenekleri (Kurumsal Ana Sayfa + Test Modülleri)
+# SOL MENÜ
+st.sidebar.markdown("<h2 style='color: #1d3557; text-align: center;'>🌐 Interlock Global</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='text-align: center; font-size: 12px; color: grey;'>Uluslararası Emtia Brokerlığı & Dijital İstihbarat</p>", unsafe_allow_html=True)
+st.sidebar.divider()
+
 menu = st.sidebar.radio(
-    "Menü", 
-    [
-        "🏠 Kurumsal Ana Sayfa", 
-        "🚀 Interlock Trader (Beta Test)",
-        "📄 Evrak Doğrulama & GTİP", 
-        "⚖️ Akreditif & Sözleşme"
-    ]
+    "Gezinti Paneli", 
+    ["🏠 Kurumsal Ana Sayfa", "🚀 Interlock Trader (Beta Test)", "📄 Evrak Doğrulama & GTİP", "⚖️ Akreditif & Sözleşme"]
 )
 
-# ------------------------------------------------------------------
-# MODÜL 1: KURUMSAL BROKERLIK ANA SAYFASI
-# ------------------------------------------------------------------
+# MODÜL 1: MODERN KURUMSAL ANA SAYFA
 if menu == "🏠 Kurumsal Ana Sayfa":
-    st.title("Interlock Global International Brokerage")
-    st.subheader("Küresel Emtia Ticaretinde Güvenilir Köprünüz")
+    st.markdown("""
+        <div style="background-color: #0e1c36; padding: 40px; border-radius: 15px; text-align: center; margin-bottom: 30px;">
+            <h1 style="color: white; margin-bottom: 10px; font-size: 36px;">INTERLOCK GLOBAL</h1>
+            <p style="color: #cbd5e1; font-size: 18px; max-width: 800px; margin: 0 auto;">
+                Küresel emtia piyasalarında akıllı risk analizi, otonom lojistik takibi ve güvenli brokerlık çözümleri sunan dijital ticaret partneriniz.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Şirket Tanıtımı
-    st.write("""
-    Interlock Global; tarım, enerji ve metal emtialarında küresel alıcılar ile üreticileri bir araya getiren dijital altyapılı bir brokerlık firmasıdır. 
-    Güçlü lojistik ağımız, gümrükleme çözümlerimiz ve sahteciliği önleyen yapay zeka destekli risk analiz sistemlerimizle ticaretinizi güvence altına alıyoruz.
-    """)
+    col_st1, col_st2, col_st3, col_st4 = st.columns(4)
+    col_st1.metric("Küresel İş Ortağı", "45+", "Ülke Ağı")
+    col_st2.metric("Yıllık Ticaret Hacmi", "$120M+", "Emtia")
+    col_st3.metric("Lojistik Yönetimi", "180K+ Ton", "Dökme/Konteyner")
+    col_st4.metric("Yapay Zeka Risk Skoru", "99.2%", "Güvenli İşlem")
     
-    # Faaliyet Alanları (Emtialar)
-    st.header("🎯 Ticaretine Aracılık Ettiğimiz Başlıca Emtialar")
-    col_em1, col_em2, col_em3 = st.columns(3)
-    with col_em1:
-        st.subheader("🌾 Tarım Ürünleri")
-        st.markdown("- Şeker (ICUMSA 45)\n- Buğday & Mısır\n- Ayçiçek Yağı")
-    with col_em2:
-        st.subheader("⛏️ Metaller & Madenler")
-        st.markdown("- Ham Alüminyum & Külçe\n- Bakır Katot\n- Demir & Çelik Ürünleri")
-    with col_em3:
-        st.subheader("⚡ Enerji")
-        st.markdown("- Ham Petrol (WTI/Brent)\n- Doğalgaz\n- Kömür")
-
-    # TEST MODÜLÜNE ÇAĞRI (Sizin İstediğiniz Buton Metni)
     st.divider()
-    st.header("🛠️ Dijital Ticaret İstihbaratı")
-    st.info("Sektörde bir ilk! Geliştirmekte olduğumuz yapay zeka destekli trader modülümüzü tamamen ücretsiz deneyebilirsiniz.")
+    st.markdown("<h3 style='text-align: center; margin-bottom: 25px;'>🎯 Ticaret Alanlarımız</h3>", unsafe_allow_html=True)
+    col_em1, col_em2, col_em3 = st.columns(3)
     
-    if st.button("PROTOTİPİ TEST ET: Interlock Trader Modülüne Git 🚀"):
-        st.warning("Lütfen sol menüden '🚀 Interlock Trader (Beta Test)' seçeneğine tıklayarak canlı modülü başlatın.")
+    with col_em1:
+        st.markdown('<div style="background-color: white; padding: 20px; border-radius: 10px; border-left: 5px solid #e63946; min-height: 180px;"><h4>🌾 Endüstriyel Tarım</h4><p style="font-size: 14px; color: #4a5568;"><b>Şeker:</b> ICUMSA 45 Brezilya menşeli dökme sevkiyatları.<br><b>Tahıl:</b> Buğday, Mısır ve Ayçiçek Yağı.</p></div>', unsafe_allow_html=True)
+    with col_em2:
+        st.markdown('<div style="background-color: white; padding: 20px; border-radius: 10px; border-left: 5px solid #457b9d; min-height: 180px;"><h4>⛏️ Metaller & Madenler</h4><p style="font-size: 14px; color: #4a5568;"><b>Alüminyum:</b> Kazakistan ve Hindistan menşeli Külçe P1020.<br><b>Bakır:</b> Katot bakır (Grade A).</p></div>', unsafe_allow_html=True)
+    with col_em3:
+        st.markdown('<div style="background-color: white; padding: 20px; border-radius: 10px; border-left: 5px solid #1d3557; min-height: 180px;"><h4>⚡ Enerji & Petrokimya</h4><p style="font-size: 14px; color: #4a5568;"><b>Akaryakıt:</b> EN590 Dizel ve Jet Yakıtı (A1).<br><b>Kömür:</b> Yüksek kalorili sanayi kömürü.</p></div>', unsafe_allow_html=True)
 
-# ------------------------------------------------------------------
-# MODÜL 2: INTERLOCK TRADER VE WHATSAPP ENTEGRASYONU
-# ------------------------------------------------------------------
+    st.divider()
+    st.write("<p style='text-align: center;'>Geleneksel brokerlık süreçlerini yapay zeka istihbaratıyla birleştiriyoruz. Sol paneldeki 'Interlock Trader' modülünden test edebilirsiniz.</p>", unsafe_allow_html=True)
+# MODÜL 2: GELİŞMİŞ VE DİNAMİK INTERLOCK TRADER
 elif menu == "🚀 Interlock Trader (Beta Test)":
-    st.title("📊 Interlock Trader - Canlı İstihbarat & Lojistik Paneli")
-    st.caption("Arama motoru, canlı borsa fiyatları ve otomatik raporlama")
-    
-    search_query = st.text_input("Arama Motoru (Örn: şeker brezilya - türkiye veya aluminyum)", placeholder="Emtia ve hedef ülkeleri yazın...")
+    st.title("📊 Akıllı Ticari İstihbarat & Lojistik Motoru")
+    search_query = st.text_input("Arama Motoru:", placeholder="Örn: aluminyum kazakistan - türkiye veya şeker brezilya...")
     
     if search_query:
-        st.success(f"'{search_query}' analizi tamamlandı.")
+        query_lower = search_query.lower()
         
-        # Canlı Fiyatlar (Simüle ve Canlı Karışık)
+        if "aluminyum" in query_lower or "alüminyum" in query_lower:
+            product = "Ham Alüminyum (Külçe / P1020)"
+            fob = "$2,450.00"
+            premium = "+$180.00 (Bölge Primi)"
+            freight = "$95.00 (Demiryolu + Deniz)"
+            gtip = "7601.10.00.00.00"
+            suppliers = "1. Kazakistan Alüminyum (KCA), 2. ERG Group"
+            buyers = "1. Assan Alüminyum, 2. Teknik Alüminyum"
+            risks = "Hazar geçişli orta koridor yoğunluğu. LME stok seviyesi riskleri."
+            lat, lon = 43.8240, 87.3554
+            marker_text = "Alüminyum Sevkiyat Rota Başlangıcı"
+            
+        elif "şeker" in query_lower or "seker" in query_lower:
+            product = "Rafine Beyaz Şeker (ICUMSA 45)"
+            fob = "$520.00"
+            premium = "+$15.00 (Sertifikasyon Primi)"
+            freight = "$48.00 (Santos Port)"
+            gtip = "1701.99.10.00.11"
+            suppliers = "1. Cosan SA, 2. São Martinho, 3. Tereos"
+            buyers = "1. Türkiye Şeker Fabrikaları, 2. Konya Şeker"
+            risks = "Santos limanında sıra yoğunluğu (Demurrage riski). İthalat fon düzenlemeleri."
+            lat, lon = -23.9535, -46.3015
+            marker_text = "Santos Port - Yükleme Alanı"
+            
+        else:
+            product = f"Emtia: {search_query.capitalize()}"
+            fob = "$680.00"; premium = "+$25.00"; freight = "$55.00"; gtip = "Gözetim Belgesi Gerekli"
+            suppliers = "Küresel Tedarikçi Veri Tabanı Taranıyor..."; buyers = "TR İthalatçı Listesi..."; risks = "Standart riskler."
+            lat, lon = 41.0082, 28.9784; marker_text = "Interlock Global"
+
+        st.success(f"📌 '{product}' için Analiz Raporu Hazırlandı.")
         col1, col2, col3 = st.columns(3)
-        col1.metric("Tahmini FOB (Ton)", "$480.00", "Canlı Endeks")
-        col2.metric("Bölgesel Prim (Premium)", "+$15.00", "LME Bazlı")
-        col3.metric("Ortalama Navlun (Lojistik)", "$45.00", "Konteyner/Dökme")
+        col1.metric("Tahmini FOB (Ton)", fob, "Güncel Borsa")
+        col2.metric("Bölgesel Prim (Premium)", premium, "Pazar Bazlı")
+        col3.metric("Ortalama Navlun", freight, "Maliyet")
         
-        # Rapor Detayları
-        st.subheader("📋 Potansiyel Alıcı/Satıcı ve Vergi Risk Analizi")
-        data = {
-            "Kategori": ["Satıcı Firmalar (Top 3)", "Alıcı Firmalar (Top 3)", "Gümrük Vergileri & Riskler"],
-            "Detaylar": [
-                "1. Cosan SA, 2. São Martinho, 3. Tereos (Brezilya)",
-                "1. Türkiye Şeker Fabrikaları, 2. Konya Şeker, 3. Özel İthalatçılar",
-                "İthalat rejimi kotasına tabi. %15-25 arası esnek gümrük vergisi riski mevcut."
-            ]
-        }
-        st.table(pd.DataFrame(data))
+        st.table(pd.DataFrame({"Kriter": ["GTİP Kodu", "Satıcılar", "Alıcılar (TR)", "Riskler"], "Veriler": [gtip, suppliers, buyers, risks]}))
         
-        # 📱 WHATSAPP VE PDF ENTEGRASYONU (SIFIR MALİYETLİ)
-        st.subheader("📥 Raporu Paylaş ve İndir")
-        
-        # PDF Oluşturma Butonu
+        # PDF ve WhatsApp Entegrasyonu
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
-        p.drawString(100, 750, f"INTERLOCK GLOBAL - TICARI ISTIHBARAT RAPORU")
-        p.drawString(100, 730, f"Sorgu: {search_query}")
-        p.drawString(100, 700, "FOB Fiyati: $480.00 | Navlun: $45.00")
-        p.drawString(100, 680, "Risk Raporu: Gumruk kotalarina dikkat edilmelidir.")
-        p.showPage()
-        p.save()
-        buffer.seek(0)
+        p.drawString(50, 750, f"INTERLOCK GLOBAL REPORT - {search_query.upper()}")
+        p.drawString(50, 720, f"Product: {product} | FOB: {fob} | Freight: {freight}")
+        p.showPage(); p.save(); buffer.seek(0)
         
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            st.download_button(label="📥 PDF Raporu Tablete İndir", data=buffer, file_name="interlock_rapor.pdf", mime="application/pdf")
+        c1, c2 = st.columns(2)
+        c1.download_button(label="📥 PDF İndir", data=buffer, file_name="interlock.pdf", mime="application/pdf")
         
-        with col_btn2:
-            # SIFIR MALİYETLİ WHATSAPP PAYLAŞIM BUTONU (API ÜCRETİ YOK)
-            whatsapp_mesaj = f"Interlock Global İstihbarat Raporu:\nSorgu: {search_query}\nFOB Fiyatı: $480.00\nDetaylar web sitemizde!"
-            encoded_mesaj = urllib.parse.quote(whatsapp_mesaj)
-            # Kullanıcıyı doğrudan WhatsApp'a yönlendiren ücretsiz link
-            wa_link = f"https://wa.me{encoded_mesaj}"
-            st.markdown(f'<a href="{wa_link}" target="_blank"><button style="background-color:#25D366;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">📱 Raporu WhatsApp ile Gönder</button></a>', unsafe_allow_index=True, unsafe_allow_html=True)
-
-    # Canlı Gemi Takip Haritası (Alt Kısımda Sabit)
+        whatsapp_mesaj = f"*Interlock Global*\n*Ürün:* {product}\n*FOB:* {fob}\n*Navlun:* {freight}"
+        encoded_mesaj = urllib.parse.quote(whatsapp_mesaj)
+        wa_link = f"https://wa.me{encoded_mesaj}"
+        c2.markdown(f'<a href="{wa_link}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:10px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 WhatsApp Paylaş</div></a>', unsafe_allow_html=True)
+    # HARİTA SİSTEMİ (Modül 2'nin Devamı)
     st.divider()
-    st.subheader("🚢 Canlı Gemi & Liman Takip Haritası")
-    m = folium.Map(location=[41.0082, 28.9784], zoom_start=8)
-    folium.Marker([41.03, 29.02], popup="Aktif Kargo Gemisi").add_to(m)
+    st.subheader("🚢 IMO / Port Destekli Canlı Lojistik Haritası")
+    map_lat = lat if search_query else 41.0082
+    map_lon = lon if search_query else 28.9784
+    m = folium.Map(location=[map_lat, map_lon], zoom_start=5 if search_query else 7, tiles="CartoDB positron")
+    
+    folium.Marker([40.98, 28.90], popup="Ambarlı Limanı (İstanbul)", icon=folium.Icon(color='darkblue', icon='anchor', prefix='fa')).add_to(m)
+    folium.Marker([36.60, 36.16], popup="İskenderun Limanı", icon=folium.Icon(color='darkblue', icon='anchor', prefix='fa')).add_to(m)
+    
+    if search_query:
+        folium.Marker([lat, lon], popup=marker_text, icon=folium.Icon(color='red', icon='ship', prefix='fa')).add_to(m)
+        folium.PolyLine(locations=[[lat, lon], [40.98, 28.90]], color="red", weight=2.5).add_to(m)
+    else:
+        folium.Marker([41.15, 29.10], popup="MSC TESSA (IMO: 9930038)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
+        folium.Marker([40.50, 27.50], popup="MV GALAXY (IMO: 9411446)", icon=folium.Icon(color='orange', icon='ship', prefix='fa')).add_to(m)
     st_folium(m, width=1100, height=400)
 
-# ------------------------------------------------------------------
-# MODÜL 3: EVRAK KONTROL
-# ------------------------------------------------------------------
+# MODÜL 3 & 4 (GELECEK PLANLAMASI)
 elif menu == "📄 Evrak Doğrulama & GTİP":
-    st.title("📄 Evrak Doğrulama & GTİP (HS Code) Arama Motoru")
-    gtip_query = st.text_input("Ürün ismi yazarak GTİP kodu bulun:", placeholder="Örn: Beyaz şeker...")
-    if gtip_query:
-        st.code("GTİP Kodu: 1701.99.10.00.11")
-        
-    uploaded_file = st.file_uploader("Kontrol edilecek Proforma veya Konşimento yükleyin", type=["pdf", "png", "jpg"])
-    if uploaded_file:
-        st.metric(label="Güvenilirlik Skoru", value="%94", delta="Güvenli Evrak")
+    st.title("📄 Evrak Doğrulama & GTİP Arama Motoru")
+    gtip_query = st.text_input("Ürün ismi yazın:")
+    if gtip_query: st.code("GTİP Kodu: 1701.99.10.00.11 (Örnektir)")
+    uploaded_file = st.file_uploader("Evrak Yükleyin", type=["pdf", "png", "jpg"])
+    if uploaded_file: st.metric(label="Güvenilirlik Skoru", value="%94", delta="Güvenli")
 
-# ------------------------------------------------------------------
-# MODÜL 4: AKREDİTİF
-# ------------------------------------------------------------------
 elif menu == "⚖️ Akreditif & Sözleşme":
     st.title("⚖️ Akıllı Akreditif (L/C) & Sözleşme Sihirbazı")
     st.text_input("Alıcı Ülke:")
     st.text_input("Satıcı Ülke:")
-    if st.button("Uluslararası SPA Sözleşme Taslağı Üret"):
-        st.text_area("Sözleşme Metni", "CONTRACT FOR SALE AND PURCHASE...", height=150)
+    if st.button("Sözleşme Taslağı Üret"): st.text_area("Metin", "CONTRACT FOR SALE...", height=150)
