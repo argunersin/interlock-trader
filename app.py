@@ -10,145 +10,178 @@ from reportlab.lib import colors
 import io
 import urllib.parse
 
-# 1. GÖRÜNTÜ BOZULMALARINI DÜZELTEN ULTRA NET CSS AYARLARI
-st.set_page_config(page_title="Interlock Trader Core", layout="wide", page_icon="📊")
+# 1. RETRO SİBER TERMİNAL AYARLARI
+st.set_page_config(page_title="Interlock Global Terminal", layout="wide", page_icon="📟")
 
 st.markdown("""
     <style>
-    .main { background-color: #0a0f1d !important; }
-    .stMetric { background-color: #111827 !important; padding: 20px !important; border-radius: 8px !important; border: 1px solid #1f2937 !important; }
-    .stTable, table, tr, td, th { background-color: #111827 !important; color: #ffffff !important; font-family: 'Courier New', monospace !important; font-size: 14px !important; }
+    .main, block-container, .stApp { background-color: #05070f !important; color: #00f2fe !important; }
+    .split-flap-card {
+        background: linear-gradient(180deg, #111524 49%, #05070f 50%, #111524 51%);
+        border: 2px solid #1f2937; border-radius: 8px; padding: 20px; text-align: center;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.5); min-height: 140px;
+        display: flex; flex-direction: column; justify-content: center;
+    }
+    .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; }
+    .split-flap-value { font-family: 'Courier New', monospace; font-size: 30px; font-weight: bold; color: #00f2fe; text-shadow: 0 0 10px rgba(0,242,254,0.5); }
+    .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; }
+    .stTable, table, tr, td, th { background-color: #0b0f19 !important; color: #ffffff !important; font-family: 'Courier New', monospace !important; }
     th { color: #00f2fe !important; font-weight: bold !important; border-bottom: 2px solid #1f2937 !important; }
-    td { border-bottom: 1px solid #1f2937 !important; padding: 10px !important; }
-    div.stButton > button:first-child { background-color: #00f2fe !important; color: #0a0f1d !important; border-radius: 5px !important; width: 100% !important; border: none !important; padding: 12px !important; font-weight: bold !important; }
-    div.stButton > button:first-child:hover { background-color: #ffffff !important; box-shadow: 0 0 15px #00f2fe !important; }
-    h1, h2, h3, p, span, label { color: #f3f4f6 !important; }
+    td { border-bottom: 1px solid #1f2937 !important; padding: 12px !important; }
+    [data-testid="stSidebar"] { background-color: #070a14 !important; border-right: 1px solid #1f2937 !important; }
+    h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Courier New', monospace !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# SOL MENÜ
-st.sidebar.title("📊 TRADER ENGINE")
-st.sidebar.caption("v2.2 - Layout Fixed")
-menu = st.sidebar.radio("Modüller", ["🚀 Akıllı İstihbarat & Derin Raporlama", "📄 Evrak Analiz & GTİP", "⚖️ Akreditif Sihirbazı"])
+st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v3</h2>", unsafe_allow_html=True)
+menu = st.sidebar.radio("İŞLEM MODÜLÜ", ["🚀 İstihbarat & Split-Flap Borsası", "📄 Evrak Analiz (OCR)", "⚓ Özel Gemi Röntgeni ($20)"])
 
-# PDF RAPOR MOTORU
+# PDF MOTORU
 def generate_advanced_pdf(query, data_dict):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
     story = []
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=18, textColor=colors.HexColor('#0e1c36'), spaceAfter=15)
-    sub_style = ParagraphStyle('SubStyle', parent=styles['Normal'], fontSize=11, textColor=colors.HexColor('#4a5568'), spaceAfter=25)
-    body_style = ParagraphStyle('BodyStyle', parent=styles['Normal'], fontSize=10, leading=14, textColor=colors.HexColor('#1a202c'))
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#0e1c36'), spaceAfter=15)
+    body_style = ParagraphStyle('BodyStyle', parent=styles['Normal'], fontSize=10, leading=14)
     story.append(Paragraph("<b>INTERLOCK GLOBAL - ULUSLARARASI TICARET ISTIHBARATI</b>", title_style))
-    story.append(Paragraph(f"<b>Analiz Edilen Rota:</b> {query.upper()}", sub_style))
-    table_data = [[Paragraph("<b>KRİTER</b>", body_style), Paragraph("<b>STRATEJİK DETAYLAR</b>", body_style)]]
+    table_data = [[Paragraph("<b>KRİTER</b>", body_style), Paragraph("<b>STRATEJİK VERİLER</b>", body_style)]]
     for key, value in data_dict.items():
         table_data.append([Paragraph(f"<b>{key}</b>", body_style), Paragraph(value, body_style)])
-    t = Table(table_data, colWidths=[130, 400])
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (1,0), colors.HexColor('#0e1c36')),
-        ('TEXTCOLOR', (0,0), (1,0), colors.white),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
-        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f8f9fa')),
-    ]))
+    t = Table(table_data, colWidths=)
+    t.setStyle(TableStyle([('BACKGROUND', (0,0), (1,0), colors.HexColor('#0e1c36')), ('TEXTCOLOR', (0,0), (1,0), colors.white), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1'))]))
     story.append(t)
     doc.build(story)
     buffer.seek(0)
     return buffer
-# MODÜL 1: CANLI VERİ VE GELİŞMİŞ İSTİHBARAT
-if menu == "🚀 Akıllı İstihbarat & Derin Raporlama":
-    st.title("🚀 Yapay Zeka Destekli Küresel İstihbarat Terminali")
-    st.subheader("📈 Londra Metal & Emtia Borsası Canlı Endeksleri")
-    col_lme1, col_lme2, col_lme3 = st.columns(3)
+# MODÜL 1: CANLI RETRO BORSA VE İSTİHBARAT
+if menu == "🚀 İstihbarat & Split-Flap Borsası":
+    st.markdown("<h1 style='color: #00f2fe;'>📟 INTERLOCK GLOBAL REAL-TIME TERMINAL</h1>", unsafe_allow_html=True)
+    st.caption("Otonom veri akışlı mekanik split-flap model emtia fiyat göstergeleri")
     
+    # 2026 CANLI VERİ ÇEKİM MOTORU
     try:
-        ali_data = yf.Ticker("ALI=F").history(period="2d")
-        ali_price = round(ali_data['Close'].iloc[-1], 2) if not ali_data.empty else 3266.50
-    except: ali_price = 3266.50
-    col_lme1.metric("LME Alüminyum (Ton)", f"${ali_price}", "Canlı Borsa")
-        
-    try:
-        oil_data = yf.Ticker("BZ=F").history(period="2d")
-        oil_price = round(oil_data['Close'].iloc[-1], 2) if not oil_data.empty else 71.34
-    except: oil_price = 71.34
-    col_lme2.metric("Brent Petrol (Varil)", f"${oil_price}", "Anlık Değişim")
-        
-    try:
-        sugar_data = yf.Ticker("SB=F").history(period="2d")
-        sugar_price = round(sugar_data['Close'].iloc[-1] * 22.04, 2) if not sugar_data.empty else 329.72
-    except: sugar_price = 329.72
-    col_lme3.metric("Şeker Endeksi (Ton)", f"${sugar_price}", "Uluslararası")
+        ali = yf.Ticker("ALI=F").history(period="2d"); ali_p = round(ali['Close'].iloc[-1], 2) if not ali.empty else 3266.50
+        cu = yf.Ticker("HG=F").history(period="2d"); cu_p = round(cu['Close'].iloc[-1] * 2204.62, 2) if not cu.empty else 9120.00
+        sugar = yf.Ticker("SB=F").history(period="2d"); sugar_p = round(sugar['Close'].iloc[-1] * 22.04, 2) if not sugar.empty else 329.72
+        wheat = yf.Ticker("W=F").history(period="2d"); wheat_p = round(wheat['Close'].iloc[-1] * 0.367, 2) if not wheat.empty else 245.00
+        oil = yf.Ticker("BZ=F").history(period="2d"); oil_p = round(oil['Close'].iloc[-1], 2) if not oil.empty else 71.38
+    except:
+        ali_p=3266.50; cu_p=9120.00; sugar_p=329.72; wheat_p=245.00; oil_p=71.38
 
+    # 📻 MEKANİK ÇENTİK KONTROLÜ
+    st.subheader("🛠️ Kategori Kumandası (Mekanik Çentik Ayarı)")
+    col_sel1, col_sel2 = st.columns(2)
+    with col_sel1:
+        metal_select = st.selectbox("⚙️ LME METALLER GRUBU:", ["Alüminyum (Külçe P1020)", "Bakır Katot (Grade A)", "İnşaat Demiri (Rebar)", "HMS 1/2 Demir Hurdası"])
+    with col_sel2:
+        gida_select = st.selectbox("🌾 ENDÜSTRİYEL GIDA GRUBU:", ["Beyaz Şeker (ICUMSA 45)", "Ekmeklik Buğday", "Sarı Mısır", "Ham Ayçiçek Yağı"])
+        
+    # PIT PIT ATAN 6 BÜYÜK RETRO LEVHA YERLEŞİMİ
+    st.write("")
+    c_b1, c_b2, c_b3 = st.columns(3)
+    with c_b1:
+        if "Alüminyum" in metal_select:
+            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${ali_p}</div><div class="split-flap-sub">ALÜMİNYUM / TON</div></div>', unsafe_allow_html=True)
+        elif "Bakır" in metal_select:
+            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${cu_p}</div><div class="split-flap-sub">BAKIR KATOT / TON</div></div>', unsafe_allow_html=True)
+        elif "İnşaat" in metal_select:
+            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$595.00</div><div class="split-flap-sub">İNŞAAT DEMİRİ / TON</div></div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$365.00</div><div class="split-flap-sub">HMS 1/2 HURDA / TON</div></div>', unsafe_allow_html=True)
+            
+    with c_b2:
+        if "Şeker" in gida_select:
+            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${sugar_p}</div><div class="split-flap-sub">ŞEKER ENDEKSİ / TON</div></div>', unsafe_allow_html=True)
+        elif "Buğday" in gida_select:
+            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${wheat_p}</div><div class="split-flap-sub">BUĞDAY / TON</div></div>', unsafe_allow_html=True)
+        elif "Mısır" in gida_select:
+            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">$185.00</div><div class="split-flap-sub">SARI MISIR / TON</div></div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">$890.00</div><div class="split-flap-sub">AYÇİÇEK YAĞI / TON</div></div>', unsafe_allow_html=True)
+            
+    with c_b3:
+        st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENERJİ & AKARYAKIT</div><div class="split-flap-value">${oil_p}</div><div class="split-flap-sub">BRENT PETROL / VARİL</div></div>', unsafe_allow_html=True)
+
+    st.write("")
+    c_b4, c_b5, c_b6 = st.columns(3)
+    with c_b4:
+        st.markdown('<div class="split-flap-card"><div class="split-flap-title">• ENERJİ ENTEGRASYONU</div><div class="split-flap-value">$745.00</div><div class="split-flap-sub">EN590 DİZEL / TON</div></div>', unsafe_allow_html=True)
+    with c_b5:
+        st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
+    with c_b6:
+        st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
+    # ARAMA MOTORU VE DERİN RAPORLAMA KATMANI
     st.divider()
-    search_query = st.text_input("Arama Motoru (Emtia ve Ülkeleri Yazın):", placeholder="Örn: aluminyum kazakistan - türkiye")
+    search_query = st.text_input("Gelişmiş Arama Terminali (Emtia ve Ülkeler):", placeholder="Örn: aluminyum kazakistan - türkiye")
     
     if search_query:
         query_lower = search_query.lower()
         if "aluminyum" in query_lower or "alüminyum" in query_lower:
-            product = "Ham Alüminyum Külçe (P1020 / Saflık %99.7)"
-            fob_val = f"${ali_price}"; premium_val = "+$195.00 (LME Primi)"; freight_val = "$110.00 (BTK Demiryolu)"; gtip_val = "7601.10.00.00.00"
+            product = "Ham Alüminyum Külçe (P1020)"; fob_val = f"${ali_p}"; premium_val = "+$195.00"; freight_val = "$110.00"; gtip_val = "7601.10.00.00.00"
             report_data = {
                 "GTİP / HS Code": gtip_val,
-                "Menşei Ülke Üreticileri": "1. Kazakhstan Aluminium (KCA), 2. ERG Group Metal Corp, 3. Tau-Ken Samruk Mining",
-                "Türkiye İthalatçı Odakları": "1. Assan Alüminyum A.Ş., 2. Saray Metal Sanayi, 3. Teknik Alüminyum",
-                "Lojistik Güzergah Analizi": "Aktau Limanı üzerinden dökme yük gemileri veya Bakü-Tiflis-Kars (BTK) demiryolu hattı orta koridor kullanımı.",
-                "Gümrük Vergileri ve Kotalar": "Kazakistan ile ikili ticaret anlaşmaları kapsamında esnek gümrük muafiyeti, ancak TR ithalat gözetim belgesi zorunluluğu.",
-                "Operasyonel Finansal Riskler": "Hazar geçişindeki lojistik darboğazlar sebebiyle gecikme riski. LME fiyat oynaklığı koruması (Hedging) önerilir."
+                "Incoterms 2025 Fiyat Matrisi": f"EXW: $2,950 / TON | FOB Aktau: {fob_val} / TON | CIF Ambarlı: $3,450 / TON | Bölge Primi: {premium_val}",
+                "Muhtemel Lojistik Rotalar": "Aktau Port (Kazakistan) yükleme -> Hazar Denizi Geçişi -> Bakü (Azerbaycan) -> BTK Demiryolu Hattı üzerinden TR teslim Orta Koridor güzergahı.",
+                "Gümrük Vergileri & Kotası": "Kazakistan-Türkiye İkili Ticaret Anlaşması kapsamında gümrük muafiyeti mevcuttur. Ancak TR Sanayi Bakanlığı İthalat Gözetim Belgesi zorunluluğu vardır.",
+                "Gerekli Resmi Evrak Listesi": "1. Proforma Invoice, 2. Master Bill of Lading (MBL), 3. SGS Miktar ve Kalite Sertifikası, 4. Certificate of Origin (Menşe Şahadetnamesi), 5. Çeki Listesi (Packing List).",
+                "Operasyonel Finansal Riskler": "Hazar geçişindeki hava muhalefeti ve vagon eksikliği sebebiyle 10-12 gün gecikme (Demurrage) riski. LME fiyat oynaklığına karşı Hedging zorunludur.",
+                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com / +41 22 703 8888) | 2. Maersk Line (sales@maersk.com) | 3. CMA CGM (ho.media@cma-cgm.com) | 4. COSCO Shipping (cs.hq@coscon.com) | 5. Hapag-Lloyd (global.sales@hlag.com)",
+                "Top 5 Küresel Gözetim Kontak Ağı": "1. SGS SA (sgs.global@sgs.com / +41 22 739 9111) | 2. Bureau Veritas (info@bureauveritas.com) | 3. Intertek Group (info@intertek.com) | 4. Cotecna Inspection (geneva@cotecna.ch) | 5. Saybolt (info@corelab.com)"
             }
-            lat, lon = 44.5000, 50.2000; m_text = "Kazakistan Alüminyum Çıkış Koridoru"
+            lat, lon = 44.5000, 50.2000; m_text = "Kazakistan Çıkış Terminali"
         elif "şeker" in query_lower or "seker" in query_lower:
-            product = "Rafine Beyaz Kamış Şekeri (ICUMSA 45)"
-            fob_val = f"${sugar_price}"; premium_val = "+$18.00 (Sertifikasyon)"; freight_val = "$52.00 (Dökme Gemi)"; gtip_val = "1701.99.10.00.11"
+            product = "Rafine Beyaz Kamış Şekeri (ICUMSA 45)"; fob_val = f"${sugar_p}"; premium_val = "+$18.00"; freight_val = "$52.00"; gtip_val = "1701.99.10.00.11"
             report_data = {
                 "GTİP / HS Code": gtip_val,
-                "Menşei Ülke Üreticileri": "1. Cosan SA Trading, 2. São Martinho Group, 3. Tereos Sugar Brazil",
-                "Türkiye İthalatçı Odakları": "1. Türkiye Şeker Fabrikaları, 2. Konya Şeker Fabrikası, 3. Özel İthalatçılar",
-                "Lojistik Güzergah Analizi": "Santos veya Paranagua limanlarından yükleme, Akdeniz / Marmara limanları tahliye dökme yük taşımacılığı.",
-                "Gümrük Vergileri ve Kotalar": "Şeker ithalatı tarife kontenjanına ve sıkı gümrük fon denetimlerine tabidir.",
-                "Operasyonel Finansal Riskler": "Santos limanındaki gemi kuyrukları nedeniyle yüksek Demurrage riski. SGS raporu kontrol edilmelidir."
+                "Incoterms 2025 Fiyat Matrisi": f"EXW Santos: $480 / TON | FOB Santos: {fob_val} / TON | CIF İskenderun: $610 / TON | Sertifikasyon Primi: {premium_val}",
+                "Muhtemel Lojistik Rotalar": "Santos Port veya Paranagua (Brezilya) yükleme -> Atlantik Okyanusu -> Cebelitarık Geçişi -> Akdeniz / Marmara Limanları tahliye dökme yük gemi rotası.",
+                "Gümrük Vergileri & Kotası": "Şeker ithalatı sıkı tarife kontenjanına, Ticaret Bakanlığı ithalat lisansına ve yüksek fon denetimlerine tabidir.",
+                "Gerekli Resmi Evrak Listesi": "1. Commercial Invoice, 2. Ocean Bill of Lading, 3. Phytosanitary Certificate (Sağlık Sertifikası), 4. SGS Kalite Raporu, 5. Fumigasyon Belgesi.",
+                "Operasyonel Finansal Riskler": "Santos limanındaki yoğun gemi trafiği ve yağmurlar nedeniyle 15 güne varan yükleme kuyruğu riski. SGS onayı olmadan akreditif çözülmemelidir.",
+                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com) | 2. Maersk Line (sales@maersk.com) | 3. CMA CGM (ho.media@cma-cgm.com) | 4. COSCO Shipping | 5. Hapag-Lloyd",
+                "Top 5 Küresel Gözetim Kontak Ağı": "1. SGS SA (sgs.global@sgs.com) | 2. Bureau Veritas | 3. Intertek Group | 4. Cotecna Inspection | 5. Saybolt"
             }
-            lat, lon = -23.9535, -46.3015; m_text = "Santos Port - Şeker İhracat Terminali"
+            lat, lon = -23.9535, -46.3015; m_text = "Santos Port"
         else:
-            product = f"Emtia: {search_query.upper()}"; fob_val = "$750.00"; premium_val = "+$30.00"; freight_val = "$65.00"; gtip_val = "Sorgulanıyor"
-            report_data = {"Veri Durumu": "Küresel veri tabanında arama yapılıyor. Lütfen emtia adını net belirtiniz."}
-            lat, lon = 41.0082, 28.9784; m_text = "Interlock Hub"
+            product = f"Emtia: {search_query.upper()}"; fob_val = "$750.00"; premium_val = "+$30.00"; freight_val = "$65.00"; gtip_val = "Kontrol Ediliyor"
+            report_data = {"Veri Durumu": "Canlı arama ajanları hazırlanıyor. Lütfen test aşamasında 'Alüminyum' veya 'Şeker' yazarak derin raporu simüle edin."}
+            lat, lon = 41.0082, 28.9784; m_text = "Hub"
 
-        st.success(f"📌 {product} Analiz Segmenti Aktif.")
-        c_m1, c_m2, c_m3 = st.columns(3)
-        c_m1.metric("Canlı FOB Fiyatı (Ton)", fob_val, "Gerçek Zamanlı")
-        c_m2.metric("Bölge Primi (Premium)", premium_val, "LME Kontrollü")
-        c_m3.metric("Navlun Maliyeti (Tahmini)", freight_val, "Rota Endeksli")
+        st.success(f"📌 {product} İçin Canlı Veri Segmenti Kilitlendi.")
+        st.table(pd.DataFrame(list(report_data.items()), columns=["Terminal Kriteri", "Mekanik Rapor Çıktısı"]))
         
-        st.subheader("📋 Gelişmiş Ticari İstihbarat Detayları")
-        st.table(pd.DataFrame(list(report_data.items()), columns=["İstihbarat Kriteri", "Stratejik Veri ve Açıklamalar"]))
-        
-        st.subheader("📥 Raporlama Merkez Ofis Çıktıları")
         pdf_file = generate_advanced_pdf(search_query, report_data)
         col_b1, col_b2 = st.columns(2)
         with col_b1:
-            st.download_button(label="📥 Resmi PDF Raporu İndir", data=pdf_file, file_name="Interlock_Rapor.pdf", mime="application/pdf")
+            st.download_button(label="📥 İstihbarat Brifingi Resmi PDF İndir", data=pdf_file, file_name=f"Interlock_{search_query}_Briefing.pdf")
         with col_b2:
-            wa_text = f"*INTERLOCK GLOBAL REPORT*\n\n*Ürün:* {product}\n*Canlı FOB:* {fob_val}"
-            encoded_wa = urllib.parse.quote(wa_text)
-            st.markdown(f'<a href="https://wa.me{encoded_wa}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:12px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 Raporu WhatsApp Hattına Gönder</div></a>', unsafe_allow_html=True)
+            wa_text = f"*INTERLOCK GLOBAL REPORT*\n\n*Ürün:* {product}\n*Canlı FOB:* {fob_val}\n*Lojistik:* {freight_val}\n\nResmi istihbarat ve gümrük brifingi PDF olarak üretilmiştir."
+            st.markdown(f'<a href="https://wa.me{urllib.parse.quote(wa_text)}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:12px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 Brifingi WhatsApp İletişim Hattına Gönder</div></a>', unsafe_allow_html=True)
 
+    # HARİTA KATMANI
     st.divider()
-    st.subheader("🚢 Canlı Denizcilik ve Rota Kontrol Haritası")
-    m_lat = lat if search_query else 41.0082
-    m_lon = lon if search_query else 28.9784
+    m_lat = lat if search_query else 41.0082; m_lon = lon if search_query else 28.9784
     m = folium.Map(location=[m_lat, m_lon], zoom_start=4 if search_query else 6, tiles="CartoDB dark_matter")
     if search_query:
         folium.Marker([lat, lon], popup=m_text, icon=folium.Icon(color='red', icon='ship', prefix='fa')).add_to(m)
         folium.PolyLine(locations=[[lat, lon], [40.98, 28.90]], color="#00f2fe", weight=3).add_to(m)
     else:
-        folium.Marker([41.15, 29.10], popup="MSC TESSA", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
-    st_folium(m, width=1100, height=450)
+        folium.Marker([41.15, 29.10], popup="MSC TESSA (Aktif Kargo)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
+    st_folium(m, width=1100, height=400)
 
-elif menu == "📄 Evrak Analiz & GTİP":
-    st.title("📄 Akıllı Evrak Doğrulama Motoru")
-    st.file_uploader("Evrak Yükleyin (PDF/JPG)", type=["pdf", "jpg", "png"])
+elif menu == "📄 Evrak Analiz (OCR)":
+    st.title("📄 Akıllı Evrak Doğrulama Terminali")
+    st.info("Bu modül, yüklenen belgeleri (B/L, SGS, Proforma) yapay zeka görüşüyle (Vision LLM) tarayarak sahtecilik ve tutarsızlık analizlerini pıt pıt listeleyecektir.")
+    st.file_uploader("Evrak Yükleyin (PDF/JPG/PNG)", type=["pdf", "jpg", "png"])
 
-elif menu == "⚖️ Akreditif Sihirbazı":
-    st.title("⚖️ Otonom Akreditif (L/C) Kontrolü")
-    st.text_input("Firma Detayları:")
+# GELİR MODELİ MODÜLÜ (20 DOLARLIK RAPOR SATIŞ ALTYAPISI)
+elif menu == "⚓ Özel Gemi Röntgeni ($20)":
+    st.title("⚓ Özel Gemi Röntgeni & Cargo Manifest Detayları")
+    st.markdown("<p style='color: #9ca3af;'>Gelişmiş Uydu (AIS) ve Konşimento veri tabanlarından geminin anlık yük miktarını, tam manifesto içeriğini ve rota sapmalarını röntgen formatında raporlar.</p>", unsafe_allow_html=True)
+    
+    ship_imo = st.text_input("Gemi IMO Numarası veya Çağrı Adı Girin:", placeholder="Örn: 9930038")
+    
+    if ship_imo:
+        st.warning("⚠️ Bu veri katmanı ücrete tabidir. Cargo Manifest ve canlı B/L röntgenini açmak için lütfen ödemeyi tamamlayın.")
+        st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><p style="color: #cbd5e1; font-size:14px; margin-bottom:15px;">Bu sorgu için hesabınızdan <b>$20.00 USD</b> veya 1 Rapor Kredisi düşülecektir.</p><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Stripe / Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
