@@ -4,9 +4,7 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
+from reportlab.pdfgen import canvas
 import io
 import urllib.parse
 
@@ -36,24 +34,26 @@ st.markdown("""
 st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v3</h2>", unsafe_allow_html=True)
 menu = st.sidebar.radio("İŞLEM MODÜLÜ", ["🚀 İstihbarat & Split-Flap Borsası", "📄 Evrak Analiz (OCR)", "⚓ Özel Gemi Röntgeni ($20)"])
 
-# PDF MOTORU
+# HATASIZ SADELEŞTİRİLMİŞ PDF MOTORU
 def generate_advanced_pdf(query, data_dict):
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
-    story = []
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#0e1c36'), spaceAfter=15)
-    body_style = ParagraphStyle('BodyStyle', parent=styles['Normal'], fontSize=10, leading=14)
-    story.append(Paragraph("<b>INTERLOCK GLOBAL - ULUSLARARASI TICARET ISTIHBARATI</b>", title_style))
-    table_data = [[Paragraph("<b>KRİTER</b>", body_style), Paragraph("<b>STRATEJİK VERİLER</b>", body_style)]]
+    p = canvas.Canvas(buffer, pagesize=letter)
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, 750, "INTERLOCK GLOBAL - ULUSLARARASI TICARET ISTIHBARATI")
+    p.setFont("Helvetica", 10)
+    p.drawString(50, 735, f"Analiz Edilen Rota: {query.upper()}")
+    y = 700
     for key, value in data_dict.items():
-        table_data.append([Paragraph(f"<b>{key}</b>", body_style), Paragraph(value, body_style)])
-    t = Table(table_data, colWidths=[200, 500])
-    t.setStyle(TableStyle([('BACKGROUND', (0,0), (1,0), colors.HexColor('#0e1c36')), ('TEXTCOLOR', (0,0), (1,0), colors.white), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1'))]))
-    story.append(t)
-    doc.build(story)
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(50, y, f"{key}:")
+        p.setFont("Helvetica", 10)
+        p.drawString(200, y, str(value)[:80])
+        y -= 25
+    p.showPage()
+    p.save()
     buffer.seek(0)
     return buffer
+
 # MODÜL 1: CANLI RETRO BORSA VE İSTİHBARAT
 if menu == "🚀 İstihbarat & Split-Flap Borsası":
     st.markdown("<h1 style='color: #00f2fe;'>📟 INTERLOCK GLOBAL REAL-TIME TERMINAL</h1>", unsafe_allow_html=True)
@@ -111,6 +111,7 @@ if menu == "🚀 İstihbarat & Split-Flap Borsası":
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
     with c_b6:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
+
     # ARAMA MOTORU VE DERİN RAPORLAMA KATMANI
     st.divider()
     search_query = st.text_input("Gelişmiş Arama Terminali (Emtia ve Ülkeler):", placeholder="Örn: aluminyum kazakistan - türkiye")
@@ -121,31 +122,31 @@ if menu == "🚀 İstihbarat & Split-Flap Borsası":
             product = "Ham Alüminyum Külçe (P1020)"; fob_val = f"${ali_p}"; premium_val = "+$195.00"; freight_val = "$110.00"; gtip_val = "7601.10.00.00.00"
             report_data = {
                 "GTİP / HS Code": gtip_val,
-                "Incoterms 2025 Fiyat Matrisi": f"EXW: $2,950 / TON | FOB Aktau: {fob_val} / TON | CIF Ambarlı: $3,450 / TON | Bölge Primi: {premium_val}",
-                "Muhtemel Lojistik Rotalar": "Aktau Port (Kazakistan) yükleme -> Hazar Denizi Geçişi -> Bakü (Azerbaycan) -> BTK Demiryolu Hattı üzerinden TR teslim Orta Koridor güzergahı.",
-                "Gümrük Vergileri & Kotası": "Kazakistan-Türkiye İkili Ticaret Anlaşması kapsamında gümrük muafiyeti mevcuttur. Ancak TR Sanayi Bakanlığı İthalat Gözetim Belgesi zorunluluğu vardır.",
-                "Gerekli Resmi Evrak Listesi": "1. Proforma Invoice, 2. Master Bill of Lading (MBL), 3. SGS Miktar ve Kalite Sertifikası, 4. Certificate of Origin (Menşe Şahadetnamesi), 5. Çeki Listesi (Packing List).",
-                "Operasyonel Finansal Riskler": "Hazar geçişindeki hava muhalefeti ve vagon eksikliği sebebiyle 10-12 gün gecikme (Demurrage) riski. LME fiyat oynaklığına karşı Hedging zorunludur.",
-                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com / +41 22 703 8888) | 2. Maersk Line (sales@maersk.com) | 3. CMA CGM (ho.media@cma-cgm.com) | 4. COSCO Shipping (cs.hq@coscon.com) | 5. Hapag-Lloyd (global.sales@hlag.com)",
-                "Top 5 Küresel Gözetim Kontak Ağı": "1. SGS SA (sgs.global@sgs.com / +41 22 739 9111) | 2. Bureau Veritas (info@bureauveritas.com) | 3. Intertek Group (info@intertek.com) | 4. Cotecna Inspection (geneva@cotecna.ch) | 5. Saybolt (info@corelab.com)"
+                "Incoterms 2025 Fiyat Matrisi": f"EXW: $2,950 / TON | FOB: {fob_val} / TON | CIF: $3,450 / TON",
+                "Muhtemel Lojistik Rotalar": "Aktau Port (Kazakistan) -> Hazar Denizi Geçişi -> Bakü -> BTK Demiryolu Hattı Orta Koridor güzergahı.",
+                "Gümrük Vergileri & Kotası": "Kazakistan-Türkiye İkili Ticaret Anlaşması kapsamında gümrük muafiyeti mevcuttur. TR İthalat Gözetim Belgesi zorunludur.",
+                "Gerekli Resmi Evrak Listesi": "1. Proforma Invoice, 2. Master Bill of Lading (MBL), 3. SGS Sertifikası, 4. Certificate of Origin, 5. Çeki Listesi.",
+                "Operasyonel Finansal Riskler": "Hazar geçişindeki gecikme riski. LME fiyat oynaklığına karşı Hedging zorunludur.",
+                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com) | 2. Maersk Line (sales@maersk.com) | 3. CMA CGM | 4. COSCO Shipping | 5. Hapag-Lloyd",
+                "Top 5 Küresel Gözetim Kontak Ağı": "1. SGS SA (sgs.global@sgs.com) | 2. Bureau Veritas | 3. Intertek Group | 4. Cotecna Inspection | 5. Saybolt"
             }
             lat, lon = 44.5000, 50.2000; m_text = "Kazakistan Çıkış Terminali"
         elif "şeker" in query_lower or "seker" in query_lower:
             product = "Rafine Beyaz Kamış Şekeri (ICUMSA 45)"; fob_val = f"${sugar_p}"; premium_val = "+$18.00"; freight_val = "$52.00"; gtip_val = "1701.99.10.00.11"
             report_data = {
                 "GTİP / HS Code": gtip_val,
-                "Incoterms 2025 Fiyat Matrisi": f"EXW Santos: $480 / TON | FOB Santos: {fob_val} / TON | CIF İskenderun: $610 / TON | Sertifikasyon Primi: {premium_val}",
-                "Muhtemel Lojistik Rotalar": "Santos Port veya Paranagua (Brezilya) yükleme -> Atlantik Okyanusu -> Cebelitarık Geçişi -> Akdeniz / Marmara Limanları tahliye dökme yük gemi rotası.",
-                "Gümrük Vergileri & Kotası": "Şeker ithalatı sıkı tarife kontenjanına, Ticaret Bakanlığı ithalat lisansına ve yüksek fon denetimlerine tabidir.",
-                "Gerekli Resmi Evrak Listesi": "1. Commercial Invoice, 2. Ocean Bill of Lading, 3. Phytosanitary Certificate (Sağlık Sertifikası), 4. SGS Kalite Raporu, 5. Fumigasyon Belgesi.",
-                "Operasyonel Finansal Riskler": "Santos limanındaki yoğun gemi trafiği ve yağmurlar nedeniyle 15 güne varan yükleme kuyruğu riski. SGS onayı olmadan akreditif çözülmemelidir.",
-                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com) | 2. Maersk Line (sales@maersk.com) | 3. CMA CGM (ho.media@cma-cgm.com) | 4. COSCO Shipping | 5. Hapag-Lloyd",
+                "Incoterms 2025 Fiyat Matrisi": f"EXW: $480 / TON | FOB: {fob_val} / TON | CIF: $610 / TON",
+                "Muhtemel Lojistik Rotalar": "Santos veya Paranagua (Brezilya) yükleme -> Atlantik Okyanusu -> Cebelitarık -> Akdeniz / Marmara Limanları.",
+                "Gümrük Vergileri & Kotası": "Şeker ithalatı sıkı tarife kontenjanına ya da yüksek fon denetimlerine tabidir.",
+                "Gerekli Resmi Evrak Listesi": "1. Commercial Invoice, 2. Ocean Bill of Lading, 3. Phytosanitary Certificate, 4. SGS Kalite Raporu, 5. Fumigasyon Belgesi.",
+                "Operasyonel Finansal Riskler": "Santos limanındaki gemi trafiği nedeniyle yüksek Demurrage riski. SGS onayı şarttır.",
+                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com) | 2. Maersk Line | 3. CMA CGM | 4. COSCO Shipping | 5. Hapag-Lloyd",
                 "Top 5 Küresel Gözetim Kontak Ağı": "1. SGS SA (sgs.global@sgs.com) | 2. Bureau Veritas | 3. Intertek Group | 4. Cotecna Inspection | 5. Saybolt"
             }
             lat, lon = -23.9535, -46.3015; m_text = "Santos Port"
         else:
             product = f"Emtia: {search_query.upper()}"; fob_val = "$750.00"; premium_val = "+$30.00"; freight_val = "$65.00"; gtip_val = "Kontrol Ediliyor"
-            report_data = {"Veri Durumu": "Canlı arama ajanları hazırlanıyor. Lütfen test aşamasında 'Alüminyum' veya 'Şeker' yazarak derin raporu simüle edin."}
+            report_data = {"Veri Durumu": "Test aşamasında 'Alüminyum' veya 'Şeker' yazarak derin raporu simüle edin."}
             lat, lon = 41.0082, 28.9784; m_text = "Hub"
 
         st.success(f"📌 {product} İçin Canlı Veri Segmenti Kilitlendi.")
@@ -154,10 +155,10 @@ if menu == "🚀 İstihbarat & Split-Flap Borsası":
         pdf_file = generate_advanced_pdf(search_query, report_data)
         col_b1, col_b2 = st.columns(2)
         with col_b1:
-            st.download_button(label="📥 İstihbarat Brifingi Resmi PDF İndir", data=pdf_file, file_name=f"Interlock_{search_query}_Briefing.pdf")
+            st.download_button(label="📥 Resmi PDF Raporu İndir", data=pdf_file, file_name="Interlock_Briefing.pdf")
         with col_b2:
-            wa_text = f"*INTERLOCK GLOBAL REPORT*\n\n*Ürün:* {product}\n*Canlı FOB:* {fob_val}\n*Lojistik:* {freight_val}\n\nResmi istihbarat ve gümrük brifingi PDF olarak üretilmiştir."
-            st.markdown(f'<a href="https://wa.me{urllib.parse.quote(wa_text)}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:12px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 Brifingi WhatsApp İletişim Hattına Gönder</div></a>', unsafe_allow_html=True)
+            wa_text = f"*INTERLOCK GLOBAL REPORT*\n\n*Ürün:* {product}\n*Canlı FOB:* {fob_val}"
+            st.markdown(f'<a href="https://wa.me{urllib.parse.quote(wa_text)}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:12px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 Raporu WhatsApp Hattına Gönder</div></a>', unsafe_allow_html=True)
 
     # HARİTA KATMANI
     st.divider()
@@ -168,20 +169,14 @@ if menu == "🚀 İstihbarat & Split-Flap Borsası":
         folium.PolyLine(locations=[[lat, lon], [40.98, 28.90]], color="#00f2fe", weight=3).add_to(m)
     else:
         folium.Marker([41.15, 29.10], popup="MSC TESSA (Aktif Kargo)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
-    st_folium(m, width=1100, height=400)
+    st_folium(m, width=1100, height=450)
 
 elif menu == "📄 Evrak Analiz (OCR)":
     st.title("📄 Akıllı Evrak Doğrulama Terminali")
-    st.info("Bu modül, yüklenen belgeleri (B/L, SGS, Proforma) yapay zeka görüşüyle (Vision LLM) tarayarak sahtecilik ve tutarsızlık analizlerini pıt pıt listeleyecektir.")
     st.file_uploader("Evrak Yükleyin (PDF/JPG/PNG)", type=["pdf", "jpg", "png"])
 
-# GELİR MODELİ MODÜLÜ (20 DOLARLIK RAPOR SATIŞ ALTYAPISI)
 elif menu == "⚓ Özel Gemi Röntgeni ($20)":
     st.title("⚓ Özel Gemi Röntgeni & Cargo Manifest Detayları")
-    st.markdown("<p style='color: #9ca3af;'>Gelişmiş Uydu (AIS) ve Konşimento veri tabanlarından geminin anlık yük miktarını, tam manifesto içeriğini ve rota sapmalarını röntgen formatında raporlar.</p>", unsafe_allow_html=True)
-    
-    ship_imo = st.text_input("Gemi IMO Numarası veya Çağrı Adı Girin:", placeholder="Örn: 9930038")
-    
+    ship_imo = st.text_input("Gemi IMO Numarası Girin:", placeholder="Örn: 9930038")
     if ship_imo:
-        st.warning("⚠️ Bu veri katmanı ücrete tabidir. Cargo Manifest ve canlı B/L röntgenini açmak için lütfen ödemeyi tamamlayın.")
-        st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><p style="color: #cbd5e1; font-size:14px; margin-bottom:15px;">Bu sorgu için hesabınızdan <b>$20.00 USD</b> veya 1 Rapor Kredisi düşülecektir.</p><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Stripe / Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
+        st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><p style="color: #cbd5e1; font-size:14px; margin-bottom:15px;">Bu sorgu için hesabınızdan <b>$20.00 USD</b> düşülecektir.</p><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
