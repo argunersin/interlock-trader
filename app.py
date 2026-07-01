@@ -48,7 +48,7 @@ def generate_advanced_pdf(query, data_dict):
     table_data = [[Paragraph("<b>KRİTER</b>", body_style), Paragraph("<b>STRATEJİK VERİLER</b>", body_style)]]
     for key, value in data_dict.items():
         table_data.append([Paragraph(f"<b>{key}</b>", body_style), Paragraph(value, body_style)])
-    t = Table(table_data, colWidths=)
+    t = Table(table_data, colWidths=[200, 500])
     t.setStyle(TableStyle([('BACKGROUND', (0,0), (1,0), colors.HexColor('#0e1c36')), ('TEXTCOLOR', (0,0), (1,0), colors.white), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1'))]))
     story.append(t)
     doc.build(story)
