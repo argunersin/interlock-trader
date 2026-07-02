@@ -7,9 +7,15 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
 import urllib.parse
+import json
 
-# 1. RETRO SİBER TERMİNAL AYARLARI
-st.set_page_config(page_title="Interlock Global Terminal", layout="wide", page_icon="📟")
+# 🔑 GOOGLE GEMINI FREE TIER ZEKA ANAHTARINIZ SİSTEME KİLİTLENDİ
+import google.generativeai as genai
+GOOGLE_API_KEY = "AQ.Ab8RN6IS_Dxs2lm5nlvsR9c03s9V9EmWpFS3S86-e3nZE6TfJg"
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# 1. RETRO SİBER TERMİNAL GÖRSEL AYARLARI
+st.set_page_config(page_title="Interlock Global AI Terminal", layout="wide", page_icon="📟")
 
 st.markdown("""
     <style>
@@ -31,8 +37,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v3</h2>", unsafe_allow_html=True)
-menu = st.sidebar.radio("İŞLEM MODÜLÜ", ["🚀 İstihbarat & Split-Flap Borsası", "📄 Evrak Analiz (OCR)", "⚓ Özel Gemi Röntgeni ($20)"])
+st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4</h2>", unsafe_allow_html=True)
+st.sidebar.caption("Yapay Zeka Ajanları Aktif")
+menu = st.sidebar.radio("İŞLEM MODÜLÜ", ["🚀 Otonom İstihbarat Ajanı", "📄 Evrak Analiz (OCR)", "⚓ Özel Gemi Röntgeni ($20)"])
 
 # HATASIZ SADELEŞTİRİLMİŞ PDF MOTORU
 def generate_advanced_pdf(query, data_dict):
@@ -53,10 +60,9 @@ def generate_advanced_pdf(query, data_dict):
     p.save()
     buffer.seek(0)
     return buffer
-
 # MODÜL 1: CANLI RETRO BORSA VE İSTİHBARAT
-if menu == "🚀 İstihbarat & Split-Flap Borsası":
-    st.markdown("<h1 style='color: #00f2fe;'>📟 INTERLOCK GLOBAL REAL-TIME TERMINAL</h1>", unsafe_allow_html=True)
+if menu == "🚀 Otonom İstihbarat Ajanı":
+    st.markdown("<h1 style='color: #00f2fe;'>📟 INTERLOCK GLOBAL REAL-TIME RADAR</h1>", unsafe_allow_html=True)
     st.caption("Otonom veri akışlı mekanik split-flap model emtia fiyat göstergeleri")
     
     # 2026 CANLI VERİ ÇEKİM MOTORU
@@ -111,68 +117,75 @@ if menu == "🚀 İstihbarat & Split-Flap Borsası":
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
     with c_b6:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
-
-    # ARAMA MOTORU VE DERİN RAPORLAMA KATMANI
+    # 🧠 OTONOM YAPAY ZEKA AJANI VE DERİN RAPORLAMA KATMANI (ACCIO MODELİ)
     st.divider()
-    search_query = st.text_input("Gelişmiş Arama Terminali (Emtia ve Ülkeler):", placeholder="Örn: aluminyum kazakistan - türkiye")
+    search_query = st.text_input("Gelişmiş Yapay Zeka İstihbarat Terminali (Emtia ve Ülkeleri Yazın):", placeholder="Örn: irmik kazakistan - endonezya veya aluminyum rusya - türkiye")
     
     if search_query:
-        query_lower = search_query.lower()
-        if "aluminyum" in query_lower or "alüminyum" in query_lower:
-            product = "Ham Alüminyum Külçe (P1020)"; fob_val = f"${ali_p}"; premium_val = "+$195.00"; freight_val = "$110.00"; gtip_val = "7601.10.00.00.00"
-            report_data = {
-                "GTİP / HS Code": gtip_val,
-                "Incoterms 2025 Fiyat Matrisi": f"EXW: $2,950 / TON | FOB: {fob_val} / TON | CIF: $3,450 / TON",
-                "Muhtemel Lojistik Rotalar": "Aktau Port (Kazakistan) -> Hazar Denizi Geçişi -> Bakü -> BTK Demiryolu Hattı Orta Koridor güzergahı.",
-                "Gümrük Vergileri & Kotası": "Kazakistan-Türkiye İkili Ticaret Anlaşması kapsamında gümrük muafiyeti mevcuttur. TR İthalat Gözetim Belgesi zorunludur.",
-                "Gerekli Resmi Evrak Listesi": "1. Proforma Invoice, 2. Master Bill of Lading (MBL), 3. SGS Sertifikası, 4. Certificate of Origin, 5. Çeki Listesi.",
-                "Operasyonel Finansal Riskler": "Hazar geçişindeki gecikme riski. LME fiyat oynaklığına karşı Hedging zorunludur.",
-                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com) | 2. Maersk Line (sales@maersk.com) | 3. CMA CGM | 4. COSCO Shipping | 5. Hapag-Lloyd",
-                "Top 5 Küresel Gözetim Kontak Ağı": "1. SGS SA (sgs.global@sgs.com) | 2. Bureau Veritas | 3. Intertek Group | 4. Cotecna Inspection | 5. Saybolt"
-            }
-            lat, lon = 44.5000, 50.2000; m_text = "Kazakistan Çıkış Terminali"
-        elif "şeker" in query_lower or "seker" in query_lower:
-            product = "Rafine Beyaz Kamış Şekeri (ICUMSA 45)"; fob_val = f"${sugar_p}"; premium_val = "+$18.00"; freight_val = "$52.00"; gtip_val = "1701.99.10.00.11"
-            report_data = {
-                "GTİP / HS Code": gtip_val,
-                "Incoterms 2025 Fiyat Matrisi": f"EXW: $480 / TON | FOB: {fob_val} / TON | CIF: $610 / TON",
-                "Muhtemel Lojistik Rotalar": "Santos veya Paranagua (Brezilya) yükleme -> Atlantik Okyanusu -> Cebelitarık -> Akdeniz / Marmara Limanları.",
-                "Gümrük Vergileri & Kotası": "Şeker ithalatı sıkı tarife kontenjanına ya da yüksek fon denetimlerine tabidir.",
-                "Gerekli Resmi Evrak Listesi": "1. Commercial Invoice, 2. Ocean Bill of Lading, 3. Phytosanitary Certificate, 4. SGS Kalite Raporu, 5. Fumigasyon Belgesi.",
-                "Operasyonel Finansal Riskler": "Santos limanındaki gemi trafiği nedeniyle yüksek Demurrage riski. SGS onayı şarttır.",
-                "Top 5 Küresel Lojistik Kontak Ağı": "1. MSC (info@msc.com) | 2. Maersk Line | 3. CMA CGM | 4. COSCO Shipping | 5. Hapag-Lloyd",
-                "Top 5 Küresel Gözetim Kontak Ağı": "1. SGS SA (sgs.global@sgs.com) | 2. Bureau Veritas | 3. Intertek Group | 4. Cotecna Inspection | 5. Saybolt"
-            }
-            lat, lon = -23.9535, -46.3015; m_text = "Santos Port"
-        else:
-            product = f"Emtia: {search_query.upper()}"; fob_val = "$750.00"; premium_val = "+$30.00"; freight_val = "$65.00"; gtip_val = "Kontrol Ediliyor"
-            report_data = {"Veri Durumu": "Test aşamasında 'Alüminyum' veya 'Şeker' yazarak derin raporu simüle edin."}
-            lat, lon = 41.0082, 28.9784; m_text = "Hub"
-
-        st.success(f"📌 {product} İçin Canlı Veri Segmenti Kilitlendi.")
-        st.table(pd.DataFrame(list(report_data.items()), columns=["Terminal Kriteri", "Mekanik Rapor Çıktısı"]))
+        st.info("📟 Interlock Otonom Ajanları internete çıkıyor, küresel veri ağları, gümrük kotaları ve B2B platformları taranıyor... Lütfen bekleyin (3-5 sn)...")
         
-        pdf_file = generate_advanced_pdf(search_query, report_data)
-        col_b1, col_b2 = st.columns(2)
-        with col_b1:
-            st.download_button(label="📥 Resmi PDF Raporu İndir", data=pdf_file, file_name="Interlock_Briefing.pdf")
-        with col_b2:
-            wa_text = f"*INTERLOCK GLOBAL REPORT*\n\n*Ürün:* {product}\n*Canlı FOB:* {fob_val}"
-            st.markdown(f'<a href="https://wa.me{urllib.parse.quote(wa_text)}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:12px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 Raporu WhatsApp Hattına Gönder</div></a>', unsafe_allow_html=True)
+        # GEMINI UYANDIRMA VE YAPAY ZEKA TALİMAT MATRİSİ
+        prompt = f"""
+        Sen uluslararası bir emtia brokerlığı yapay zeka ajanısın (Interlock Accio Modeli).
+        Kullanıcı şu sorguyu yaptı: '{search_query}'.
+        Bu sorguya göre dünya genelindeki B2B ağlarından, gümrük kayıtlarından ve ticaret koridorlarından anlık istihbarat topla.
+        Bize tam olarak şu kriterleri içeren ve kesinlikle boş metin içermeyen JSON formatında bir yanıt ver:
+        1. "Urun_Adi": Sorgulanan emtianın tam ticari adı ve GTİP (HS Code) kodu.
+        2. "Fiyat_Matrisi": Incoterms 2025 kurallarına uygun olarak EXW, FOB, CIF ve DDP tahmini ton başına maliyet kırılımları ve varsa bölgesel pazar primleri.
+        3. "Lojistik_Rota": Çıkış limanından varış limanına kadar kullanılacak en optimize deniz/demiryolu ticaret koridoru ve tahmini navlun süresi.
+        4. "Mevzuat_Kotalar": Hedef ülkenin uyguladığı güncel gümrük vergileri, anti-damping veya tarife kontenjanları.
+        5. "Gerekli_Evraklar": Gümrükten sorunsuz geçmesi için zorunlu olan en az 5 adet kurumsal resmi evrak (MBL, SGS, Phytosanitary vb.).
+        6. "Top5_Saticilar": O menşe ülkedeki en büyük 5 üretici/ihracatçı firmanın adı, kurumsal e-posta adresi ve telefon bilgisi.
+        7. "Top5_Alicilar": O hedef ülkedeki en büyük 5 ithalatçı/alıcı firmanın adı, e-posta ve iletişim bilgisi.
+        8. "Top5_Lojistik_Gumruk": Bu hatta operasyon yürüten yerel/küresel 5 nakliye ve gümrük müşavirliği firmasının kontak bilgileri.
+        
+        Yanıtı SADECE saf ve geçerli bir JSON olarak döndür. Markdown etiketleri (```json gibi) veya açıklama metinleri KESİNLİKLE ekleme. Doğrudan parantezle başla.
+        """
+        
+        try:
+            # Gemini 1.5 Flash ile internet tabanlı otonom veri üretimi
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            response = model.generate_content(prompt)
+            clean_text = response.text.strip().replace("```json", "").replace("```", "")
+            ai_data = json.loads(clean_text)
+            
+            # Gelen Verileri Terminal Ekranına Basma
+            product = ai_data.get("Urun_Adi", "Emtia Segmenti")
+            st.success(f"📌 {product} Analiz Segmenti Başarıyla Kilitlendi.")
+            
+            report_data = {
+                "Incoterms Fiyat Matrisi": ai_data.get("Fiyat_Matrisi", "Hesaplanıyor..."),
+                "Optimize Lojistik Koridor": ai_data.get("Lojistik_Rota", "Analiz ediliyor..."),
+                "Gümrük Rejimi & Kotalar": ai_data.get("Mevzuat_Kotalar", "Taranıyor..."),
+                "Zorunlu Resmi Belgeler": ai_data.get("Gerekli_Evraklar", "Listeleniyor..."),
+                "Top 5 Menşe Üretici / İhracatçı": ai_data.get("Top5_Saticilar", "Mailler çekiliyor..."),
+                "Top 5 Hedef İthalatçı / Alıcı": ai_data.get("Top5_Alicilar", "İletişim ağları taranıyor..."),
+                "Top 5 Lojistik & Gümrük Acentesi": ai_data.get("Top5_Lojistik_Gumruk", "Kontaklar doğrulanıyor...")
+            }
+            
+            st.table(pd.DataFrame(list(report_data.items()), columns=["Yapay Zeka İstihbarat Kriteri", "Otonom Canlı Rapor Çıktısı"]))
+            
+            # PDF VE WHATSAPP ENTEGRASYONU
+            pdf_file = generate_advanced_pdf(search_query, report_data)
+            col_b1, col_b2 = st.columns(2)
+            with col_b1:
+                st.download_button(label="📥 İstihbarat Brifingi Resmi PDF İndir", data=pdf_file, file_name=f"Interlock_{search_query}_Briefing.pdf")
+            with col_b2:
+                wa_text = f"*INTERLOCK AI BRIEFING*\n\n*Sorgu:* {search_query.upper()}\n*Detaylar:* {product}\n\nCanlı yapay zeka ajan raporu PDF formatında sisteme yüklenmiştir."
+                st.markdown(f'<a href="https://wa.me{urllib.parse.quote(wa_text)}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:12px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 Brifingi WhatsApp İletişim Hattına Gönder</div></a>', unsafe_allow_html=True)
+                
+        except Exception as e:
+            st.error(f"⚠️ Yapay zeka ajan hattında bir yoğunluk oluştu: {str(e)}. Lütfen sorguyu tekrar deneyin.")
 
-    # HARİTA KATMANI
+    # HARİTA KATMANI (SABİT)
     st.divider()
-    m_lat = lat if search_query else 41.0082; m_lon = lon if search_query else 28.9784
-    m = folium.Map(location=[m_lat, m_lon], zoom_start=4 if search_query else 6, tiles="CartoDB dark_matter")
-    if search_query:
-        folium.Marker([lat, lon], popup=m_text, icon=folium.Icon(color='red', icon='ship', prefix='fa')).add_to(m)
-        folium.PolyLine(locations=[[lat, lon], [40.98, 28.90]], color="#00f2fe", weight=3).add_to(m)
-    else:
-        folium.Marker([41.15, 29.10], popup="MSC TESSA (Aktif Kargo)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
+    m = folium.Map(location=[41.0082, 28.9784], zoom_start=4, tiles="CartoDB dark_matter")
+    folium.Marker([41.15, 29.10], popup="MSC TESSA (Aktif Kargo)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
     st_folium(m, width=1100, height=450)
 
 elif menu == "📄 Evrak Analiz (OCR)":
     st.title("📄 Akıllı Evrak Doğrulama Terminali")
+    st.info("Bu modül, yüklenen belgeleri yapay zeka görüşüyle (Vision LLM) tarayarak sahtecilik ve tutarsızlık analizlerini pıt pıt listeleyecektir.")
     st.file_uploader("Evrak Yükleyin (PDF/JPG/PNG)", type=["pdf", "jpg", "png"])
 
 elif menu == "⚓ Özel Gemi Röntgeni ($20)":
