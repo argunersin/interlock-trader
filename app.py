@@ -146,8 +146,8 @@ if menu == "🚀 Otonom İstihbarat Ajanı":
         """
         
         try:
-            # Gemini 1.5 Flash ile internet tabanlı otonom veri üretimi
-            model = genai.GenerativeModel("gemini-1.5-flash")
+           # Google'ın en güncel hatasız modeliyle otonom veri üretimi 
+            model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content(prompt)
             clean_text = response.text.strip().replace("```json", "").replace("```", "")
             ai_data = json.loads(clean_text)
