@@ -8,11 +8,14 @@ from reportlab.pdfgen import canvas
 import io
 import urllib.parse
 import json
+import os
 
-# 🔑 GOOGLE GEMINI FREE TIER ZEKA ANAHTARINIZ SİSTEME KİLİTLENDİ
+# 🔒 GÜVENLİK ZIRHI: ŞİFRE KODUN İÇİNDEN KALDIRILDI, RENDER KASASINDAN OKUNUYOR
 import google.generativeai as genai
-GOOGLE_API_KEY = "AQ.Ab8RN6IS_Dxs2lm5nlvsR9c03s9V9EmWpFS3S86-e3nZE6TfJg"
-genai.configure(api_key=GOOGLE_API_KEY)
+if "GEMINI_API_KEY" in os.environ:
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+elif "google_api_key" in st.secrets:
+    genai.configure(api_key=st.secrets["google_api_key"])
 
 # 1. RETRO SİBER TERMİNAL GÖRSEL AYARLARI
 st.set_page_config(page_title="Interlock Global AI Terminal", layout="wide", page_icon="📟")
@@ -38,7 +41,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4</h2>", unsafe_allow_html=True)
-st.sidebar.caption("Yapay Zeka Ajanları Aktif")
+st.sidebar.caption("Zırhlı Yapay Zeka Sistemi Aktif")
 menu = st.sidebar.radio("İŞLEM MODÜLÜ", ["🚀 Otonom İstihbarat Ajanı", "📄 Evrak Analiz (OCR)", "⚓ Özel Gemi Röntgeni ($20)"])
 
 # HATASIZ SADELEŞTİRİLMİŞ PDF MOTORU
