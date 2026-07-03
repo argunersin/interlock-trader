@@ -9,8 +9,9 @@ import io
 import urllib.parse
 import json
 import os
+import time
 
-# 🔒 GÜVENLİK ZIRHI: ŞİFRE KODUN İÇİNDEN KALDIRILDI, RENDER KASASINDAN OKUNUYOR
+# 🔒 GÜVENLİK ZIRHI: RENDER KASASINDAN OKUMA
 import google.generativeai as genai
 if "GEMINI_API_KEY" in os.environ:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -22,16 +23,27 @@ st.set_page_config(page_title="Interlock Global AI Terminal", layout="wide", pag
 
 st.markdown("""
     <style>
+    [data-testid="stHeader"] { background: rgba(0,0,0,0) !important; color: transparent !important; }
+    .block-container { padding-top: 1rem !important; padding-bottom: 0rem !important; }
     .main, block-container, .stApp { background-color: #05070f !important; color: #00f2fe !important; }
+    
+    /* 📟 RETRO PIT PIT DÖNEN (SPLIT-FLAP) AĞIR ÇEKİM KUTU ANİMASYONU */
     .split-flap-card {
-        background: linear-gradient(180deg, #111524 49%, #05070f 50%, #111524 51%);
-        border: 2px solid #1f2937; border-radius: 8px; padding: 20px; text-align: center;
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.5); min-height: 140px;
+        background: linear-gradient(180deg, #131a30 49%, #05070f 50%, #131a30 51%);
+        border: 2px solid #1f2937; border-radius: 6px; padding: 20px; text-align: center;
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 6px 12px rgba(0,0,0,0.6); min-height: 130px;
         display: flex; flex-direction: column; justify-content: center;
+        animation: flapRotation 0.8s ease-in-out; /* 0.8 Saniye Ağır Çekim Takla Efekti */
+    }
+    @keyframes flapRotation {
+        0% { transform: rotateX(0deg); background-color: #131a30; }
+        50% { transform: rotateX(90deg); background-color: #090d1a; color: #0088cc; }
+        100% { transform: rotateX(0deg); background-color: #131a30; }
     }
     .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; }
-    .split-flap-value { font-family: 'Courier New', monospace; font-size: 30px; font-weight: bold; color: #00f2fe; text-shadow: 0 0 10px rgba(0,242,254,0.5); }
+    .split-flap-value { font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; color: #00f2fe; text-shadow: 0 0 10px rgba(0,242,254,0.4); }
     .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; }
+    
     .stTable, table, tr, td, th { background-color: #0b0f19 !important; color: #ffffff !important; font-family: 'Courier New', monospace !important; }
     th { color: #00f2fe !important; font-weight: bold !important; border-bottom: 2px solid #1f2937 !important; }
     td { border-bottom: 1px solid #1f2937 !important; padding: 12px !important; }
@@ -40,33 +52,69 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4</h2>", unsafe_allow_html=True)
-st.sidebar.caption("Zırhlı Yapay Zeka Sistemi Aktif")
-menu = st.sidebar.radio("İŞLEM MODÜLÜ", ["🚀 Otonom İstihbarat Ajanı", "📄 Evrak Analiz (OCR)", "⚓ Özel Gemi Röntgeni ($20)"])
+# SOL MENÜ VE DİL SEÇİM SİHRİ
+st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4.2</h2>", unsafe_allow_html=True)
+lang = st.sidebar.selectbox("🌐 LANGUAGE / DİL:", ["English", "Türkçe"])
 
-# HATASIZ SADELEŞTİRİLMİŞ PDF MOTORU
-def generate_advanced_pdf(query, data_dict):
+if lang == "Türkçe":
+    menu_label = "İŞLEM MODÜLÜ"
+    mod1 = "🚀 Otonom İstihbarat Ajanı"
+    mod2 = "📄 Evrak Analiz (OCR)"
+    mod3 = "⚓ Özel Gemi Röntgeni ($20)"
+    komut = "🛠️ Kategori Kumandası (Mekanik Çentik Ayarı)"
+else:
+    menu_label = "OPERATION MODULE"
+    mod1 = "🚀 Autonomous AI Agent"
+    mod2 = "📄 Document Analysis (OCR)"
+    mod3 = "⚓ Custom Vessel X-Ray ($20)"
+    komut = "🛠️ Category Control (Mechanical Flap Setting)"
+
+menu = st.sidebar.radio(menu_label, [mod1, mod2, mod3])
+
+# PREMIUM PDF ÜRETİM MOTORU ($19.99 SATIŞ İÇİN BÜYÜK VERİLER BURAYA GÖMÜLÜYOR)
+def generate_advanced_pdf(query, ai_data, is_tr):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, 750, "INTERLOCK GLOBAL - ULUSLARARASI TICARET ISTIHBARATI")
+    p.drawString(50, 750, "INTERLOCK GLOBAL - PREMIUM INTELLIGENCE BRIEFING")
     p.setFont("Helvetica", 10)
-    p.drawString(50, 735, f"Analiz Edilen Rota: {query.upper()}")
+    p.drawString(50, 735, f"Target Route / Analiz Koridoru: {query.upper()}")
     y = 700
-    for key, value in data_dict.items():
-        p.setFont("Helvetica-Bold", 10)
-        p.drawString(50, y, f"{key}:")
-        p.setFont("Helvetica", 10)
-        p.drawString(200, y, str(value)[:80])
+    sections = [
+        ("COMMODITY & HS CODE", "Urun_Adi"),
+        ("INCOTERMS PRICE MATRIX", "Fiyat_Matrisi"),
+        ("LOGISTICS & TRADE ROUTE", "Lojistik_Rota"),
+        ("CUSTOMS REGIME & TARIFFS", "Mevzuat_Kotalar"),
+        ("REQUIRED OFFICIAL DOCUMENTS", "Gerekli_Evraklar"),
+        ("TOP 5 MANUFACTURERS / SUPPLIERS", "Top5_Saticilar"),
+        ("TOP 5 KEY BUYERS / IMPORTERS", "Top5_Alicilar"),
+        ("TOP 5 LOCAL LOGISTICS & CUSTOMS AGENTS", "Top5_Lojistik_Gumruk")
+    ]
+    for title, key in sections:
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(50, y, f"■ {title}")
+        y -= 15
+        p.setFont("Helvetica", 9)
+        val = str(ai_data.get(key, ""))
+        words = val.split()
+        line = ""
+        for word in words:
+            if len(line) + len(word) < 85:
+                line += " " + word
+            else:
+                p.drawString(60, y, line)
+                y -= 12
+                line = word
+        p.drawString(60, y, line)
         y -= 25
     p.showPage()
     p.save()
     buffer.seek(0)
     return buffer
 # MODÜL 1: CANLI RETRO BORSA VE İSTİHBARAT
-if menu == "🚀 Otonom İstihbarat Ajanı":
+if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     st.markdown("<h1 style='color: #00f2fe;'>📟 INTERLOCK GLOBAL REAL-TIME RADAR</h1>", unsafe_allow_html=True)
-    st.caption("Otonom veri akışlı mekanik split-flap model emtia fiyat göstergeleri")
+    st.caption("Autonomous data streaming with slow-motion mechanical split-flap displays" if lang == "English" else "Otonom veri akışlı ve ağır çekim mekanik split-flap model fiyat göstergeleri")
     
     # 2026 CANLI VERİ ÇEKİM MOTORU
     try:
@@ -78,14 +126,19 @@ if menu == "🚀 Otonom İstihbarat Ajanı":
     except:
         ali_p=3266.50; cu_p=9120.00; sugar_p=329.72; wheat_p=245.00; oil_p=71.38
 
-    # 📻 MEKANİK ÇENTİK KONTROLÜ
-    st.subheader("🛠️ Kategori Kumandası (Mekanik Çentik Ayarı)")
-    col_sel1, col_sel2 = st.columns(2)
-    with col_sel1:
-        metal_select = st.selectbox("⚙️ LME METALLER GRUBU:", ["Alüminyum (Külçe P1020)", "Bakır Katot (Grade A)", "İnşaat Demiri (Rebar)", "HMS 1/2 Demir Hurdası"])
-    with col_sel2:
-        gida_select = st.selectbox("🌾 ENDÜSTRİYEL GIDA GRUBU:", ["Beyaz Şeker (ICUMSA 45)", "Ekmeklik Buğday", "Sarı Mısır", "Ham Ayçiçek Yağı"])
+    # 📻 MEKANİK KUMANDA: ÜSTTEKİ ÇİRKİN KUTULAR GİTTİ, YAN YANA KUMANDA GELDİ
+    st.write("")
+    col_ctrl1, col_ctrl2 = st.columns(2)
+    with col_ctrl1:
+        m_label = "SELECT METAL / METAL ÇENTİĞİ:" if lang == "English" else "⚙️ METAL SEÇİM ÇENTİĞİ:"
+        metal_select = st.radio(m_label, ["Alüminyum (Külçe P1020)", "Bakır Katot (Grade A)", "İnşaat Demiri (Rebar)", "HMS 1/2 Demir Hurdası"], horizontal=True)
+    with col_ctrl2:
+        g_label = "SELECT AGRI / GIDA ÇENTİĞİ:" if lang == "English" else "🌾 GIDA SEÇİM ÇENTİĞİ:"
+        gida_select = st.radio(g_label, ["Beyaz Şeker (ICUMSA 45)", "Ekmeklik Buğday", "Sarı Mısır", "Ham Ayçiçek Yağı"], horizontal=True)
         
+    # Ağır çekim animasyonu tetiklemek için minik bir kod uykusu
+    time.sleep(0.4)
+
     # PIT PIT ATAN 6 BÜYÜK RETRO LEVHA YERLEŞİMİ
     st.write("")
     c_b1, c_b2, c_b3 = st.columns(3)
@@ -120,14 +173,20 @@ if menu == "🚀 Otonom İstihbarat Ajanı":
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
     with c_b6:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
-    # 🧠 OTONOM YAPAY ZEKA AJANI VE DERİN RAPORLAMA KATMANI (ACCIO MODELİ)
+    # 🧠 ÜRETKEN ZEKA, ENTER BUTONU VE 19.99 DOLARLIK PAYWALL SİMHULASYONU
     st.divider()
-    search_query = st.text_input("Gelişmiş Yapay Zeka İstihbarat Terminali (Emtia ve Ülkeleri Yazın):", placeholder="Örn: irmik kazakistan - endonezya veya aluminyum rusya - türkiye")
+    search_placeholder = "e.g., sugar brazil - turkey" if lang == "English" else "Örn: şeker brezilya - türkiye"
+    search_label = "Advanced AI Intelligence Search:" if lang == "English" else "Gelişmiş Yapay Zeka İstihbarat Arama Motoru:"
     
-    if search_query:
-        st.info("📟 Interlock Otonom Ajanları internete çıkıyor, küresel veri ağları, gümrük kotaları ve B2B platformları taranıyor... Lütfen bekleyin (3-5 sn)...")
+    # Kodu dondurmayan, Enter basılınca veya butona tıklanınca çalışan form yapısı
+    with st.form(key="ai_search_form"):
+        search_query = st.text_input(search_label, placeholder=search_placeholder)
+        submit_btn_label = "EXECUTE SEARCH (ENTER)" if lang == "English" else "İSTİHBARATI BAŞLAT (ENTER)"
+        submit_button = st.form_submit_button(label=submit_btn_label)
+    
+    if submit_button and search_query:
+        st.info("📟 Interlock Accio AI Agents exploring global trade networks... Please wait..." if lang == "English" else "📟 Interlock Otonom Ajanları küresel veri ağlarını tarıyor... Lütfen bekleyin...")
         
-        # GEMINI UYANDIRMA VE YAPAY ZEKA TALİMAT MATRİSİ
         prompt = f"""
         Sen uluslararası bir emtia brokerlığı yapay zeka ajanısın (Interlock Accio Modeli).
         Kullanıcı şu sorguyu yaptı: '{search_query}'.
@@ -146,39 +205,52 @@ if menu == "🚀 Otonom İstihbarat Ajanı":
         """
         
         try:
-           # Google'ın en güncel hatasız modeliyle otonom veri üretimi 
             model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content(prompt)
             clean_text = response.text.strip().replace("```json", "").replace("```", "")
             ai_data = json.loads(clean_text)
             
-            # Gelen Verileri Terminal Ekranına Basma
             product = ai_data.get("Urun_Adi", "Emtia Segmenti")
-            st.success(f"📌 {product} Analiz Segmenti Başarıyla Kilitlendi.")
+            st.success(f"📌 {product} - AI Target Locked.")
             
-            report_data = {
-                "Incoterms Fiyat Matrisi": ai_data.get("Fiyat_Matrisi", "Hesaplanıyor..."),
-                "Optimize Lojistik Koridor": ai_data.get("Lojistik_Rota", "Analiz ediliyor..."),
-                "Gümrük Rejimi & Kotalar": ai_data.get("Mevzuat_Kotalar", "Taranıyor..."),
-                "Zorunlu Resmi Belgeler": ai_data.get("Gerekli_Evraklar", "Listeleniyor..."),
-                "Top 5 Menşe Üretici / İhracatçı": ai_data.get("Top5_Saticilar", "Mailler çekiliyor..."),
-                "Top 5 Hedef İthalatçı / Alıcı": ai_data.get("Top5_Alicilar", "İletişim ağları taranıyor..."),
-                "Top 5 Lojistik & Gümrük Acentesi": ai_data.get("Top5_Lojistik_Gumruk", "Kontaklar doğrulanıyor...")
+            # 📋 EKRANI JİLET GİBİ SADE TUTAN ÖZET KARATAHTA MATRİSİ
+            summary_tr = {
+                "Analiz Edilen Emtia": product,
+                "Lojistik Güzergah Özeti": ai_data.get("Lojistik_Rota", "")[:130] + "...",
+                "Gümrük & Kota Özeti": ai_data.get("Mevzuat_Kotalar", "")[:130] + "...",
+                "Kilitli Premium Bilgiler": "🔓 5 Adet Canlı Satıcı Maili, 5 Adet İthalatçı Maili, Tam EXW/FOB/CIF/DDP Maliyet Hesaplamaları ve Yerel Gümrükçü Kontakları Ücretli PDF Raporunun İçine Kilitlenmiştir."
+            }
+            summary_en = {
+                "Analyzed Commodity": product,
+                "Logistics Route Summary": ai_data.get("Lojistik_Rota", "")[:130] + "...",
+                "Customs & Tariff Summary": ai_data.get("Mevzuat_Kotalar", "")[:130] + "...",
+                "Locked Premium Data": "🔓 5 Live Supplier Emails, 5 Key Importer Emails, Complete EXW/FOB/CIF/DDP Cost Matrix, and Local Customs Agents are LOCKED inside the Premium PDF Report."
             }
             
-            st.table(pd.DataFrame(list(report_data.items()), columns=["Yapay Zeka İstihbarat Kriteri", "Otonom Canlı Rapor Çıktısı"]))
+            display_data = summary_tr if lang == "Türkçe" else summary_en
+            st.table(pd.DataFrame(list(display_data.items()), columns=["Kriter / Milestone", "Terminal Dashboard"]))
             
-            # PDF VE WHATSAPP ENTEGRASYONU
-            pdf_file = generate_advanced_pdf(search_query, report_data)
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                st.download_button(label="📥 İstihbarat Brifingi Resmi PDF İndir", data=pdf_file, file_name=f"Interlock_{search_query}_Briefing.pdf")
-            with col_b2:
-                wa_text = f"*INTERLOCK AI BRIEFING*\n\n*Sorgu:* {search_query.upper()}\n*Detaylar:* {product}\n\nCanlı yapay zeka ajan raporu PDF formatında sisteme yüklenmiştir."
-                st.markdown(f'<a href="https://wa.me{urllib.parse.quote(wa_text)}" target="_blank"><div style="background-color:#25D366;color:white;text-align:center;padding:12px;border-radius:5px;font-weight:bold;cursor:pointer;">📱 Brifingi WhatsApp İletişim Hattına Gönder</div></a>', unsafe_allow_html=True)
+            # 💳 $19.99'LIK PARALI PREMIUM PDF SATIŞ PANELİ (STRIPE SİMÜLASYONU)
+            st.write("")
+            pay_desc = "5 adet gerçek üretici mailini, 5 adet alıcı telefon/kontak bilgisini ve tam DDP maliyet kırılımlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier emails, 5 buyer phone/mails, and complete DDP cost breakdowns instantly."
+            
+            st.markdown(f"""
+                <div style="background-color: #0b0f19; padding: 25px; border-radius: 8px; border: 2px dashed #d4af37; text-align:center; margin-top:20px;">
+                    <h3 style="color:#d4af37; font-family:'Courier New', monospace;">🪙 PREMIUM REPORT OVERVIEW ($19.99)</h3>
+                    <p style="color: #cbd5e1; font-size:13px; margin-bottom:15px; font-family:'Courier New', monospace;">{pay_desc}</p>
+                    <div style="display:inline-block; padding:12px 25px; background-color:#d4af37; color:#0e1c36; border-radius:5px; font-weight:bold; cursor:pointer; font-family:'Courier New', monospace; box-shadow: 0 0 15px rgba(212,175,55,0.4);">
+                        Stripe / Credit Card Secure Pay ($19.99)
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # SİMÜLASYON İÇİN GEÇİCİ ÜCRETSİZ İNDİRME BUTONU (İŞ MODELİNİ GÖSTERMEK İÇİN)
+            st.write("")
+            pdf_file = generate_advanced_pdf(search_query, ai_data, lang == "Türkçe")
+            st.download_button(label="🔑 [SIMULATION] Download Premium PDF Report", data=pdf_file, file_name=f"Interlock_{search_query}_Premium.pdf")
                 
         except Exception as e:
-            st.error(f"⚠️ Yapay zeka ajan hattında bir yoğunluk oluştu: {str(e)}. Lütfen sorguyu tekrar deneyin.")
+            st.error(f"⚠️ Connection Timeout: {str(e)}")
 
     # HARİTA KATMANI (SABİT)
     st.divider()
@@ -186,13 +258,12 @@ if menu == "🚀 Otonom İstihbarat Ajanı":
     folium.Marker([41.15, 29.10], popup="MSC TESSA (Aktif Kargo)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
     st_folium(m, width=1100, height=450)
 
-elif menu == "📄 Evrak Analiz (OCR)":
-    st.title("📄 Akıllı Evrak Doğrulama Terminali")
-    st.info("Bu modül, yüklenen belgeleri yapay zeka görüşüyle (Vision LLM) tarayarak sahtecilik ve tutarsızlık analizlerini pıt pıt listeleyecektir.")
-    st.file_uploader("Evrak Yükleyin (PDF/JPG/PNG)", type=["pdf", "jpg", "png"])
+elif menu in [mod2, "📄 Evrak Analiz (OCR)", "📄 Document Analysis (OCR)"]:
+    st.title("📄 Akıllı Evrak Doğrulama Terminali" if lang == "Türkçe" else "📄 Smart Document Verification Terminal")
+    st.file_uploader("Upload Document (PDF/JPG/PNG)", type=["pdf", "jpg", "png"])
 
-elif menu == "⚓ Özel Gemi Röntgeni ($20)":
-    st.title("⚓ Özel Gemi Röntgeni & Cargo Manifest Detayları")
-    ship_imo = st.text_input("Gemi IMO Numarası Girin:", placeholder="Örn: 9930038")
+elif menu in [mod3, "⚓ Özel Gemi Röntgeni ($20)", "⚓ Custom Vessel X-Ray ($20)"]:
+    st.title("⚓ Özel Gemi Röntgeni & Cargo Manifest" if lang == "Türkçe" else "⚓ Custom Vessel X-Ray & Cargo Manifest")
+    ship_imo = st.text_input("IMO Number / Gemi IMO Girin:", placeholder="Örn: 9930038")
     if ship_imo:
         st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><p style="color: #cbd5e1; font-size:14px; margin-bottom:15px;">Bu sorgu için hesabınızdan <b>$20.00 USD</b> düşülecektir.</p><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
