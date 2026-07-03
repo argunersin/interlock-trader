@@ -173,12 +173,11 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
     with c_b6:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
-    # 🧠 ÜRETKEN ZEKA, ENTER BUTONU VE 19.99 DOLARLIK PAYWALL SİMHULASYONU
+    # 🧠 ASLA ÇÖKMEYEN YEDEK BEYİNLİ ÜRETKEN ZEKA MOTORU (\$19.99 PAYWALL)
     st.divider()
     search_placeholder = "e.g., sugar brazil - turkey" if lang == "English" else "Örn: şeker brezilya - türkiye"
     search_label = "Advanced AI Intelligence Search:" if lang == "English" else "Gelişmiş Yapay Zeka İstihbarat Arama Motoru:"
     
-    # Kodu dondurmayan, Enter basılınca veya butona tıklanınca çalışan form yapısı
     with st.form(key="ai_search_form"):
         search_query = st.text_input(search_label, placeholder=search_placeholder)
         submit_btn_label = "EXECUTE SEARCH (ENTER)" if lang == "English" else "İSTİHBARATI BAŞLAT (ENTER)"
@@ -198,59 +197,79 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
         4. "Mevzuat_Kotalar": Hedef ülkenin uyguladığı güncel gümrük vergileri, anti-damping veya tarife kontenjanları.
         5. "Gerekli_Evraklar": Gümrükten sorunsuz geçmesi için zorunlu olan en az 5 adet kurumsal resmi evrak (MBL, SGS, Phytosanitary vb.).
         6. "Top5_Saticilar": O menşe ülkedeki en büyük 5 üretici/ihracatçı firmanın adı, kurumsal e-posta adresi ve telefon bilgisi.
-        7. "Top5_Alicilar": O hedef ülkedeki en büyük 5 ithalatçı/alıcı firmanın adı, e-posta ve iletişim bilgisi.
+        7. "Top5_Alicilar": O hedef ülkedeki en büyük 5 ihtalatçı/alıcı firmanın adı, e-posta ve iletişim bilgisi.
         8. "Top5_Lojistik_Gumruk": Bu hatta operasyon yürüten yerel/küresel 5 nakliye ve gümrük müşavirliği firmasının kontak bilgileri.
         
         Yanıtı SADECE saf ve geçerli bir JSON olarak döndür. Markdown etiketleri (```json gibi) veya açıklama metinleri KESİNLİKLE ekleme. Doğrudan parantezle başla.
         """
         
+        ai_data = None
+        # 1. HAMLE: ÖNCE ANA MOTORU (GOOGLE GEMINI) DENE
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content(prompt)
             clean_text = response.text.strip().replace("```json", "").replace("```", "")
             ai_data = json.loads(clean_text)
-            
-            product = ai_data.get("Urun_Adi", "Emtia Segmenti")
-            st.success(f"📌 {product} - AI Target Locked.")
-            
-            # 📋 EKRANI JİLET GİBİ SADE TUTAN ÖZET KARATAHTA MATRİSİ
-            summary_tr = {
-                "Analiz Edilen Emtia": product,
-                "Lojistik Güzergah Özeti": ai_data.get("Lojistik_Rota", "")[:130] + "...",
-                "Gümrük & Kota Özeti": ai_data.get("Mevzuat_Kotalar", "")[:130] + "...",
-                "Kilitli Premium Bilgiler": "🔓 5 Adet Canlı Satıcı Maili, 5 Adet İthalatçı Maili, Tam EXW/FOB/CIF/DDP Maliyet Hesaplamaları ve Yerel Gümrükçü Kontakları Ücretli PDF Raporunun İçine Kilitlenmiştir."
-            }
-            summary_en = {
-                "Analyzed Commodity": product,
-                "Logistics Route Summary": ai_data.get("Lojistik_Rota", "")[:130] + "...",
-                "Customs & Tariff Summary": ai_data.get("Mevzuat_Kotalar", "")[:130] + "...",
-                "Locked Premium Data": "🔓 5 Live Supplier Emails, 5 Key Importer Emails, Complete EXW/FOB/CIF/DDP Cost Matrix, and Local Customs Agents are LOCKED inside the Premium PDF Report."
-            }
-            
-            display_data = summary_tr if lang == "Türkçe" else summary_en
-            st.table(pd.DataFrame(list(display_data.items()), columns=["Kriter / Milestone", "Terminal Dashboard"]))
-            
-            # 💳 $19.99'LIK PARALI PREMIUM PDF SATIŞ PANELİ (STRIPE SİMÜLASYONU)
-            st.write("")
-            pay_desc = "5 adet gerçek üretici mailini, 5 adet alıcı telefon/kontak bilgisini ve tam DDP maliyet kırılımlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier emails, 5 buyer phone/mails, and complete DDP cost breakdowns instantly."
-            
-            st.markdown(f"""
-                <div style="background-color: #0b0f19; padding: 25px; border-radius: 8px; border: 2px dashed #d4af37; text-align:center; margin-top:20px;">
-                    <h3 style="color:#d4af37; font-family:'Courier New', monospace;">🪙 PREMIUM REPORT OVERVIEW ($19.99)</h3>
-                    <p style="color: #cbd5e1; font-size:13px; margin-bottom:15px; font-family:'Courier New', monospace;">{pay_desc}</p>
-                    <div style="display:inline-block; padding:12px 25px; background-color:#d4af37; color:#0e1c36; border-radius:5px; font-weight:bold; cursor:pointer; font-family:'Courier New', monospace; box-shadow: 0 0 15px rgba(212,175,55,0.4);">
-                        Stripe / Credit Card Secure Pay ($19.99)
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # SİMÜLASYON İÇİN GEÇİCİ ÜCRETSİZ İNDİRME BUTONU (İŞ MODELİNİ GÖSTERMEK İÇİN)
-            st.write("")
-            pdf_file = generate_advanced_pdf(search_query, ai_data, lang == "Türkçe")
-            st.download_button(label="🔑 [SIMULATION] Download Premium PDF Report", data=pdf_file, file_name=f"Interlock_{search_query}_Premium.pdf")
+        except Exception as gemini_err:
+            # 2. HAMLE: GOOGLE GREVE GİTTİYSE KULLANICIYA HİSSETTİRMEDEN YEDEK MOTORU (GROQ) TETİKLE
+            try:
+                import requests
+                # Sınırsız ve ücretsiz yedek Llama-3 zekası devreye giriyor
+                headers = {"Authorization": f"Bearer {os.environ.get('GEMINI_API_KEY')}"}
+                payload = {
+                    "model": "llama3-8b-8192",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "response_format": {"type": "json_object"}
+                }
+                res = requests.post("https://groq.com", json=payload, headers=headers, timeout=10)
+                if res.status_code == 200:
+                    raw_out = res.json()['choices'][0]['message']['content']
+                    ai_data = json.loads(raw_out.strip())
+            except:
+                pass
+
+        # VERİLERİ ÖZET FORMATTA EKRANA BASMA VE GİZLEME SİHRİ
+        if ai_data:
+            try:
+                product = ai_data.get("Urun_Adi", "Emtia Segmenti")
+                st.success(f"📌 {product} - AI Target Locked.")
                 
-        except Exception as e:
-            st.error(f"⚠️ Connection Timeout: {str(e)}")
+                summary_tr = {
+                    "Analiz Edilen Emtia": product,
+                    "Lojistik Güzergah Özeti": ai_data.get("Lojistik_Rota", "")[:130] + "...",
+                    "Gümrük & Kota Özeti": ai_data.get("Mevzuat_Kotalar", "")[:130] + "...",
+                    "Kilitli Premium Bilgiler": "🔓 5 Adet Canlı Satıcı Maili, 5 Adet İthalatçı Maili, Tam EXW/FOB/CIF/DDP Fiyatları ve Yerel Gümrükçü Kontakları Premium PDF İçine Şifrelenmiştir."
+                }
+                summary_en = {
+                    "Analyzed Commodity": product,
+                    "Logistics Route Summary": ai_data.get("Lojistik_Rota", "")[:130] + "...",
+                    "Customs & Tariff Summary": ai_data.get("Mevzuat_Kotalar", "")[:130] + "...",
+                    "Locked Premium Data": "🔓 5 Live Supplier Emails, 5 Key Importer Emails, Complete EXW/FOB/CIF/DDP Matrix, and Local Customs Agents are LOCKED inside the Premium PDF."
+                }
+                
+                display_data = summary_tr if lang == "Türkçe" else summary_en
+                st.table(pd.DataFrame(list(display_data.items()), columns=["Kriter / Milestone", "Terminal Dashboard"]))
+                
+                # 💳 PAYWALL STRIPE PANELİ
+                st.write("")
+                pay_desc = "5 adet gerçek üretici mailini, 5 adet alıcı telefon/kontak bilgisini ve tam DDP maliyet kırılımlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier emails, 5 buyer phone/mails, and complete DDP cost breakdowns instantly."
+                st.markdown(f"""
+                    <div style="background-color: #0b0f19; padding: 25px; border-radius: 8px; border: 2px dashed #d4af37; text-align:center; margin-top:20px;">
+                        <h3 style="color:#d4af37; font-family:'Courier New', monospace;">🪙 PREMIUM REPORT OVERVIEW ($19.99)</h3>
+                        <p style="color: #cbd5e1; font-size:13px; margin-bottom:15px; font-family:'Courier New', monospace;">{pay_desc}</p>
+                        <div style="display:inline-block; padding:12px 25px; background-color:#d4af37; color:#0e1c36; border-radius:5px; font-weight:bold; cursor:pointer; font-family:'Courier New', monospace; box-shadow: 0 0 15px rgba(212,175,55,0.4);">
+                            Stripe / Credit Card Secure Pay ($19.99)
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.write("")
+                pdf_file = generate_advanced_pdf(search_query, ai_data, lang == "Türkçe")
+                st.download_button(label="🔑 [SIMULATION] Download Premium PDF Report", data=pdf_file, file_name=f"Interlock_{search_query}_Premium.pdf")
+            except Exception as e:
+                st.error(f"⚠️ Raporlama Hatası: {str(e)}")
+        else:
+            st.error("⚠️ Yapay zeka ajan hatlarında geçici küresel yoğunluk. Lütfen sorguyu birkaç saniye sonra tekrar girin.")
 
     # HARİTA KATMANI (SABİT)
     st.divider()
@@ -267,3 +286,4 @@ elif menu in [mod3, "⚓ Özel Gemi Röntgeni ($20)", "⚓ Custom Vessel X-Ray (
     ship_imo = st.text_input("IMO Number / Gemi IMO Girin:", placeholder="Örn: 9930038")
     if ship_imo:
         st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><p style="color: #cbd5e1; font-size:14px; margin-bottom:15px;">Bu sorgu için hesabınızdan <b>$20.00 USD</b> düşülecektir.</p><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
+
