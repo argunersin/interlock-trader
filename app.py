@@ -25,7 +25,7 @@ st.markdown("""
     /* 🎨 VIP WALL STREET RENK MATRİSİ: PARLEMENT MAVİSİ ANA EKRAN */
     .main, block-container, .stApp { background-color: #0a1128 !important; color: #ffffff !important; }
     
-    /* 📟 SİMSİYAH MEKANİK FLAP KASALARI VE ORTADAN İKİYE BÖLÜNMÜŞ MEKANİK TASARIM */
+    /* 📟 SAF HTML/CSS MİLMETRİK MEKANİK FLAP TASARIMI VE ORTADAN BÖLÜNMÜŞ ÇİZGİ */
     .split-flap-card {
         background: #02040a !important; 
         border: 2px solid #1f2937; border-radius: 6px; padding: 20px; text-align: center;
@@ -33,16 +33,13 @@ st.markdown("""
         display: flex; flex-direction: column; justify-content: center; perspective: 1000px;
         position: relative;
     }
-    
-    /* 📏 TAM ORTADAN GEÇEN İNCE MEKANİK PLAKA ÇİZGİSİ (BÜTÜNLÜĞÜ BOZMAYAN İNCE YATAY ÇİZGİ) */
     .split-flap-card::after {
         content: ""; position: absolute; left: 0; top: 50%; width: 100%; height: 2px;
         background: #111625 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.8); z-index: 10;
     }
-    
     .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; z-index: 5; }
     
-    /* SAF BEYAZ NOSTALJİK RAKAMLAR VE 0.4 SN PIRRR DİK KART DÖNÜŞÜ */
+    /* 0.4 SN SAF BEYAZ PIRRR DİK KARTTakla ANİMASYONU */
     .split-flap-value { 
         font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; color: #ffffff !important; 
         text-shadow: 0 0 8px rgba(255,255,255,0.3); display: inline-block; transform-style: preserve-3d;
@@ -54,17 +51,20 @@ st.markdown("""
     }
     .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; z-index: 5; }
     
-    /* ⌨️ SİMSİYAH PARILDAYAN KURUMSAL NEON SORGULAMA BUTONU */
-    div.stButton > button:first-child {
+    /* ⌨️ BEYAZLIKTAN KURTARILAN SİMSIYAH PARILDAYAN RESMİ NEON S SORGULAMA BUTONU */
+    div.stButton > button:first-child, .stFormSubmitButton > button:first-child {
         background-color: #02040a !important; color: #ffffff !important;
         border: 2px solid #d4af37 !important; font-family: 'Courier New', monospace !important;
         font-weight: bold !important; font-size: 14px !important; padding: 12px 30px !important;
-        box-shadow: 0 0 10px rgba(212,175,55,0.2) !important; transition: all 0.3s ease !important;
-        width: 100% !important; margin-top: 10px !important;
+        box-shadow: 0 0 15px rgba(212,175,55,0.3) !important; transition: all 0.3s ease !important;
+        width: 100% !important; margin-top: 15px !important;
     }
-    div.stButton > button:first-child:hover {
-        box-shadow: 0 0 20px rgba(212,175,55,0.5) !important; background-color: #0b1124 !important; color: #d4af37 !important;
+    div.stButton > button:first-child:hover, .stFormSubmitButton > button:first-child:hover {
+        box-shadow: 0 0 25px rgba(212,175,55,0.6) !important; background-color: #0b1124 !important; color: #d4af37 !important;
     }
+    
+    /* MEKANİK DİKEY ÇENTİK OK BUTONLARI İÇİN ÖZEL SİBER GÖRÜNÜM */
+    .stButton > button { background-color: #02040a !important; color: #ffffff !important; border: 1px solid #1f2937 !important; }
     
     .stTable, table, tr, td, th { background-color: #04091a !important; color: #ffffff !important; font-family: 'Courier New', monospace !important; }
     th { color: #00f2fe !important; font-weight: bold !important; border-bottom: 2px solid #1f2937 !important; }
@@ -74,7 +74,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4.4</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4.5</h2>", unsafe_allow_html=True)
 lang = st.sidebar.selectbox("🌐 LANGUAGE / DİL:", ["English", "Türkçe"])
 
 if lang == "Türkçe":
@@ -119,7 +119,7 @@ def generate_advanced_pdf(query, ai_data, mode):
     buffer.seek(0)
     return buffer
 
-# BÖLGESEL HAFIZA: SADECE FLAPLERİ YENİLER, EKRANI ASLA KARARTMAZ VEYA KIRPMAZ
+# BÖLGESEL HAFIZA: SADECE RAKAMLARI YENİLER, SAYFAYI ASLA KARARTMAZ VEYA KIRPMAZ
 @st.fragment
 def show_mechanical_radar(lang):
     # ⚡ IŞIK HIZINDA SABİT BELLEK MOTORU (EKRAN KARARMASINI KÖKTEN YOK EDER)
@@ -128,7 +128,6 @@ def show_mechanical_radar(lang):
     metals_list = ["Alüminyum Külçe (P1020)", "Bakır Katot (Grade A)", "İnşaat Demiri (Rebar)", "HMS 1/2 Demir Hurdası", "Çinko", "Kurşun", "Nikel", "Kalay", "Külçe Altın (999.9)", "Külçe Gümüş"]
     agri_list = ["Beyaz Şeker (ICUMSA 45)", "Ham Kamış Şekeri", "Sızma Zeytinyağı", "Rafine Zeytinyağı", "Ham Ayçiçek Yağı", "Ham Soya Yağı", "Palm Yağı (RBD)", "Ekmeklik Buğday", "Makarnalık Durum Buğdayı", "Sarı Mısır", "Arpa", "Ham Pamuk", "Kakao Çekirdeği", "Kahve Çekirdeği"]
 
-    # Hafıza indekslerini sabitleme
     if "m_idx" not in st.session_state: st.session_state.m_idx = 0
     if "a_idx" not in st.session_state: st.session_state.a_idx = 0
 
@@ -138,11 +137,11 @@ def show_mechanical_radar(lang):
     with c_b1:
         col_btn1, col_card, col_btn2 = st.columns([1, 4, 1])
         with col_btn1:
-            st.write("")
+            st.write(""); st.write("")
             if st.button("▲", key="m_up"):
                 st.session_state.m_idx = (st.session_state.m_idx - 1) % len(metals_list)
         with col_btn2:
-            st.write("")
+            st.write(""); st.write("")
             if st.button("▼", key="m_down"):
                 st.session_state.m_idx = (st.session_state.m_idx + 1) % len(metals_list)
         with col_card:
@@ -157,11 +156,11 @@ def show_mechanical_radar(lang):
     with c_b2:
         col_abtn1, col_acard, col_abtn2 = st.columns([1, 4, 1])
         with col_abtn1:
-            st.write("")
+            st.write(""); st.write("")
             if st.button("▲", key="a_up"):
                 st.session_state.a_idx = (st.session_state.a_idx - 1) % len(agri_list)
         with col_abtn2:
-            st.write("")
+            st.write(""); st.write("")
             if st.button("▼", key="a_down"):
                 st.session_state.a_idx = (st.session_state.a_idx + 1) % len(agri_list)
         with col_acard:
@@ -212,18 +211,23 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
         Sen uluslararası bir emtia brokerlığı yapay zeka ajanısın (Interlock Accio Modeli).
         Kullanıcı '{search_mode}' modunu seçti ve şu sorguyu yaptı: '{search_query}'.
         Eğer mod Nokta Atışı ise iki ülke arasındaki rotaya, gümrük kotalarına, fiyat matrisine ve oradaki 5'er adet alıcı/satıcı firma mailine odaklan.
-        Eğer mod Küresel Makro ise, bu emtiayı dünyada en çok üreten ilk 5 ülkeyi, en çok ithal eden ilk 5 ülkeyi ve dünyadaki en büyük 5 küresel üretici dev tescilli tedarikçinin kurumsal maillerini bul.
+        Eğer mod Küresel Makro ise, bu emtiayı dünyada en çok üreten ilk 5 ülkeyi, en çok ithal eden ilk 5 ülkeyi bir dünyadaki en büyük 5 küresel üretici dev tescilli tedarikçinin kurumsal maillerini bul.
         Bize kesinlikle saf JSON formatında, parantezle başlayan bir yanıt döndür. Anahtarlar: "Urun_Adi", "Fiyat_Matrisi", "Lojistik_Rota", "Mevzuat_Kotalar", "Gerekli_Evraklar", "Top5_Saticilar", "Top5_Alicilar", "Top5_Lojistik_Gumruk".
         """
         
         ai_data = None
+        gemini_error_msg = ""
+        groq_error_msg = ""
+        
         # BİRİNCİ HAMLE: GOOGLE GEMINI (30 SN TIMEOUT)
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content(prompt)
             clean_text = response.text.strip().replace("```json", "").replace("```", "")
             ai_data = json.loads(clean_text)
-        except:
+        except Exception as e:
+            gemini_error_msg = str(e)
+            
             # İKİNCİ HAMLE: ASLA ÇÖKMEYEN RESMİ VE GARANTİLİ GROQ YEDEK BEYNİ
             try:
                 groq_key = os.environ.get("GROQ_API_KEY")
@@ -233,14 +237,22 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
                     res = requests.post("https://groq.com", json=payload, headers=headers, timeout=30)
                     if res.status_code == 200:
                         ai_data = json.loads(res.json()['choices']['message']['content'].strip())
-            except:
-                pass
+                    else:
+                        groq_error_msg = f"Groq HTTP {res.status_code}: {res.text}"
+                else:
+                    groq_error_msg = "GROQ_API_KEY Render kasasında bulunamadı!"
+            except Exception as e2:
+                groq_error_msg = str(e2)
+
+        # MERTÇE HATALARI BAŞA BASMA (ŞEFFAF ANALİZ)
+        if not ai_data:
+            st.error("❌ YAPAY ZEKA MOTORLARI LİMİT DUVARINA TAKILDI!")
+            st.code(f"Google Gemini Hatası: {gemini_error_msg}\nGroq Yedek Beyin Hatası: {groq_error_msg}", language="python")
 
         if ai_data:
             product = ai_data.get("Urun_Adi", "Emtia Segmenti")
             st.success(f"📌 {product} - AI Target Locked.")
             
-            # JİLET GİBİ 3 BELİRGİN KESKİN KURUMSAL BÖLÜM
             st.markdown(f"### 🛃 BÖLÜM 1: MEVZUAT & ANALİZ REJİMİ")
             st.write(ai_data.get("Mevzuat_Kotalar", "Analiz tamamlanıyor..."))
             
@@ -252,7 +264,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             
             # 📉 KÜRESEL EMRA FINANSAL GÖZ BOYAMA GRAFİĞİ
             st.markdown(f"#### 📈 GLOBAL {product.upper()} PRICE TREND (6-MONTH PROJECTION)")
-            chart_data = pd.DataFrame([100, 115, 110, 130, 125, 145], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+            chart_data = pd.DataFrame([100, 105, 98, 115, 120, 130], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
             st.line_chart(chart_data)
             
             # 💳 $19.99'LIK PAYWALL STRIPE PANELİ
@@ -271,13 +283,6 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             st.write("")
             pdf_file = generate_advanced_pdf(search_query, ai_data, search_mode)
             st.download_button(label="🔑 [SIMULATION] Download Premium PDF Report", data=pdf_file, file_name=f"Interlock_{search_query}_Premium.pdf")
-        else:
-            st.warning("📟 Küresel ticaret veri hatları taranıyor, sunucu optimizasyonu yapılıyor... Lütfen sorguyu tekrar girerek istihbarat hattını açık tutun.")
-
-    st.divider()
-    m = folium.Map(location=[41.0082, 28.9784], zoom_start=4, tiles="CartoDB dark_matter")
-    folium.Marker([41.15, 29.10], popup="MSC TESSA (Aktif Kargo)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
-    st_folium(m, width=1100, height=450)
 
 elif menu in [mod2, "📄 Evrak Analiz (OCR)", "📄 Document Analysis (OCR)"]:
     st.title("📄 Akıllı Evrak Doğrulama Terminali" if lang == "Türkçe" else "📄 Smart Document Verification Terminal")
@@ -286,5 +291,12 @@ elif menu in [mod2, "📄 Evrak Analiz (OCR)", "📄 Document Analysis (OCR)"]:
 elif menu in [mod3, "⚓ Özel Gemi Röntgeni ($20)", "⚓ Custom Vessel X-Ray ($20)"]:
     st.title("⚓ Özel Gemi Röntgeni & Cargo Manifest" if lang == "Türkçe" else "⚓ Custom Vessel X-Ray & Cargo Manifest")
     ship_imo = st.text_input("IMO Number / Gemi IMO Girin:", placeholder="Örn: 9930038")
+    
+    # 🗺️ HARİTA TAMAMEN BURAYA TAŞINDI! ANA EKRANI YORMUYOR
+    st.divider()
+    m = folium.Map(location=[41.0082, 28.9784], zoom_start=4, tiles="CartoDB dark_matter")
+    folium.Marker([41.15, 29.10], popup="MSC TESSA (Aktif Kargo)", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
+    st_folium(m, width=1100, height=450)
+    
     if ship_imo:
         st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><p style="color: #cbd5e1; font-size:14px; margin-bottom:15px;">Bu sorgu için hesabınızdan <b>$20.00 USD</b> düşülecektir.</p><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
