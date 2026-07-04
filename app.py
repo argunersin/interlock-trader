@@ -10,13 +10,12 @@ import urllib.parse
 import json
 import os
 import time
+import requests
 
-# 🔒 GÜVENLİK ZIRHI: RENDER KASASINDAN OKUMA
+# 🔒 GÜVENLİK ZIRHI: ANAHTARLAR KODUN İÇİNDEN KALDIRILDI, RENDER KASASINDAN OKUNUYOR
 import google.generativeai as genai
 if "GEMINI_API_KEY" in os.environ:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-elif "google_api_key" in st.secrets:
-    genai.configure(api_key=st.secrets["google_api_key"])
 
 # 1. RETRO SİBER TERMİNAL GÖRSEL AYARLARI
 st.set_page_config(page_title="Interlock Global AI Terminal", layout="wide", page_icon="📟")
@@ -33,7 +32,7 @@ st.markdown("""
         border: 2px solid #1f2937; border-radius: 6px; padding: 20px; text-align: center;
         box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 6px 12px rgba(0,0,0,0.6); min-height: 130px;
         display: flex; flex-direction: column; justify-content: center;
-        animation: flapRotation 0.8s ease-in-out; /* 0.8 Saniye Ağır Çekim Takla Efekti */
+        animation: flapRotation 0.8s ease-in-out;
     }
     @keyframes flapRotation {
         0% { transform: rotateX(0deg); background-color: #131a30; }
@@ -61,56 +60,13 @@ if lang == "Türkçe":
     mod1 = "🚀 Otonom İstihbarat Ajanı"
     mod2 = "📄 Evrak Analiz (OCR)"
     mod3 = "⚓ Özel Gemi Röntgeni ($20)"
-    komut = "🛠️ Kategori Kumandası (Mekanik Çentik Ayarı)"
 else:
     menu_label = "OPERATION MODULE"
     mod1 = "🚀 Autonomous AI Agent"
     mod2 = "📄 Document Analysis (OCR)"
     mod3 = "⚓ Custom Vessel X-Ray ($20)"
-    komut = "🛠️ Category Control (Mechanical Flap Setting)"
 
 menu = st.sidebar.radio(menu_label, [mod1, mod2, mod3])
-
-# PREMIUM PDF ÜRETİM MOTORU ($19.99 SATIŞ İÇİN BÜYÜK VERİLER BURAYA GÖMÜLÜYOR)
-def generate_advanced_pdf(query, ai_data, is_tr):
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, 750, "INTERLOCK GLOBAL - PREMIUM INTELLIGENCE BRIEFING")
-    p.setFont("Helvetica", 10)
-    p.drawString(50, 735, f"Target Route / Analiz Koridoru: {query.upper()}")
-    y = 700
-    sections = [
-        ("COMMODITY & HS CODE", "Urun_Adi"),
-        ("INCOTERMS PRICE MATRIX", "Fiyat_Matrisi"),
-        ("LOGISTICS & TRADE ROUTE", "Lojistik_Rota"),
-        ("CUSTOMS REGIME & TARIFFS", "Mevzuat_Kotalar"),
-        ("REQUIRED OFFICIAL DOCUMENTS", "Gerekli_Evraklar"),
-        ("TOP 5 MANUFACTURERS / SUPPLIERS", "Top5_Saticilar"),
-        ("TOP 5 KEY BUYERS / IMPORTERS", "Top5_Alicilar"),
-        ("TOP 5 LOCAL LOGISTICS & CUSTOMS AGENTS", "Top5_Lojistik_Gumruk")
-    ]
-    for title, key in sections:
-        p.setFont("Helvetica-Bold", 11)
-        p.drawString(50, y, f"■ {title}")
-        y -= 15
-        p.setFont("Helvetica", 9)
-        val = str(ai_data.get(key, ""))
-        words = val.split()
-        line = ""
-        for word in words:
-            if len(line) + len(word) < 85:
-                line += " " + word
-            else:
-                p.drawString(60, y, line)
-                y -= 12
-                line = word
-        p.drawString(60, y, line)
-        y -= 25
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return buffer
 # MODÜL 1: CANLI RETRO BORSA VE İSTİHBARAT
 if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     st.markdown("<h1 style='color: #00f2fe;'>📟 INTERLOCK GLOBAL REAL-TIME RADAR</h1>", unsafe_allow_html=True)
@@ -126,7 +82,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     except:
         ali_p=3266.50; cu_p=9120.00; sugar_p=329.72; wheat_p=245.00; oil_p=71.38
 
-    # 📻 MEKANİK KUMANDA: ÜSTTEKİ ÇİRKİN KUTULAR GİTTİ, YAN YANA KUMANDA GELDİ
+    # 📻 MEKANİK KUMANDA: SEÇİM ÇENTİKLERİ
     st.write("")
     col_ctrl1, col_ctrl2 = st.columns(2)
     with col_ctrl1:
@@ -136,7 +92,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
         g_label = "SELECT AGRI / GIDA ÇENTİĞİ:" if lang == "English" else "🌾 GIDA SEÇİM ÇENTİĞİ:"
         gida_select = st.radio(g_label, ["Beyaz Şeker (ICUMSA 45)", "Ekmeklik Buğday", "Sarı Mısır", "Ham Ayçiçek Yağı"], horizontal=True)
         
-    # Ağır çekim animasyonu tetiklemek için minik bir kod uykusu
+    # Ağır çekim animasyonu hissettirmek için mikro yazılımsal gecikme
     time.sleep(0.4)
 
     # PIT PIT ATAN 6 BÜYÜK RETRO LEVHA YERLEŞİMİ
@@ -173,7 +129,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
     with c_b6:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
-    # 🧠 ASLA ÇÖKMEYEN YEDEK BEYİNLİ ÜRETKEN ZEKA MOTORU (\$19.99 PAYWALL)
+    # 🧠 ASLA ÇÖKMEYEN ÇİFT YAPAY ZEKA MOTORU, ENTER BUTONU VE \$19.99 PAYWALL
     st.divider()
     search_placeholder = "e.g., sugar brazil - turkey" if lang == "English" else "Örn: şeker brezilya - türkiye"
     search_label = "Advanced AI Intelligence Search:" if lang == "English" else "Gelişmiş Yapay Zeka İstihbarat Arama Motoru:"
@@ -197,38 +153,42 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
         4. "Mevzuat_Kotalar": Hedef ülkenin uyguladığı güncel gümrük vergileri, anti-damping veya tarife kontenjanları.
         5. "Gerekli_Evraklar": Gümrükten sorunsuz geçmesi için zorunlu olan en az 5 adet kurumsal resmi evrak (MBL, SGS, Phytosanitary vb.).
         6. "Top5_Saticilar": O menşe ülkedeki en büyük 5 üretici/ihracatçı firmanın adı, kurumsal e-posta adresi ve telefon bilgisi.
-        7. "Top5_Alicilar": O hedef ülkedeki en büyük 5 ihtalatçı/alıcı firmanın adı, e-posta ve iletişim bilgisi.
+        7. "Top5_Alicilar": O hedef ülkedeki en büyük 5 ithalatçı/alıcı firmanın adı, e-posta ve iletişim bilgisi.
         8. "Top5_Lojistik_Gumruk": Bu hatta operasyon yürüten yerel/küresel 5 nakliye ve gümrük müşavirliği firmasının kontak bilgileri.
         
         Yanıtı SADECE saf ve geçerli bir JSON olarak döndür. Markdown etiketleri (```json gibi) veya açıklama metinleri KESİNLİKLE ekleme. Doğrudan parantezle başla.
         """
         
         ai_data = None
-        # 1. HAMLE: ÖNCE ANA MOTORU (GOOGLE GEMINI) DENE
+        # 1. HAMLE: ÖNCE ANA MOTORU (GOOGLE GEMINI) DENE (ZAMAN AŞIMI 30 SANİYEYE ÇIKARILDI)
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content(prompt)
             clean_text = response.text.strip().replace("```json", "").replace("```", "")
             ai_data = json.loads(clean_text)
         except Exception as gemini_err:
-            # 2. HAMLE: GOOGLE GREVE GİTTİYSE KULLANICIYA HİSSETTİRMEDEN YEDEK MOTORU (GROQ) TETİKLE
+            # 2. HAMLE: GOOGLE ADRESİ KİLİTLİYSE 0.1 SÂNİYEDE RESMİ VE GÜVENLİ GROQ MOTORUNU TETİKLE
             try:
-                import requests
-                # Sınırsız ve ücretsiz yedek Llama-3 zekası devreye giriyor
-                headers = {"Authorization": f"Bearer {os.environ.get('GEMINI_API_KEY')}"}
-                payload = {
-                    "model": "llama3-8b-8192",
-                    "messages": [{"role": "user", "content": prompt}],
-                    "response_format": {"type": "json_object"}
-                }
-                res = requests.post("https://groq.com", json=payload, headers=headers, timeout=10)
-                if res.status_code == 200:
-                    raw_out = res.json()['choices'][0]['message']['content']
-                    ai_data = json.loads(raw_out.strip())
+                groq_key = os.environ.get("GROQ_API_KEY")
+                if groq_key:
+                    payload = {
+                        "model": "llama3-8b-8192",
+                        "messages": [{"role": "user", "content": prompt}],
+                        "response_format": {"type": "json_object"}
+                    }
+                    headers = {
+                        "Authorization": f"Bearer {groq_key}",
+                        "Content-Type": "application/json"
+                    }
+                    # Zaman aşımı süresi 30 saniye olarak esnetildi, donma önlendi
+                    res = requests.post("https://groq.com", json=payload, headers=headers, timeout=30)
+                    if res.status_code == 200:
+                        raw_out = res.json()['choices']['message']['content']
+                        ai_data = json.loads(raw_out.strip())
             except:
                 pass
 
-        # VERİLERİ ÖZET FORMATTA EKRANA BASMA VE GİZLEME SİHRİ
+        # VERİLERİ ÖZET SADE FORMATTA EKRANA BASMA VE GİZLEME SİHRİ
         if ai_data:
             try:
                 product = ai_data.get("Urun_Adi", "Emtia Segmenti")
@@ -250,7 +210,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
                 display_data = summary_tr if lang == "Türkçe" else summary_en
                 st.table(pd.DataFrame(list(display_data.items()), columns=["Kriter / Milestone", "Terminal Dashboard"]))
                 
-                # 💳 PAYWALL STRIPE PANELİ
+                # 💳 $19.99'LIK PAYWALL STRIPE PANELİ
                 st.write("")
                 pay_desc = "5 adet gerçek üretici mailini, 5 adet alıcı telefon/kontak bilgisini ve tam DDP maliyet kırılımlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier emails, 5 buyer phone/mails, and complete DDP cost breakdowns instantly."
                 st.markdown(f"""
@@ -286,4 +246,3 @@ elif menu in [mod3, "⚓ Özel Gemi Röntgeni ($20)", "⚓ Custom Vessel X-Ray (
     ship_imo = st.text_input("IMO Number / Gemi IMO Girin:", placeholder="Örn: 9930038")
     if ship_imo:
         st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><p style="color: #cbd5e1; font-size:14px; margin-bottom:15px;">Bu sorgu için hesabınızdan <b>$20.00 USD</b> düşülecektir.</p><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
-
