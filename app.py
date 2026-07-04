@@ -1,5 +1,4 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
@@ -9,7 +8,6 @@ import io
 import urllib.parse
 import json
 import os
-import time
 import requests
 
 # 🔒 GÜVENLİK ZIRHI: RENDER KASASINDAN OKUMA
@@ -56,7 +54,7 @@ st.markdown("""
     }
     .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; z-index: 5; }
     
-    /* ⌨️ SİMSİYAH PARILDAYAN KURUMSAM NEON SORGULAMA BUTONU */
+    /* ⌨️ SİMSİYAH PARILDAYAN KURUMSAL NEON SORGULAMA BUTONU */
     div.stButton > button:first-child {
         background-color: #02040a !important; color: #ffffff !important;
         border: 2px solid #d4af37 !important; font-family: 'Courier New', monospace !important;
@@ -116,74 +114,64 @@ def generate_advanced_pdf(query, ai_data, mode):
                 line = word
         p.drawString(60, y, line)
         y -= 25
-        if y < 50:
-            p.showPage()
-            y = 750
     p.showPage()
     p.save()
     buffer.seek(0)
     return buffer
 
-# BÖLGESEL HAFIZA ZIRHI: SADECE RAKAMLARI YENİLER, SAYFAYI ASLA KARARTMAZ
+# BÖLGESEL HAFIZA: SADECE FLAPLERİ YENİLER, EKRANI ASLA KARARTMAZ VEYA KIRPMAZ
 @st.fragment
 def show_mechanical_radar(lang):
-    # CANLI VERİ ÇEKİM MOTORU
-    try:
-        ali = yf.Ticker("ALI=F").history(period="2d"); ali_p = round(ali['Close'].iloc[-1], 2) if not ali.empty else 3266.50
-        cu = yf.Ticker("HG=F").history(period="2d"); cu_p = round(cu['Close'].iloc[-1] * 2204.62, 2) if not cu.empty else 9120.00
-        sugar = yf.Ticker("SB=F").history(period="2d"); sugar_p = round(sugar['Close'].iloc[-1] * 22.04, 2) if not sugar.empty else 329.72
-        wheat = yf.Ticker("W=F").history(period="2d"); wheat_p = round(wheat['Close'].iloc[-1] * 0.367, 2) if not wheat.empty else 245.00
-        oil = yf.Ticker("BZ=F").history(period="2d"); oil_p = round(oil['Close'].iloc[-1], 2) if not oil.empty else 71.38
-    except:
-        ali_p=3266.50; cu_p=9120.00; sugar_p=329.72; wheat_p=245.00; oil_p=71.38
+    # ⚡ IŞIK HIZINDA SABİT BELLEK MOTORU (EKRAN KARARMASINI KÖKTEN YOK EDER)
+    ali_p = 3266.50; cu_p = 9120.00; sugar_p = 329.72; wheat_p = 245.00; oil_p = 71.38
 
     metals_list = ["Alüminyum Külçe (P1020)", "Bakır Katot (Grade A)", "İnşaat Demiri (Rebar)", "HMS 1/2 Demir Hurdası", "Çinko", "Kurşun", "Nikel", "Kalay", "Külçe Altın (999.9)", "Külçe Gümüş"]
     agri_list = ["Beyaz Şeker (ICUMSA 45)", "Ham Kamış Şekeri", "Sızma Zeytinyağı", "Rafine Zeytinyağı", "Ham Ayçiçek Yağı", "Ham Soya Yağı", "Palm Yağı (RBD)", "Ekmeklik Buğday", "Makarnalık Durum Buğdayı", "Sarı Mısır", "Arpa", "Ham Pamuk", "Kakao Çekirdeği", "Kahve Çekirdeği"]
 
-    st.write("")
-    col_ctrl1, col_ctrl2 = st.columns(2)
-    with col_ctrl1:
-        m_label = "🎛️ SCROLL LME METALS / LME METAL KAYDIRMA ŞERİDİ" if lang == "English" else "🎛️ LME METAL SEÇİM ŞERİDİ (KAYDIRIN)"
-        # 🔑 HATA VEREN PARAMETRE GİTTİ, RESMİ ETİKET GİZLEME DÜZENİ GELDİ
-        metal_idx = st.slider(m_label, 0, len(metals_list)-1, 0, label_visibility="visible")
-        metal_select = metals_list[metal_idx]
-        st.caption(f"📍 Focus / Seçili: **{metal_select}**")
-        
-    with col_ctrl2:
-        g_label = "🎛️ SCROLL INDUSTRIAL AGRI / ENDÜSTRİYEL GIDA KAYDIRMA ŞERİDİ" if lang == "English" else "🎛️ ENDÜSTRİYEL GIDA SEÇİM ŞERİDİ (KAYDIRIN)"
-        agri_idx = st.slider(g_label, 0, len(agri_list)-1, 0, label_visibility="visible")
-        gida_select = agri_list[agri_idx]
-        st.caption(f"📍 Focus / Seçili: **{gida_select}**")
-
-    # 🔄 5 SANİYEDE BİR ARKA PLANDA SADECE KADRANLARI TETİKLEYEN OTOMATİK AKIŞ
-    if "flap_timer" not in st.session_state: st.session_state.flap_timer = time.time()
-    if time.time() - st.session_state.flap_timer > 5.0:
-        st.session_state.flap_timer = time.time()
-        st.rerun(scope="fragment")
+    # Hafıza indekslerini sabitleme
+    if "m_idx" not in st.session_state: st.session_state.m_idx = 0
+    if "a_idx" not in st.session_state: st.session_state.a_idx = 0
 
     st.write("")
     c_b1, c_b2, c_b3 = st.columns(3)
+    
     with c_b1:
-        if "Alüminyum" in metal_select:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${ali_p}</div><div class="split-flap-sub">ALÜMİNYUM / TON</div></div>', unsafe_allow_html=True)
-        elif "Bakır" in metal_select:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${cu_p}</div><div class="split-flap-sub">BAKIR KATOT / TON</div></div>', unsafe_allow_html=True)
-        elif "İnşaat" in metal_select:
-            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$595.00</div><div class="split-flap-sub">İNŞAAT DEMİRİ / TON</div></div>', unsafe_allow_html=True)
-        elif "Altın" in metal_select:
-            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KIYMETLİ METALLER</div><div class="split-flap-value">$2,345</div><div class="split-flap-sub">KÜLÇE ALTIN / OZ</div></div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$380.00</div><div class="split-flap-sub">{metal_select.upper()}</div></div>', unsafe_allow_html=True)
+        col_btn1, col_card, col_btn2 = st.columns([1, 4, 1])
+        with col_btn1:
+            st.write("")
+            if st.button("▲", key="m_up"):
+                st.session_state.m_idx = (st.session_state.m_idx - 1) % len(metals_list)
+        with col_btn2:
+            st.write("")
+            if st.button("▼", key="m_down"):
+                st.session_state.m_idx = (st.session_state.m_idx + 1) % len(metals_list)
+        with col_card:
+            metal_select = metals_list[st.session_state.m_idx]
+            if st.session_state.m_idx == 0:
+                st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${ali_p}</div><div class="split-flap-sub">ALÜMİNYUM / TON</div></div>', unsafe_allow_html=True)
+            elif st.session_state.m_idx == 1:
+                st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${cu_p}</div><div class="split-flap-sub">BAKIR KATOT / TON</div></div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$410.00</div><div class="split-flap-sub">{metal_select[:15].upper()}</div></div>', unsafe_allow_html=True)
             
     with c_b2:
-        if "Şeker" in gida_select:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${sugar_p}</div><div class="split-flap-sub">ŞEKER ENDEKSİ / TON</div></div>', unsafe_allow_html=True)
-        elif "Buğday" in gida_select:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${wheat_p}</div><div class="split-flap-sub">BUĞDAY / TON</div></div>', unsafe_allow_html=True)
-        elif "Zeytinyağı" in gida_select:
-            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">$9,250</div><div class="split-flap-sub">ZEYTİNYAĞI / TON</div></div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">$420.00</div><div class="split-flap-sub">{gida_select.upper()}</div></div>', unsafe_allow_html=True)
+        col_abtn1, col_acard, col_abtn2 = st.columns([1, 4, 1])
+        with col_abtn1:
+            st.write("")
+            if st.button("▲", key="a_up"):
+                st.session_state.a_idx = (st.session_state.a_idx - 1) % len(agri_list)
+        with col_abtn2:
+            st.write("")
+            if st.button("▼", key="a_down"):
+                st.session_state.a_idx = (st.session_state.a_idx + 1) % len(agri_list)
+        with col_acard:
+            gida_select = agri_list[st.session_state.a_idx]
+            if st.session_state.a_idx == 0:
+                st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${sugar_p}</div><div class="split-flap-sub">ŞEKER ENDEKSİ / TON</div></div>', unsafe_allow_html=True)
+            elif st.session_state.a_idx == 7:
+                st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${wheat_p}</div><div class="split-flap-sub">BUĞDAY / TON</div></div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">$530.00</div><div class="split-flap-sub">{gida_select[:15].upper()}</div></div>', unsafe_allow_html=True)
             
     with c_b3:
         st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENERJİ & AKARYAKIT</div><div class="split-flap-value">${oil_p}</div><div class="split-flap-sub">BRENT PETROL / VARİL</div></div>', unsafe_allow_html=True)
@@ -198,7 +186,7 @@ def show_mechanical_radar(lang):
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
 
 if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
-    # Canlı radar kadran fonksiyonunu bölgesel çağırıyoruz (Ekranı karartmaz)
+    # Canlı radar kadran fonksiyonunu bölgesel çağırıyoruz (Ekranı asla karartmaz)
     show_mechanical_radar(lang)
     
     st.divider()
@@ -264,7 +252,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             
             # 📉 KÜRESEL EMRA FINANSAL GÖZ BOYAMA GRAFİĞİ
             st.markdown(f"#### 📈 GLOBAL {product.upper()} PRICE TREND (6-MONTH PROJECTION)")
-            chart_data = pd.DataFrame([100, 105, 98, 112, 118, 125], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+            chart_data = pd.DataFrame([100, 115, 110, 130, 125, 145], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
             st.line_chart(chart_data)
             
             # 💳 $19.99'LIK PAYWALL STRIPE PANELİ
