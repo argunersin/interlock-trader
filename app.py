@@ -56,7 +56,7 @@ st.markdown("""
     }
     .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; z-index: 5; }
     
-    /* ⌨️ SİMSİYAH PARILDAYAN KURUMSAL NEON SORGULAMA BUTONU */
+    /* ⌨️ SİMSİYAH PARILDAYAN KURUMSAM NEON SORGULAMA BUTONU */
     div.stButton > button:first-child {
         background-color: #02040a !important; color: #ffffff !important;
         border: 2px solid #d4af37 !important; font-family: 'Courier New', monospace !important;
@@ -91,6 +91,7 @@ else:
     mod3 = "⚓ Custom Vessel X-Ray ($20)"
 
 menu = st.sidebar.radio(menu_label, [mod1, mod2, mod3])
+
 def generate_advanced_pdf(query, ai_data, mode):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
@@ -123,7 +124,7 @@ def generate_advanced_pdf(query, ai_data, mode):
     buffer.seek(0)
     return buffer
 
-# BÖLGESEL HAFIZA KORUMASI: SADECE KADRANLARI YENİLER, EKRANI ASLA KARARTMAZ
+# BÖLGESEL HAFIZA ZIRHI: SADECE RAKAMLARI YENİLER, SAYFAYI ASLA KARARTMAZ
 @st.fragment
 def show_mechanical_radar(lang):
     # CANLI VERİ ÇEKİM MOTORU
@@ -143,13 +144,14 @@ def show_mechanical_radar(lang):
     col_ctrl1, col_ctrl2 = st.columns(2)
     with col_ctrl1:
         m_label = "🎛️ SCROLL LME METALS / LME METAL KAYDIRMA ŞERİDİ" if lang == "English" else "🎛️ LME METAL SEÇİM ŞERİDİ (KAYDIRIN)"
-        metal_idx = st.slider(m_label, 0, len(metals_list)-1, 0, show_value=False)
+        # 🔑 HATA VEREN PARAMETRE GİTTİ, RESMİ ETİKET GİZLEME DÜZENİ GELDİ
+        metal_idx = st.slider(m_label, 0, len(metals_list)-1, 0, label_visibility="visible")
         metal_select = metals_list[metal_idx]
         st.caption(f"📍 Focus / Seçili: **{metal_select}**")
         
     with col_ctrl2:
         g_label = "🎛️ SCROLL INDUSTRIAL AGRI / ENDÜSTRİYEL GIDA KAYDIRMA ŞERİDİ" if lang == "English" else "🎛️ ENDÜSTRİYEL GIDA SEÇİM ŞERİDİ (KAYDIRIN)"
-        agri_idx = st.slider(g_label, 0, len(agri_list)-1, 0, show_value=False)
+        agri_idx = st.slider(g_label, 0, len(agri_list)-1, 0, label_visibility="visible")
         gida_select = agri_list[agri_idx]
         st.caption(f"📍 Focus / Seçili: **{gida_select}**")
 
@@ -168,6 +170,8 @@ def show_mechanical_radar(lang):
             st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${cu_p}</div><div class="split-flap-sub">BAKIR KATOT / TON</div></div>', unsafe_allow_html=True)
         elif "İnşaat" in metal_select:
             st.markdown('<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$595.00</div><div class="split-flap-sub">İNŞAAT DEMİRİ / TON</div></div>', unsafe_allow_html=True)
+        elif "Altın" in metal_select:
+            st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KIYMETLİ METALLER</div><div class="split-flap-value">$2,345</div><div class="split-flap-sub">KÜLÇE ALTIN / OZ</div></div>', unsafe_allow_html=True)
         else:
             st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$380.00</div><div class="split-flap-sub">{metal_select.upper()}</div></div>', unsafe_allow_html=True)
             
@@ -192,6 +196,7 @@ def show_mechanical_radar(lang):
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
     with c_b6:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
+
 if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     # Canlı radar kadran fonksiyonunu bölgesel çağırıyoruz (Ekranı karartmaz)
     show_mechanical_radar(lang)
@@ -247,7 +252,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             product = ai_data.get("Urun_Adi", "Emtia Segmenti")
             st.success(f"📌 {product} - AI Target Locked.")
             
-            # JİLET GİBİ 3 BELİRGİN KESKİN KURUMSAL BÖLÜM (HATA KORUMALIDIR)
+            # JİLET GİBİ 3 BELİRGİN KESKİN KURUMSAL BÖLÜM
             st.markdown(f"### 🛃 BÖLÜM 1: MEVZUAT & ANALİZ REJİMİ")
             st.write(ai_data.get("Mevzuat_Kotalar", "Analiz tamamlanıyor..."))
             
@@ -257,9 +262,9 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             st.markdown(f"### 🔒 BÖLÜM 3: KİLİTLİ GİZLİ KASALAR & PROJEKSİYON")
             st.warning("🔓 5 adet tescilli üretici maili, 5 alıcı kontak numarası ve tam Incoterms DDP maliyet kırılımları holding kasasında kilitlenmiştir. Erişmek için aşağıdaki Premium Raporu indirin." if lang == "Türkçe" else "🔓 5 Verified supplier emails, 5 target buyer phone/mails, and complete DDP price sheets are locked inside the holding vault. Unlock below.")
             
-            # 📉 KÜRESEL EMRA FINANSAL GÖZ BOYAMA GRAFİĞİ (SAYFAYI SABİT TUTAR)
+            # 📉 KÜRESEL EMRA FINANSAL GÖZ BOYAMA GRAFİĞİ
             st.markdown(f"#### 📈 GLOBAL {product.upper()} PRICE TREND (6-MONTH PROJECTION)")
-            chart_data = pd.DataFrame([3100, 3150, 3080, 3220, 3290, 3350], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+            chart_data = pd.DataFrame([100, 105, 98, 112, 118, 125], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
             st.line_chart(chart_data)
             
             # 💳 $19.99'LIK PAYWALL STRIPE PANELİ
@@ -279,7 +284,6 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             pdf_file = generate_advanced_pdf(search_query, ai_data, search_mode)
             st.download_button(label="🔑 [SIMULATION] Download Premium PDF Report", data=pdf_file, file_name=f"Interlock_{search_query}_Premium.pdf")
         else:
-            # HATA KORUMA KALKANI: ÇİRKİN MESAJ YERİNE PROFESYONEL SİMÜLASYON BEKLEME EKRANI
             st.warning("📟 Küresel ticaret veri hatları taranıyor, sunucu optimizasyonu yapılıyor... Lütfen sorguyu tekrar girerek istihbarat hattını açık tutun.")
 
     st.divider()
