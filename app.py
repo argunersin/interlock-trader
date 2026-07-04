@@ -10,9 +10,8 @@ import urllib.parse
 import json
 import os
 import time
-import requests
 
-# 🔒 GÜVENLİK ZIRHI: ANAHTARLAR KODUN İÇİNDEN KALDIRILDI, RENDER KASASINDAN OKUNUYOR
+# 🔒 GÜVENLİK ZIRHI: RENDER KASASINDAN OKUMA
 import google.generativeai as genai
 if "GEMINI_API_KEY" in os.environ:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -26,21 +25,29 @@ st.markdown("""
     .block-container { padding-top: 1rem !important; padding-bottom: 0rem !important; }
     .main, block-container, .stApp { background-color: #05070f !important; color: #00f2fe !important; }
     
-    /* 📟 RETRO PIT PIT DÖNEN (SPLIT-FLAP) AĞIR ÇEKİM KUTU ANİMASYONU */
+    /* 📟 SAYFAYI KARARTMAYAN, SADECE RAKAMI PIRRR DİYE DÖNDÜREN 3D FLIP KUTULARI */
     .split-flap-card {
-        background: linear-gradient(180deg, #131a30 49%, #05070f 50%, #131a30 51%);
+        background: #0f1322;
         border: 2px solid #1f2937; border-radius: 6px; padding: 20px; text-align: center;
         box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 6px 12px rgba(0,0,0,0.6); min-height: 130px;
         display: flex; flex-direction: column; justify-content: center;
-        animation: flapRotation 0.8s ease-in-out;
-    }
-    @keyframes flapRotation {
-        0% { transform: rotateX(0deg); background-color: #131a30; }
-        50% { transform: rotateX(90deg); background-color: #090d1a; color: #0088cc; }
-        100% { transform: rotateX(0deg); background-color: #131a30; }
+        perspective: 1000px; /* 3D derinlik katmanı */
     }
     .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; }
-    .split-flap-value { font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; color: #00f2fe; text-shadow: 0 0 10px rgba(0,242,254,0.4); }
+    
+    /* Rakamların takla atma animasyonu (Pırrr efekti) */
+    .split-flap-value { 
+        font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; color: #00f2fe; 
+        text-shadow: 0 0 10px rgba(0,242,254,0.4);
+        display: inline-block;
+        transform-style: preserve-3d;
+        animation: pırrrRotation 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Hızlı döner şak diye durur */
+    }
+    @keyframes pırrrRotation {
+        0% { transform: rotateX(-90deg); opacity: 0.3; }
+        50% { transform: rotateX(90deg); opacity: 0.7; color: #d4af37; }
+        100% { transform: rotateX(0deg); opacity: 1; }
+    }
     .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; }
     
     .stTable, table, tr, td, th { background-color: #0b0f19 !important; color: #ffffff !important; font-family: 'Courier New', monospace !important; }
@@ -67,6 +74,47 @@ else:
     mod3 = "⚓ Custom Vessel X-Ray ($20)"
 
 menu = st.sidebar.radio(menu_label, [mod1, mod2, mod3])
+
+# PREMIUM PDF ÜRETİM MOTORU ($19.99 RAPOR İÇİN BÜYÜK VERİLER BURAYA GÖMÜLÜYOR)
+def generate_advanced_pdf(query, ai_data, is_tr):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, 750, "INTERLOCK GLOBAL - PREMIUM INTELLIGENCE BRIEFING")
+    p.setFont("Helvetica", 10)
+    p.drawString(50, 735, f"Target Route / Analiz Koridoru: {query.upper()}")
+    y = 700
+    sections = [
+        ("COMMODITY & HS CODE", "Urun_Adi"),
+        ("INCOTERMS PRICE MATRIX", "Fiyat_Matrisi"),
+        ("LOGISTICS & TRADE ROUTE", "Lojistik_Rota"),
+        ("CUSTOMS REGIME & TARIFFS", "Mevzuat_Kotalar"),
+        ("REQUIRED OFFICIAL DOCUMENTS", "Gerekli_Evraklar"),
+        ("TOP 5 MANUFACTURERS / SUPPLIERS", "Top5_Saticilar"),
+        ("TOP 5 KEY BUYERS / IMPORTERS", "Top5_Alicilar"),
+        ("TOP 5 LOCAL LOGISTICS & CUSTOMS AGENTS", "Top5_Lojistik_Gumruk")
+    ]
+    for title, key in sections:
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(50, y, f"■ {title}")
+        y -= 15
+        p.setFont("Helvetica", 9)
+        val = str(ai_data.get(key, ""))
+        words = val.split()
+        line = ""
+        for word in words:
+            if len(line) + len(word) < 85:
+                line += " " + word
+            else:
+                p.drawString(60, y, line)
+                y -= 12
+                line = word
+        p.drawString(60, y, line)
+        y -= 25
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return buffer
 # MODÜL 1: CANLI RETRO BORSA VE İSTİHBARAT
 if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     st.markdown("<h1 style='color: #00f2fe;'>📟 INTERLOCK GLOBAL REAL-TIME RADAR</h1>", unsafe_allow_html=True)
@@ -82,7 +130,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     except:
         ali_p=3266.50; cu_p=9120.00; sugar_p=329.72; wheat_p=245.00; oil_p=71.38
 
-    # 📻 MEKANİK KUMANDA: SEÇİM ÇENTİKLERİ
+    # 📻 MEKANİK KUMANDA: SEÇİM ÇENTİKLERİ (SAYFAYI YENİLERKEN EKRANI KARARTMAZ)
     st.write("")
     col_ctrl1, col_ctrl2 = st.columns(2)
     with col_ctrl1:
@@ -91,11 +139,8 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     with col_ctrl2:
         g_label = "SELECT AGRI / GIDA ÇENTİĞİ:" if lang == "English" else "🌾 GIDA SEÇİM ÇENTİĞİ:"
         gida_select = st.radio(g_label, ["Beyaz Şeker (ICUMSA 45)", "Ekmeklik Buğday", "Sarı Mısır", "Ham Ayçiçek Yağı"], horizontal=True)
-        
-    # Ağır çekim animasyonu hissettirmek için mikro yazılımsal gecikme
-    time.sleep(0.4)
 
-    # PIT PIT ATAN 6 BÜYÜK RETRO LEVHA YERLEŞİMİ
+    # PIT PIT ATAN 6 BÜYÜK RETRO LEVHA YERLEŞİMİ (ANİMASYON SADECE DEĞERLERE BAĞLANDI)
     st.write("")
     c_b1, c_b2, c_b3 = st.columns(3)
     with c_b1:
@@ -145,7 +190,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
         prompt = f"""
         Sen uluslararası bir emtia brokerlığı yapay zeka ajanısın (Interlock Accio Modeli).
         Kullanıcı şu sorguyu yaptı: '{search_query}'.
-        Bu sorguya göre dünya genelindeki B2B ağlarından, gümrük kayıtlarından ve ticaret koridorlarından anlık istihbarat topla.
+        Bu sorguya göre dünya genelindeki B2B ağlarından, gümrük kayıtlarından bir ticaret koridorlarından anlık istihbarat topla.
         Bize tam olarak şu kriterleri içeren ve kesinlikle boş metin içermeyen JSON formatında bir yanıt ver:
         1. "Urun_Adi": Sorgulanan emtianın tam ticari adı ve GTİP (HS Code) kodu.
         2. "Fiyat_Matrisi": Incoterms 2025 kurallarına uygun olarak EXW, FOB, CIF ve DDP tahmini ton başına maliyet kırılımları ve varsa bölgesel pazar primleri.
