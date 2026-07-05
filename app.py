@@ -1,301 +1,483 @@
 import streamlit as st
-import pandas as pd
-import folium
-from streamlit_folium import st_folium
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import io
-import urllib.parse
-import json
-import os
 import requests
+import json
+import time
+import random
+from datetime import datetime
 
-# 🛡️ GÜVENLİK ZIRHI: RENDER KASASINDAN OKUMA
-import google.generativeai as genai
-if "GEMINI_API_KEY" in os.environ:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+# ------------------- SAYFA YAPILANDIRMASI -------------------
+st.set_page_config(
+    page_title="Interlock Global AI Terminal",
+    page_icon="🌐",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-st.set_page_config(page_title="Interlock Global AI Terminal", layout="wide", page_icon="📟")
-
+# ------------------- ÖZEL CSS (TEMA + SPLIT-FLAP + MENÜ) -------------------
 st.markdown("""
-    <style>
-    [data-testid="stHeader"] { background: rgba(0,0,0,0) !important; color: transparent !important; }
-    .block-container { padding-top: 1rem !important; padding-bottom: 0rem !important; }
-    
-    /* 🎨 VIP WALL STREET RENK MATRİSİ: PARLEMENT MAVİSİ ANA EKRAN */
-    .main, block-container, .stApp { background-color: #0a1128 !important; color: #ffffff !important; }
-    
-    /* 📟 KUŞ TÜYÜ HAFİFLİKTE SİMSIYAH MEKANİK FLAP KASALARI VE ORTADAN BÖLÜNMÜŞ ÇİZGİ */
-    .split-flap-card {
-        background: #02040a !important; 
-        border: 2px solid #1f2937; border-radius: 6px; padding: 25px 15px; text-align: center;
-        box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 6px 12px rgba(0,0,0,0.6); min-height: 140px;
-        display: flex; flex-direction: column; justify-content: center; perspective: 1000px;
-        position: relative; width: 100% !important;
+<style>
+    /* Ana arka plan – Parlamento Mavisi */
+    .stApp {
+        background-color: #0a1128;
+        color: #ffffff;
     }
-    .split-flap-card::after {
-        content: ""; position: absolute; left: 0; top: 50%; width: 100%; height: 2px;
-        background: #111625 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.8); z-index: 10;
+    /* Tüm yazılar beyaz, linkler mavi */
+    .stApp * {
+        color: #ffffff !important;
     }
-    .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; z-index: 5; }
-    
-    /* SAF BEYAZ NOSTALJİK RAKAMLAR VE 0.4 SN PIRRR TAKLA ANİMASYONU */
-    .split-flap-value { 
-        font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #ffffff !important; 
-        text-shadow: 0 0 8px rgba(255,255,255,0.3); display: inline-block; transform-style: preserve-3d;
-        animation: pirrrRotation 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5; white-space: nowrap !important;
+    a {
+        color: #4a9eff !important;
     }
-    @keyframes pirrrRotation {
-        0% { transform: rotateX(-90deg); opacity: 0.5; }
-        100% { transform: rotateX(0deg); opacity: 1; }
+    /* Üst menü şeridi – yatay, koyu */
+    .top-menu {
+        background-color: #02040a;
+        padding: 10px 20px;
+        border-radius: 0px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #1a2a4a;
     }
-    .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; z-index: 5; }
-    
-    /* ⌨️ SİMSİYAH PARILDAYAN KURUMSAL NEON SORGULAMA BUTONU */
-    div.stButton > button {
-        background-color: #02040a !important; color: #ffffff !important;
-        border: 2px solid #d4af37 !important; font-family: 'Courier New', monospace !important;
-        font-weight: bold !important; font-size: 14px !important; padding: 12px 30px !important;
-        box-shadow: 0 0 15px rgba(212,175,55,0.3) !important; transition: all 0.3s ease !important;
-        width: 100% !important; margin-top: 15px !important;
+    .top-menu .menu-item {
+        color: #b0c4de !important;
+        font-weight: 500;
+        margin: 0 15px;
+        cursor: pointer;
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: transparent;
+        transition: 0.2s;
+        border: none;
+        font-size: 16px;
     }
-    div.stButton > button:hover {
-        box-shadow: 0 0 25px rgba(212,175,55,0.6) !important; background-color: #0b1124 !important; color: #d4af37 !important;
+    .top-menu .menu-item:hover {
+        background: #1a2a4a;
+        color: #ffffff !important;
     }
-    
-    /* 🚨 TARAYICIYI KİLİTLEYEN SOL MENÜYÜ TAMAMEN KAZIYAN SİBER ZIRH */
-    [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none !important; width: 0px !important; }
-    iframe, .element-container { background-color: transparent !important; color: transparent !important; height: 0px !important; display: none !important; }
-    
-    .stTable, table, tr, td, th { background-color: #04091a !important; color: #ffffff !important; font-family: 'Courier New', monospace !important; }
-    th { color: #00f2fe !important; font-weight: bold !important; border-bottom: 2px solid #1f2937 !important; }
-    td { border-bottom: 1px solid #1f2937 !important; padding: 12px !important; }
-    h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Courier New', monospace !important; }
-    </style>
-    """, unsafe_allow_html=True)
-# 📟 YATAY ÜST KUMANDA PANELİ (SIFIR KİLİTLENME VE TAM UYUMLULUK DÜZENİ)
-col_top1, col_top2 = st.columns(2)
-with col_top2:
-    lang = st.selectbox("🌐 LANGUAGE / DİL:", ["English", "Türkçe"], label_visibility="collapsed")
+    .top-menu .menu-item.active {
+        background: #2a4a7a;
+        color: #ffffff !important;
+    }
+    /* Split‑Flap kartları – tam genişlik, siyah zemin */
+    .flap-container {
+        background: #02040a;
+        padding: 8px 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-top: 1px solid #1a2a4a;
+        border-bottom: 1px solid #1a2a4a;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+    }
+    .flap-card {
+        background: #02040a;
+        border-radius: 6px;
+        padding: 6px 12px;
+        min-width: 120px;
+        flex: 1 0 auto;
+        text-align: center;
+        border-right: 1px solid #1a2a4a;
+        margin: 4px 0;
+    }
+    .flap-card:last-child {
+        border-right: none;
+    }
+    .flap-symbol {
+        font-size: 14px;
+        color: #8a9bb5;
+        letter-spacing: 1px;
+        font-weight: 300;
+    }
+    .flap-price {
+        font-size: 26px;
+        font-weight: 700;
+        color: #ffffff;
+        font-family: 'Courier New', monospace;
+        display: inline-block;
+        background: #02040a;
+        padding: 0 8px;
+        border-left: 1px solid #2a3a5a;
+        border-right: 1px solid #2a3a5a;
+        margin: 0 4px;
+        transition: all 0.1s ease;
+        line-height: 1.4;
+    }
+    .flap-change {
+        font-size: 14px;
+        font-weight: 500;
+        margin-left: 6px;
+    }
+    .flap-change.positive { color: #4caf50; }
+    .flap-change.negative { color: #f44336; }
+    .flap-nav {
+        background: transparent;
+        border: 1px solid #2a4a6a;
+        color: #b0c4de;
+        border-radius: 4px;
+        padding: 2px 10px;
+        margin: 0 3px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: 0.2s;
+    }
+    .flap-nav:hover {
+        background: #1a2a4a;
+        color: #ffffff;
+    }
+    /* Arama çubuğu – form yok, saf input+button */
+    .search-box {
+        background: #02040a;
+        padding: 20px 25px;
+        border-radius: 8px;
+        border: 1px solid #1a2a4a;
+        margin-bottom: 25px;
+    }
+    .search-box input {
+        background: #0a1128 !important;
+        border: 1px solid #2a4a6a !important;
+        color: #ffffff !important;
+        border-radius: 30px !important;
+        padding: 12px 20px !important;
+        font-size: 18px !important;
+    }
+    .search-box button {
+        background: #1a3a6a !important;
+        border: none !important;
+        color: #ffffff !important;
+        border-radius: 30px !important;
+        padding: 12px 35px !important;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .search-box button:hover {
+        background: #2a5a9a !important;
+    }
+    /* Rapor kartları */
+    .report-section {
+        background: #0a1128;
+        border-left: 3px solid #2a5a9a;
+        padding: 15px 20px;
+        margin: 12px 0;
+        border-radius: 4px;
+        box-shadow: 0 0 15px rgba(0,20,50,0.5);
+    }
+    .report-section h3 {
+        color: #b0c4de;
+        border-bottom: 1px solid #1a2a4a;
+        padding-bottom: 6px;
+    }
+    /* Paywall */
+    .paywall-box {
+        background: #02040a;
+        border: 2px dashed #2a5a9a;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        text-align: center;
+    }
+    .paywall-box .email-list {
+        color: #8a9bb5;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        background: #0a1128;
+        padding: 10px;
+        border-radius: 6px;
+        margin: 15px 0;
+    }
+    .stButton button {
+        background: #1a3a6a !important;
+        color: white !important;
+        border-radius: 30px !important;
+        padding: 10px 30px !important;
+        font-weight: 600;
+        border: none !important;
+        transition: 0.2s;
+    }
+    .stButton button:hover {
+        background: #2a5a9a !important;
+        transform: scale(1.02);
+    }
+    /* Hata mesajları */
+    .error-box {
+        background: #2a0a0a;
+        border: 1px solid #aa3333;
+        color: #ff8888;
+        padding: 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        margin: 15px 0;
+    }
+    /* Footer – boşluk yok */
+    .reportview-container .main .block-container {
+        padding-top: 0.5rem;
+        padding-bottom: 0rem;
+    }
+    footer { display: none; }
+    /* Mobil uyum */
+    @media (max-width: 768px) {
+        .flap-card { min-width: 80px; }
+        .flap-price { font-size: 18px; }
+        .top-menu .menu-item { font-size: 13px; margin: 0 6px; padding: 4px 10px; }
+        .search-box input { font-size: 15px; }
+    }
+</style>
+""", unsafe_allow_html=True)
 
-if lang == "Türkçe":
-    mod1 = "🚀 Otonom İstihbarat Ajanı"
-    mod2 = "📄 Evrak Analiz (OCR)"
-    mod3 = "⚓ Özel Gemi Röntgeni ($20)"
-else:
-    mod1 = "🚀 Autonomous AI Agent"
-    mod2 = "📄 Document Analysis (OCR)"
-    mod3 = "⚓ Custom Vessel X-Ray ($20)"
+# ------------------- SABİT BELLEK (IŞIK HIZINDA VERİ) -------------------
+# Split‑Flap verileri – gerçekte yfinance veya başka bir kaynaktan periyodik güncellenir.
+# Bu örnekte statik veriler kullanılıyor, dilerseniz arka planda bir scheduler ile güncelleyebilirsiniz.
+if 'flap_data' not in st.session_state:
+    st.session_state.flap_data = {
+        "XAU": {"price": 2345.20, "change": 0.45},
+        "XAG": {"price": 27.85, "change": -0.12},
+        "WTI": {"price": 82.45, "change": 1.23},
+        "WHT": {"price": 5.67, "change": -0.34},
+        "HG":  {"price": 4.32, "change": 0.07},
+        "NG":  {"price": 2.15, "change": -0.89}
+    }
+    st.session_state.flap_symbols = ["XAU", "XAG", "WTI", "WHT", "HG", "NG"]
 
-with col_top1:
-    menu = st.radio("MODULE / MODÜL:", [mod1, mod2, mod3], horizontal=True, label_visibility="collapsed")
+# ------------------- ÜST MENÜ (YATAY, SİDEBAR YOK) -------------------
+with st.container():
+    col1, col2, col3, col4, col5 = st.columns([1, 2, 2, 2, 1])
+    with col1:
+        st.image("https://via.placeholder.com/40x40/0a1128/4a9eff?text=IL", width=40)  # Logo placeholder
+    with col2:
+        st.selectbox("🌐 Dil", ["Türkçe", "English", "Русский"], key="lang", label_visibility="collapsed")
+    with col3:
+        if st.button("🛰️ Otonom Ajan", key="menu_agent", use_container_width=True):
+            st.session_state.menu_page = "agent"
+    with col4:
+        if st.button("📄 OCR Evrak Doğrulama", key="menu_ocr", use_container_width=True):
+            st.session_state.menu_page = "ocr"
+    with col5:
+        if st.button("⚓ Gemi Röntgeni ($20)", key="menu_ship", use_container_width=True):
+            st.session_state.menu_page = "ship"
 
-def generate_advanced_pdf(query, ai_data, mode):
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, 750, "INTERLOCK GLOBAL - PREMIUM INTELLIGENCE BRIEFING")
-    p.setFont("Helvetica", 10)
-    p.drawString(50, 735, f"Analysis Mode / Mod: {mode.upper()} | Target: {query.upper()}")
-    y = 700
-    for key, val in ai_data.items():
-        p.setFont("Helvetica-Bold", 11)
-        p.drawString(50, y, f"■ {key.upper()}")
-        y -= 15
-        p.setFont("Helvetica", 9)
-        words = str(val).split()
-        line = ""
-        for word in words:
-            if len(line) + len(word) < 85: line += " " + word
-            else:
-                p.drawString(60, y, line)
-                y -= 12
-                line = word
-        p.drawString(60, y, line)
-        y -= 25
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return buffer
+# Varsayılan menü sayfası
+if "menu_page" not in st.session_state:
+    st.session_state.menu_page = "agent"  # ana sayfa
 
-# BÖLGESEL HAFIZA: SADECE KADRANLARI YENİLER, SAYFAYI ASLA KARARTMAZ VEYA KIRPMAZ
+# ------------------- BORSA KADRANLARI (@st.fragment) -------------------
 @st.fragment
-def show_mechanical_radar(lang):
-    ali_p = 3266.50; cu_p = 9120.00; sugar_p = 329.72; wheat_p = 245.00; oil_p = 71.38
+def render_flap_cards():
+    """Split‑Flap kadranları – sayfa kararması yok, sadece rakamlar takla atar."""
+    cols = st.columns(len(st.session_state.flap_symbols))
+    for i, sym in enumerate(st.session_state.flap_symbols):
+        data = st.session_state.flap_data[sym]
+        price = data["price"]
+        change = data["change"]
+        change_str = f"{change:+.2f}%"
+        change_class = "positive" if change >= 0 else "negative"
 
-    metals_list = ["Alüminyum Külçe (P1020)", "Bakır Katot (Grade A)", "İnşaat Demiri (Rebar)", "HMS 1/2 Demir Hurdası", "Çinko", "Kurşun", "Nikel", "Kalay", "Külçe Altın (999.9)", "Külçe Gümüş"]
-    agri_list = ["Beyaz Şeker (ICUMSA 45)", "Ham Kamış Şekeri", "Sızma Zeytinyağı", "Rafine Zeytinyağı", "Ham Ayçiçek Yağı", "Ham Soya Yağı", "Palm Yağı (RBD)", "Ekmeklik Buğday", "Makarnalık Durum Buğdayı", "Sarı Mısır", "Arpa", "Ham Pamuk", "Kakao Çekirdeği", "Kahve Çekirdeği"]
-
-    if "m_idx" not in st.session_state: st.session_state.m_idx = 0
-    if "a_idx" not in st.session_state: st.session_state.a_idx = 0
-
-    st.write("")
-    st.columns(1)
-    c_b1, c_b2, c_b3 = st.columns(3)
-    
-    with c_b1:
-        metal_select = metals_list[st.session_state.m_idx]
-        if st.session_state.m_idx == 0:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${ali_p}</div><div class="split-flap-sub">ALÜMİNYUM / TON</div></div>', unsafe_allow_html=True)
-        elif st.session_state.m_idx == 1:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">${cu_p}</div><div class="split-flap-sub">BAKIR KATOT / TON</div></div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• LME METALLER</div><div class="split-flap-value">$410.00</div><div class="split-flap-sub">{metal_select[:15].upper()}</div></div>', unsafe_allow_html=True)
-        
-        col_m1, col_m2 = st.columns(2)
-        with col_m1:
-            if st.button("◀", key="m_up"): st.session_state.m_idx = (st.session_state.m_idx - 1) % len(metals_list)
-        with col_m2:
-            if st.button("▶", key="m_down"): st.session_state.m_idx = (st.session_state.m_idx + 1) % len(metals_list)
-            
-    with c_b2:
-        gida_select = agri_list[st.session_state.a_idx]
-        if st.session_state.a_idx == 0:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${sugar_p}</div><div class="split-flap-sub">ŞEKER ENDEKSİ / TON</div></div>', unsafe_allow_html=True)
-        elif st.session_state.a_idx == 7:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">${wheat_p}</div><div class="split-flap-sub">BUĞDAY / TON</div></div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENDÜSTRİYEL GIDA</div><div class="split-flap-value">$530.00</div><div class="split-flap-sub">{gida_select[:15].upper()}</div></div>', unsafe_allow_html=True)
-        
-        col_a1, col_a2 = st.columns(2)
-        with col_a1:
-            if st.button("◀", key="a_up"): st.session_state.a_idx = (st.session_state.a_idx - 1) % len(agri_list)
-        with col_a2:
-            if st.button("▶", key="a_down"): st.session_state.a_idx = (st.session_state.a_idx + 1) % len(agri_list)
-            
-    with c_b3:
-        st.markdown(f'<div class="split-flap-card"><div class="split-flap-title">• ENERJİ & AKARYAKIT</div><div class="split-flap-value">${oil_p}</div><div class="split-flap-sub">BRENT PETROL / VARİL</div></div>', unsafe_allow_html=True)
-
-    st.write("")
-    c_b4, c_b5, c_b6 = st.columns(3)
-    with c_b4:
-        st.markdown('<div class="split-flap-card"><div class="split-flap-title">• ENERJİ ENTEGRASYONU</div><div class="split-flap-value">$745.00</div><div class="split-flap-sub">EN590 DİZEL / TON</div></div>', unsafe_allow_html=True)
-    with c_b5:
-        st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
-    with c_b6:
-        st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
-if menu in [mod1, "🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
-    show_mechanical_radar(lang)
-    st.divider()
-    
-    mode_label = "SELECT ANALYSIS TYPE / ANALİZ MODU SEÇİN:" if lang == "English" else "🔮 ARTIK ÇİFT MOD AKTİF - ANALİZ MODU SEÇİN:"
-    opt_route = "📍 Nokta Atışı Rota Analizi (Specific Route)"
-    opt_global = "🌐 Küresel Makro Emtia Analizi (Global Market Analysis)"
-    search_mode = st.radio(mode_label, [opt_route, opt_global], horizontal=True)
-
-    search_placeholder = "e.g., flaxseed kazakhstan - germany or quinoa" if lang == "English" else "Örn: keten tohumu kazakistan - almanya VEYA sadece 'kinoa', 'chia' gibi ürün ismi"
-    search_label = "Advanced AI Intelligence Search (Unlimited Commodities):" if lang == "English" else "Gemi İstihbarat Motoru (Sonsuz Emtia Özgürlüğü):"
-    
-    search_query = st.text_input(search_label, placeholder=search_placeholder, key="unrestricted_ai_query")
-    
-    submit_btn_label = "EXECUTE SEARCH (ENTER)" if lang == "English" else "İSTİHBARATI BAŞLAT (ENTER)"
-    submit_button = st.button(label=submit_btn_label, key="unrestricted_ai_btn")
-    
-    if (submit_button or (search_query and st.session_state.get("last_query", "") != search_query)):
-        st.session_state["last_query"] = search_query
-        st.info("📟 Interlock Accio AI Agents exploring global trade networks... Please wait..." if lang == "English" else "📟 Interlock Otonom Ajanları küresel veri ağlarını tarıyor... Lütfen bekleyin...")
-        
-        prompt = f"""
-        Sen uluslararası bir emtia brokerlığı yapay zeka ajanısın (Interlock Accio Modeli).
-        Kullanıcı '{search_mode}' modunu seçti ve şu sorguyu yaptı: '{search_query}'.
-        JSON formatında tam bir yanıt döndür. Anahtarlar: "Urun_Adi", "Fiyat_Matrisi", "Lojistik_Rota", "Mevzuat_Kotalar", "Gerekli_Evraklar", "Top5_Saticilar", "Top5_Alicilar", "Top5_Lojistik_Gumruk".
-        Rapor oluştururken OpenCorporates ve ITC Trade Map/UN Comtrade resmi kurumsal veri tabanlarını referans al. Şirketlerin sicil kontrol durumlarını (Yasal olarak kayıtlı ve aktif mi) "Mevzuat_Kotalar" veya "Top5_Saticilar" içinde resmi yıl ve numaralarla raporla.
-        """
-        
-        ai_data = None
-        gemini_error_msg = ""
-        groq_error_msg = ""
-        openrouter_error_msg = ""
-        
-        try:
-            model = genai.GenerativeModel("gemini-2.5-flash")
-            response = model.generate_content(prompt)
-            clean_text = response.text.strip().replace("```json", "").replace("```", "")
-            ai_data = json.loads(clean_text)
-        except Exception as e:
-            gemini_error_msg = str(e)
-            try:
-                groq_key = os.environ.get("GROQ_API_KEY")
-                if groq_key:
-                    payload = {"model": "llama3-8b-8192", "messages": [{"role": "user", "content": prompt}], "response_format": {"type": "json_object"}}
-                    headers = {"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"}
-                    res = requests.post("https://groq.com", json=payload, headers=headers, timeout=30)
-                    if res.status_code == 200:
-                        ai_data = json.loads(res.json()['choices']['message']['content'].strip())
-                    else:
-                        groq_error_msg = f"Groq HTTP {res.status_code}"
-                else:
-                    groq_error_msg = "GROQ KEY MISSING"
-            except Exception as e2:
-                groq_error_msg = str(e2)
-
-            if not ai_data:
-                try:
-                    payload_or = {"model": "meta-llama/llama-3-8b-instruct:free", "messages": [{"role": "user", "content": prompt}]}
-                    headers_or = {"Content-Type": "application/json"}
-                    res_or = requests.post("https://openrouter.ai", json=payload_or, headers=headers_or, timeout=30)
-                    if res_or.status_code == 200:
-                        raw_out_or = res_or.json()['choices']['message']['content']
-                        clean_or = raw_out_or.strip().replace("```json", "").replace("```", "")
-                        start_idx = clean_or.find("{")
-                        end_idx = clean_or.rfind("}") + 1
-                        if start_idx != -1 and end_idx > start_idx:
-                            ai_data = json.loads(clean_or[start_idx:end_idx])
-                        else:
-                            ai_data = {"Urun_Adi": search_query, "Mevzuat_Kotalar": raw_out_or, "Lojistik_Rota": "OpenRouter Havuzu Aktif"}
-                    else:
-                        openrouter_error_msg = f"OpenRouter HTTP {res_or.status_code}"
-                except Exception as e3:
-                    openrouter_error_msg = str(e3)
-
-        if not ai_data:
-            st.error("❌ YAPAY ZEKA MOTORLARI KÜRESEL LİMİT DUVARINA TAKILDI!")
-            st.code(f"Google Gemini Hatası: {gemini_error_msg}\nGroq Hatası: {groq_error_msg}\nOpenRouter Yedek Ordusu Hatası: {openrouter_error_msg}", language="python")
-
-        if ai_data:
-            product = ai_data.get("Urun_Adi", "Emtia Segmenti")
-            st.success(f"📌 {product} - AI Target Locked.")
-            
-            st.markdown(f"### 🛃 BÖLÜM 1: MEVZUAT & REGESTRAL DOĞRULAMA (OpenCorporates / ITC)")
-            st.write(ai_data.get("Mevzuat_Kotalar", ""))
-            
-            st.markdown(f"### 🚚 BÖLÜM 2: LOJİSTİK & KÜRESEL HACİM KORİDORU")
-            st.write(ai_data.get("Lojistik_Rota", ""))
-            
-            st.markdown(f"### 🔒 BÖLÜM 3: KİLİTLİ GİZLİ KASALAR & PROJEKSİYON")
-            st.warning("🔓 Premium veriler holding kasasındadır. Aşağıdan indirin.")
-            
-            st.markdown(f"#### 📈 GLOBAL {product.upper()} PRICE TREND (6-MONTH PROJECTION)")
-            # 📌 HATA VEREN BOŞ VİRGÜL UÇTU, YERİNE IŞIK HIZINDA HAZIR SABİT MATRİS MÜHÜRLENDİ!
-            chart_data = pd.DataFrame([100, 105, 115, 110, 125, 130], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
-            st.line_chart(chart_data)
-            
-            pay_desc = "5 adet gerçek üretici/ithalatçı mailini ve OpenCorporates sicil kayıtlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier/buyer corporate emails and official OpenCorporates registry data instantly."
+        with cols[i]:
+            # Kart
             st.markdown(f"""
-                <div style="background-color: #04091a; padding: 25px; border-radius: 8px; border: 2px dashed #d4af37; text-align:center; margin-top:20px;">
-                    <h3 style="color:#d4af37; font-family:'Courier New', monospace;">🪙 PREMIUM REPORT OVERVIEW ($19.99)</h3>
-                    <p style="color: #cbd5e1; font-size:13px; margin-bottom:15px; font-family:'Courier New', monospace;">{pay_desc}</p>
-                    <div style="display:inline-block; padding:12px 25px; background-color:#d4af37; color:#0e1c36; border-radius:5px; font-weight:bold; cursor:pointer; font-family:'Courier New', monospace;">
-                        Stripe / Credit Card Secure Pay ($19.99)
-                    </div>
+            <div class="flap-card">
+                <div class="flap-symbol">{sym}</div>
+                <div>
+                    <span class="flap-price">{price:.2f}</span>
+                    <span class="flap-change {change_class}">{change_str}</span>
                 </div>
-                """, unsafe_allow_html=True)
+                <div style="margin-top: 6px;">
+                    <button class="flap-nav" data-sym="{sym}" data-dir="-1">◀</button>
+                    <button class="flap-nav" data-sym="{sym}" data-dir="1">▶</button>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            # Bu butonlar Streamlit butonları ile değiştirilebilir – daha güvenli
+            # fakat JS ile yapılan bu yöntem sayfayı yeniden yüklemeden çalışır.
+            # Ancak @st.fragment ile çalışması için Streamlit butonları kullanmalıyız.
+            # Aşağıda Streamlit butonları ile yeniden düzenliyoruz:
+            # Aslında yukarıdaki HTML butonlar Streamlit ile etkileşimli değil,
+            # bu yüzden aşağıdaki gibi Streamlit butonları ekliyoruz:
+    # Alternatif: Streamlit butonları ile doğru fragment yönetimi
+    # Yukarıdaki HTML butonları kaldırıp, kolonlara Streamlit butonları koyalım:
+    # (Yukarıdaki kod sadece görsel, aşağıda tekrar düzenliyoruz)
+
+# Daha iyisi: Flap kartlarını tamamen Streamlit butonları ile oluşturalım.
+# Aşağıdaki fonksiyon tam çalışır durumda.
+
+@st.fragment
+def render_flap_cards_v2():
+    """Split‑Flap kartları – sayfa kararması yok, butonlara tıklanınca sadece fiyat değişir."""
+    symbols = st.session_state.flap_symbols
+    cols = st.columns(len(symbols))
+    for idx, sym in enumerate(symbols):
+        with cols[idx]:
+            # Kart başlığı
+            st.markdown(f"<div style='font-size:14px;color:#8a9bb5;text-align:center;'>{sym}</div>", unsafe_allow_html=True)
+            # Fiyat ve değişim
+            data = st.session_state.flap_data[sym]
+            price = data["price"]
+            change = data["change"]
+            change_color = "#4caf50" if change >= 0 else "#f44336"
+            st.markdown(f"""
+            <div style='text-align:center;'>
+                <span style='font-size:30px;font-weight:700;color:#ffffff;background:#02040a;padding:0 8px;border-left:1px solid #2a3a5a;border-right:1px solid #2a3a5a;'>{price:.2f}</span>
+                <span style='font-size:16px;font-weight:500;color:{change_color};margin-left:6px;'>{change:+.2f}%</span>
+            </div>
+            """, unsafe_allow_html=True)
+            # Navigasyon butonları
+            c1, c2, c3 = st.columns([1, 1, 1])
+            with c1:
+                if st.button("◀", key=f"flap_left_{sym}"):
+                    # Fiyatı rastgele değiştir (simülasyon)
+                    st.session_state.flap_data[sym]["price"] += random.uniform(-2, 2)
+                    st.session_state.flap_data[sym]["change"] += random.uniform(-0.5, 0.5)
+                    # Fragment yeniden çalışır, sayfa tamamen yenilenmez.
+            with c3:
+                if st.button("▶", key=f"flap_right_{sym}"):
+                    st.session_state.flap_data[sym]["price"] += random.uniform(-2, 2)
+                    st.session_state.flap_data[sym]["change"] += random.uniform(-0.5, 0.5)
+
+# Ana sayfada flap kartlarını göster
+render_flap_cards_v2()
+
+# ------------------- ARAÇ (ARAMA MOTORU) – FORM YOK -------------------
+st.markdown('<div class="search-box">', unsafe_allow_html=True)
+col_search1, col_search2 = st.columns([5, 1])
+with col_search1:
+    query = st.text_input("🔍 Emtia, rota veya ürün ara... (ör: keten tohumu kazakistan - almanya)", 
+                          placeholder="Örn: kinoa, alüminyum, buğday ukrayna - türkiye",
+                          label_visibility="collapsed")
+with col_search2:
+    search_clicked = st.button("🔄 ARA", use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ------------------- API FALLBACK ZİNCİRİ (ÇOKLU ANAHTAR) -------------------
+def call_ai_api(prompt):
+    """Gemini -> Groq -> OpenRouter (ücretsiz) fallback zinciri."""
+    api_keys = [
+        ("gemini", st.secrets.get("GEMINI_API_KEY_1", "")),
+        ("gemini", st.secrets.get("GEMINI_API_KEY_2", "")),
+        ("groq", st.secrets.get("GROQ_API_KEY", "")),
+        ("openrouter", "free")  # OpenRouter ücretsiz model kullanımı
+    ]
+    errors = []
+    for provider, key in api_keys:
+        try:
+            if provider == "gemini" and key:
+                # Gemini API çağrısı (örnek)
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={key}"
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}]
+                }
+                resp = requests.post(url, json=payload, timeout=15)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    return data["candidates"][0]["content"]["parts"][0]["text"]
+                else:
+                    errors.append(f"Gemini (key) hata: {resp.status_code}")
+            elif provider == "groq" and key:
+                # Groq API çağrısı
+                url = "https://api.groq.com/openai/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+                payload = {
+                    "model": "llama3-8b-8192",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.3
+                }
+                resp = requests.post(url, json=payload, headers=headers, timeout=15)
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"]
+                else:
+                    errors.append(f"Groq hata: {resp.status_code}")
+            elif provider == "openrouter":
+                # OpenRouter ücretsiz model
+                url = "https://openrouter.ai/api/v1/chat/completions"
+                payload = {
+                    "model": "meta-llama/llama-3-8b-instruct:free",
+                    "messages": [{"role": "user", "content": prompt}]
+                }
+                resp = requests.post(url, json=payload, timeout=15)
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"]
+                else:
+                    errors.append(f"OpenRouter hata: {resp.status_code}")
+        except Exception as e:
+            errors.append(f"{provider} exception: {str(e)}")
+            continue
+    # Hepsi başarısız -> şeffaf hata göster
+    raise Exception("Tüm API'ler başarısız oldu. Loglar:\n" + "\n".join(errors))
+
+# ------------------- RAPOR OLUŞTURMA (3 BÖLÜM) -------------------
+def generate_report(query):
+    """AI ajanlarından 3 keskin kurumsal bölüm üret."""
+    prompt = f"""
+    Sen Interlock Global AI Terminal’in istihbarat ajanısın. Kullanıcı şu sorguyu yaptı: "{query}".
+    
+    Lütfen aşağıdaki 3 bölümden oluşan profesyonel bir emtia raporu oluştur:
+    1. GÜMRÜK REJİMİ VE MEVZUAT: İlgili ülkelerin ithalat/ihracat rejimleri, vergiler, kotalar.
+    2. LOJİSTİK ROTALAR: En uygun nakliye güzergahları, tahmini transit süreleri, liman bilgileri.
+    3. FİYAT MATRİSİ VE TREND: Güncel fiyat aralıkları, geçmiş 1 ay trendi, volatilite analizi.
+    
+    Rapor kurumsal, özlü ve veri odaklı olsun. Markdown formatında.
+    """
+    try:
+        return call_ai_api(prompt)
+    except Exception as e:
+        # Şeffaf hata raporlayıcısı
+        st.markdown(f'<div class="error-box">⚠️ SİSTEM HATASI (şeffaf log):<br>{str(e)}</div>', unsafe_allow_html=True)
+        return None
+
+# ------------------- ANA SAYFA İÇERİĞİ (Menü kontrolü) -------------------
+if st.session_state.menu_page == "agent":
+    # Otonom Ajan – ana rapor sayfası
+    if search_clicked and query.strip():
+        with st.spinner("🔄 Çoklu yapay zeka ajanları dünyayı tarıyor..."):
+            report = generate_report(query)
+        if report:
+            st.markdown('<div class="report-section"><h3>📊 GÜMRÜK REJİMİ VE MEVZUAT</h3>', unsafe_allow_html=True)
+            # Bölümleri ayırmak için basit bir parse (örnek)
+            parts = report.split("###")
+            for part in parts:
+                st.markdown(part)
+            st.markdown('</div>', unsafe_allow_html=True)
             
-            pdf_file = generate_advanced_pdf(search_query, ai_data, search_mode)
-            st.download_button(label="🔑 [SIMULATION] Download Premium PDF Report", data=pdf_file, file_name=f"Interlock_{search_query}_Premium.pdf")
+            # PAYWALL – 5 e-posta ve Incoterms gizlenmiş
+            st.markdown("""
+            <div class="paywall-box">
+                <h4>🔒 Premium Raporun Tamamı</h4>
+                <p style="color:#8a9bb5;">5 gerçek üretici/ithalatçı firma e-postası ve Incoterms maliyet dökümleri</p>
+                <div class="email-list">
+                    📧 info@firma1.com • 📧 sales@firma2.com • 📧 trade@firma3.com<br>
+                    📧 procurement@firma4.com • 📧 logistics@firma5.com
+                </div>
+                <div style="background:#0a1128;padding:8px;border-radius:4px;margin:10px 0;font-family:monospace;">
+                    INCOTERMS: CIF, FOB, EXW, DAP, DDP (detaylı maliyetler gizli)
+                </div>
+                <br>
+                <form action="https://your-stripe-payment-link.com" method="GET" target="_blank">
+                    <button type="submit" style="background:#1a3a6a;color:white;border:none;padding:14px 40px;border-radius:30px;font-size:18px;font-weight:600;cursor:pointer;">
+                        💳 Premium PDF Raporu İndir ($19.99)
+                    </button>
+                </form>
+                <p style="font-size:12px;color:#4a6a8a;margin-top:10px;">Stripe ile güvenli ödeme</p>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("🔎 Lütfen yukarıdaki arama çubuğuna bir emtia veya rota girip 'ARA' butonuna basın.")
 
-elif menu in [mod2, "📄 Evrak Analiz (OCR)", "📄 Document Analysis (OCR)"]:
-    st.title("📄 Akıllı Evrak Doğrulama Terminali")
-    st.file_uploader("Upload Document", type=["pdf", "jpg", "png"])
+elif st.session_state.menu_page == "ocr":
+    st.header("📄 OCR Evrak Doğrulama")
+    st.write("Bu bölümde fatura, konşimento veya gümrük belgelerinin yapay zeka ile doğrulaması yapılır.")
+    uploaded_file = st.file_uploader("Belge yükleyin (PDF/JPEG/PNG)", type=["pdf", "jpg", "jpeg", "png"])
+    if uploaded_file:
+        st.success(f"📎 {uploaded_file.name} yüklendi. İşleniyor... (demo)")
 
-elif menu in [mod3, "⚓ Özel Gemi Röntgeni ($20)", "⚓ Custom Vessel X-Ray ($20)"]:
-    st.title("⚓ Özel Gemi Röntgeni & Cargo Manifest")
-    ship_imo = st.text_input("IMO Number / Gemi IMO Girin:", placeholder="Örn: 9930038")
-    
-    st.divider()
-    m = folium.Map(location=[41.0082, 28.9784], zoom_start=4, tiles="CartoDB dark_matter")
-    folium.Marker([41.15, 29.10], popup="MSC TESSA", icon=folium.Icon(color='green', icon='ship', prefix='fa')).add_to(m)
-    st_folium(m, width=1100, height=450)
-    
-    if ship_imo:
-        st.markdown('<div style="background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; text-align:center;"><h3>💳 RAPOR SATIN ALMA PANELİ</h3><button style="background-color:#d4af37; color:#0e1c36; border:none; padding:10px 20px; border-radius:5px; font-weight:bold;">Kredi Kartı ile Güvenli Öde</button></div>', unsafe_allow_html=True)
+elif st.session_state.menu_page == "ship":
+    st.header("⚓ Özel Gemi Röntgeni ($20)")
+    st.write("Canlı kargo gemisi takibi ve röntgen analizi.")
+    # Folium haritası – sadece bu sayfada
+    try:
+        import folium
+        from streamlit_folium import folium_static
+        m = folium.Map(location=[40.0, 30.0], zoom_start=4)
+        folium.Marker([40.0, 30.0], popup="Örnek Gemi").add_to(m)
+        folium_static(m, width=700, height=400)
+    except ImportError:
+        st.warning("Folium kütüphanesi yüklü değil. 'pip install folium streamlit-folium' ile kurun.")
+    st.info("Bu özellik için premium abonelik gereklidir (demo amaçlı).")
