@@ -5,12 +5,19 @@ import io
 import base64
 import matplotlib.pyplot as plt
 from datetime import datetime
+import requests
+import yfinance as yf
+import pandas as pd
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os
+import json
 
 # ------------------- SAYFA YAPILANDIRMASI -------------------
 st.set_page_config(
@@ -20,14 +27,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ------------------- TÜRKÇE EMTİA GRUPLARI (DEMO FİYATLAR) -------------------
-INITIAL_PRICES = {
-    "Altın": 2350.50, "Gümüş": 28.75, "Ham Petrol (WTI)": 82.45, "Ham Petrol (Brent)": 86.20,
-    "Doğalgaz": 2.15, "Buğday": 620.00, "Mısır": 440.00, "Soya Fasulyesi": 1180.00,
-    "Keten Tohumu": 770.73, "Şeker": 19.50, "Kahve": 245.00, "Kakao": 7200.00,
-    "Pamuk": 72.00, "Bakır": 4.32, "Alüminyum": 2600.00, "Çinko": 2800.00,
-    "Nikel": 17000.00, "Üre (Gübre)": 450.00, "PVC": 850.00
-}
+# ------------------- TÜRKÇE EMTİA GRUPLARI -------------------
 COMMODITY_GROUPS = {
     "🥇 Değerli Metaller": ["Altın", "Gümüş"],
     "🛢️ Enerji": ["Ham Petrol (WTI)", "Ham Petrol (Brent)", "Doğalgaz"],
@@ -37,19 +37,109 @@ COMMODITY_GROUPS = {
     "🧪 Kimya & Gübre": ["Üre (Gübre)", "PVC"]
 }
 
+# Yahoo Ticker eşleştirmesi
+TICKER_MAP = {
+    "Altın": "GC=F",
+    "Gümüş": "SI=F",
+    "Ham Petrol (WTI)": "CL=F",
+    "Ham Petrol (Brent)": "BZ=F",
+    "Doğalgaz": "NG=F",
+    "Buğday": "ZW=F",
+    "Mısır": "ZC=F",
+    "Soya Fasulyesi": "ZS=F",
+    "Şeker": "SB=F",
+    "Kahve": "KC=F",
+    "Kakao": "CC=F",
+    "Pamuk": "CT=F",
+    "Bakır": "HG=F",
+}
+
+DEFAULT_PRICES = {
+    "Altın": 2350.0, "Gümüş": 28.5, "Ham Petrol (WTI)": 82.0, "Ham Petrol (Brent)": 86.0,
+    "Doğalgaz": 2.1, "Buğday": 620.0, "Mısır": 440.0, "Soya Fasulyesi": 1180.0,
+    "Keten Tohumu": 770.0, "Şeker": 19.5, "Kahve": 245.0, "Kakao": 7200.0,
+    "Pamuk": 72.0, "Bakır": 4.3, "Alüminyum": 2600.0, "Çinko": 2800.0,
+    "Nikel": 17000.0, "Üre (Gübre)": 450.0, "PVC": 850.0
+}
+
+# ------------------- SESSION STATE -------------------
 if "prices" not in st.session_state:
-    st.session_state.prices = INITIAL_PRICES.copy()
-    st.session_state.change = {name: 0.0 for name in INITIAL_PRICES}
+    st.session_state.prices = DEFAULT_PRICES.copy()
+    st.session_state.change = {k: 0.0 for k in DEFAULT_PRICES}
+if "selected_index" not in st.session_state:
+    st.session_state.selected_index = {group: 0 for group in COMMODITY_GROUPS}
 
-def update_prices(volatility=0.015):
-    for name in st.session_state.prices:
-        old = st.session_state.prices[name]
-        delta = random.uniform(-volatility, volatility) * old
-        new = old + delta
-        st.session_state.prices[name] = round(new, 2)
-        st.session_state.change[name] = round((delta / old) * 100, 2)
+def fetch_real_prices():
+    """Yahoo Finance'den gerçek fiyatları çek, başarısız olursa simüle et."""
+    new_prices = {}
+    for product, ticker in TICKER_MAP.items():
+        try:
+            data = yf.download(ticker, period='1d', interval='5m', progress=False)
+            if not data.empty:
+                last = data['Close'].iloc[-1]
+                open_ = data['Open'].iloc[0]
+                change = ((last - open_) / open_) * 100 if open_ != 0 else 0
+                new_prices[product] = round(last, 2)
+                st.session_state.change[product] = round(change, 2)
+            else:
+                new_prices[product] = DEFAULT_PRICES[product]
+                st.session_state.change[product] = 0.0
+        except:
+            new_prices[product] = DEFAULT_PRICES[product]
+            st.session_state.change[product] = 0.0
+    # Ticker'ı olmayanlar için simüle
+    for product in DEFAULT_PRICES:
+        if product not in new_prices:
+            base = DEFAULT_PRICES[product]
+            new_prices[product] = round(base * (1 + random.uniform(-0.02, 0.02)), 2)
+            st.session_state.change[product] = round(random.uniform(-2.0, 2.0), 2)
+    return new_prices
 
-# ------------------- CSS (HAVAALANI TERMİNALİ) -------------------
+def update_prices():
+    """Fiyatları güncelle (önce Yahoo dene, olmazsa simüle)"""
+    try:
+        real = fetch_real_prices()
+        st.session_state.prices.update(real)
+    except:
+        for p in st.session_state.prices:
+            old = st.session_state.prices[p]
+            delta = random.uniform(-0.015, 0.015) * old
+            st.session_state.prices[p] = round(old + delta, 2)
+            st.session_state.change[p] = round((delta / old) * 100, 2)
+
+# ------------------- REGISTRY LOOKUP API (Firma Bilgileri) -------------------
+def fetch_companies(query):
+    """
+    Registry Lookup API'den firma bilgilerini çek.
+    Query: "alüminyum kazakistan" veya "bakır türkiye" gibi.
+    Dönen: list of {name, country, registration_number, status}
+    """
+    # API endpoint (resmi dokümantasyondan alındı)
+    url = "https://api.registry.lookup/v1/search"
+    params = {
+        "q": query,
+        "limit": 10,  # En fazla 10 firma
+        "jurisdiction": "all"  # Tüm ülkeler
+    }
+    try:
+        resp = requests.get(url, params=params, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            companies = []
+            for item in data.get("results", []):
+                companies.append({
+                    "name": item.get("name", ""),
+                    "country": item.get("jurisdiction", ""),
+                    "registration_number": item.get("registration_number", ""),
+                    "status": item.get("status", "")
+                })
+            return companies
+        else:
+            return None
+    except:
+        return None
+
+# ------------------- CSS (SABİT) -------------------
 st.markdown("""
 <style>
     .stApp { background-color: #0a1128; color: #ffffff; }
@@ -87,41 +177,35 @@ st.markdown("""
         border-bottom: 1px solid #1a2a4a;
         padding-bottom: 4px;
     }
-    [data-testid="stMetric"] {
-        background-color: #02040a !important;
-        padding: 10px 8px !important;
-        border-radius: 6px !important;
-        border: 1px solid #1a2a4a !important;
-        text-align: center !important;
-        box-shadow: inset 0 0 15px rgba(0,0,0,0.9) !important;
-        margin: 2px !important;
+    .group-card {
+        background-color: #02040a;
+        border: 1px solid #1a2a4a;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+        margin-bottom: 10px;
     }
-    [data-testid="stMetricLabel"] {
-        color: #8a9bb5 !important;
-        font-size: 13px !important;
-        font-weight: 400 !important;
-        letter-spacing: 1px !important;
-        text-transform: uppercase !important;
-        justify-content: center !important;
+    .group-card .product-name {
+        font-size: 16px;
+        color: #8a9bb5;
+        letter-spacing: 1px;
     }
-    [data-testid="stMetricValue"] {
-        color: #ffffff !important;
-        font-size: 24px !important;
-        font-weight: 700 !important;
-        font-family: 'Courier New', monospace !important;
-        justify-content: center !important;
-        background: #010308 !important;
-        padding: 0 10px !important;
-        border-left: 1px solid #2a3a5a !important;
-        border-right: 1px solid #2a3a5a !important;
-        display: inline-block !important;
-        line-height: 1.6 !important;
+    .group-card .price {
+        font-size: 32px;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        background: #010308;
+        padding: 0 15px;
+        border-left: 1px solid #2a3a5a;
+        border-right: 1px solid #2a3a5a;
+        display: inline-block;
+        line-height: 1.6;
     }
-    [data-testid="stMetricDelta"] {
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        justify-content: center !important;
-        margin-left: 6px !important;
+    .group-card .change {
+        font-size: 18px;
+        font-weight: 600;
+        margin-left: 8px;
     }
     .search-box {
         background: #02040a;
@@ -173,11 +257,6 @@ st.markdown("""
     }
     footer { display: none; }
     .block-container { padding-top: 0.2rem !important; padding-bottom: 0rem !important; }
-    @media (max-width: 768px) {
-        [data-testid="stMetricValue"] { font-size: 18px !important; padding: 0 4px !important; }
-        .top-menu .menu-item { font-size: 11px; margin: 0 4px; padding: 4px 8px; }
-        .search-box input { font-size: 14px; }
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -201,31 +280,43 @@ with st.container():
 if "menu_page" not in st.session_state:
     st.session_state.menu_page = "agent"
 
-# ------------------- PANO (GRID 3) -------------------
+# ------------------- GRUP KARTLARI (TEK KART + İLERİ/GERİ) -------------------
 st.markdown("### ✈️ CANLI EMTİA FİYATLARI (Terminal Panosu)")
-col_update, col_info = st.columns([1, 5])
-with col_update:
-    if st.button("🔄 Fiyatları Güncelle (Roll!)", use_container_width=True):
-        update_prices(0.02)
-        st.rerun()
-with col_info:
-    st.caption("Her tıklamada fiyatlar değişir, kartlar döner.")
+
+if st.button("🔄 Tüm Fiyatları Güncelle (Canlı Veri)"):
+    update_prices()
+    st.rerun()
 
 for group_name, products in COMMODITY_GROUPS.items():
     st.markdown(f"<div class='group-title'>{group_name}</div>", unsafe_allow_html=True)
-    cols = st.columns(3)
-    for idx, product in enumerate(products):
-        with cols[idx % 3]:
-            price = st.session_state.prices.get(product, 0.0)
-            change = st.session_state.change.get(product, 0.0)
-            st.metric(label=product, value=f"{price:.2f}", delta=f"{change:+.2f}%", delta_color="normal")
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button(f"◀ Önceki ({group_name[:2]})", key=f"prev_{group_name}"):
-            update_prices(0.01); st.rerun()
-    with c2:
-        if st.button(f"Sonraki ▶ ({group_name[:2]})", key=f"next_{group_name}"):
-            update_prices(0.01); st.rerun()
+    idx = st.session_state.selected_index.get(group_name, 0)
+    if idx >= len(products):
+        idx = 0
+    product = products[idx]
+    price = st.session_state.prices.get(product, 0.0)
+    change = st.session_state.change.get(product, 0.0)
+    change_color = "#4caf50" if change >= 0 else "#f44336"
+    arrow = "↑" if change >= 0 else "↓"
+    st.markdown(f"""
+    <div class="group-card">
+        <div class="product-name">{product}</div>
+        <div>
+            <span class="price">{price:.2f}</span>
+            <span class="change" style="color:{change_color};">{arrow} {change:+.2f}%</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("◀", key=f"prev_{group_name}"):
+            idx = (idx - 1) % len(products)
+            st.session_state.selected_index[group_name] = idx
+            st.rerun()
+    with col3:
+        if st.button("▶", key=f"next_{group_name}"):
+            idx = (idx + 1) % len(products)
+            st.session_state.selected_index[group_name] = idx
+            st.rerun()
     st.markdown("---")
 
 # ------------------- ARAMA MOTORU -------------------
@@ -238,53 +329,114 @@ with col_search2:
     search_clicked = st.button("🔄 ARA", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------- AI RAPOR (FALLBACK) -------------------
+# ------------------- AI RAPOR (Registry Lookup ile firmalar) -------------------
 def call_ai_api(prompt):
     try:
-        import requests
         url = "https://openrouter.ai/api/v1/chat/completions"
         payload = {
             "model": "meta-llama/llama-3-8b-instruct:free",
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.5, "max_tokens": 1024
+            "temperature": 0.7,
+            "max_tokens": 2048
         }
-        resp = requests.post(url, json=payload, timeout=15)
+        resp = requests.post(url, json=payload, timeout=25)
         if resp.status_code == 200:
             return resp.json()["choices"][0]["message"]["content"]
     except: pass
     return None
 
 def generate_report(query):
-    words = query.split(); is_bilateral = len(words) >= 3
-    prefix = "spesifik rota" if is_bilateral else "küresel piyasa"
-    prompt = f"Kullanıcı '{query}' için {prefix} raporu istiyor. 3 bölüm: Gümrük/Mevzuat, Lojistik/Navlun, Fiyat/Trend. Markdown."
-    ai = call_ai_api(prompt)
-    if ai:
-        return ai
+    words = query.split()
+    is_bilateral = len(words) >= 3
+
+    # Registry Lookup'tan firmaları çek
+    companies = fetch_companies(query)
+    company_table = ""
+    if companies:
+        company_table = "#### Gerçek Firmalar (Registry Lookup)\n\n| Firma | Ülke | Sicil No | Durum |\n|-------|------|----------|-------|\n"
+        for comp in companies[:8]:
+            company_table += f"| {comp['name']} | {comp['country']} | {comp['registration_number']} | {comp['status']} |\n"
     else:
-        # Zengin örnek rapor (PDF için de kullanılacak)
+        # Yedek firma listesi
+        company_table = """
+        #### Örnek Ticaret Firmaları (Geçici)
+        | Firma | Rol | Ülke | İletişim |
+        |-------|-----|------|----------|
+        | Global Metal Trading | Alıcı | Türkiye | info@globalmetal.com |
+        | Eurasian Resources | Satıcı | Kazakistan | sales@eurasian.kz |
+        | İzmir Alüminyum A.Ş. | Alıcı | Türkiye | procurement@izmiralu.com |
+        | Almaty Export Hub | Satıcı | Kazakistan | trade@almatyhub.kz |
+        | Bosphorus Metals | Alıcı | Türkiye | info@bosphorusmetals.com |
+        """
+
+    if is_bilateral:
+        prompt = f"""
+        Kullanıcı '{query}' rotası için detaylı ticaret raporu istiyor.
+        Lütfen aşağıdaki bölümleri içeren profesyonel bir rapor hazırla:
+        1. GÜMRÜK VE MEVZUAT: İthalat/ihracat vergileri, anti-damping, HS kodları.
+        2. LOJİSTİK VE NAVLUN: En uygun rota, transit süresi, konteyner/dökme navlun fiyatları.
+        3. FİYAT VE TREND: Güncel fiyat, 1 aylık değişim, 3 aylık tahmin.
+        4. TİCARET FIRMALARI: Aşağıda verilen firma tablosunu kullanarak alıcı ve satıcıları belirle.
+        5. EXW/FOB/CIF KARŞILAŞTIRMASI: Bu rotaya özel fiyat alternatifleri ve bölgesel primler.
+        Raporu markdown formatında, tablolar kullanarak hazırla.
+
+        Firma Tablosu:
+        {company_table}
+        """
+    else:
+        prompt = f"""
+        Kullanıcı '{query}' ürünü için küresel piyasa raporu istiyor.
+        Lütfen aşağıdaki bölümleri içeren kapsamlı bir rapor hazırla:
+        1. KÜRESEL ARZ-TALEP: Başlıca üretici ve tüketici ülkeler.
+        2. LOJİSTİK AĞI: Ana limanlar, kara yolları, lojistik firmaları.
+        3. FİYATLAR VE TREND: Dünya borsalarındaki fiyatlar, geçmiş aylık değişim.
+        4. TİCARET FIRMALARI: Aşağıdaki firma tablosunu kullanarak büyük oyuncuları listele.
+        5. EXW/FOB/CIF KARŞILAŞTIRMASI: Farklı teslim koşullarında fiyatlar.
+        Markdown formatında, tablolarla zenginleştir.
+
+        Firma Tablosu:
+        {company_table}
+        """
+
+    ai_response = call_ai_api(prompt)
+    if ai_response:
+        return ai_response
+    else:
+        # Yedek rapor (zengin)
         return f"""
-### 📊 KAPSAMLI ÖN İZLEME RAPORU: {query.upper()}
+### 📊 KAPSAMLI İSTİHBARAT RAPORU: {query.upper()}
 
-**1. GÜMRÜK VE MEVZUAT ANALİZİ**  
-- Güncel ithalat vergisi oranı: %8,5 (standart)  
-- Anti-damping riski: Düşük (henüz soruşturma yok)  
-- Önerilen HS Kodu: 7601.10 (Alüminyum külçe)  
+#### 1. GÜMRÜK VE MEVZUAT
+- Standart ithalat vergisi: %8,5 (Türkiye), %5 (AB), %12 (Rusya)
+- HS Kodu: 7601.10 (Alüminyum külçe)
+- Anti-damping: Yok (henüz soruşturma açılmadı)
 
-**2. LOJİSTİK VE NAVLUN DURUMU**  
-- En uygun rota: **Kazakistan (Aktau Limanı) → Karadeniz → Türkiye (İzmir)**  
-- Tahmini transit süresi: 22 gün  
-- Konteyner navlunu (40ft): $4.200 - $5.800 arası  
+#### 2. LOJİSTİK VE NAVLUN
+- Önerilen rota: **Kazakistan (Aktau) → Karadeniz → Türkiye (İzmir)**
+- Transit süresi: 22 gün
+- Navlun: 40ft Konteyner $4.500 - $6.000, Dökme $35/ton
 
-**3. FİYAT TRENDİ VE TAHMİN**  
-- Güncel LME Alüminyum: $2.620/Ton  
-- 1 aylık değişim: +%3.2 (yukarı yönlü)  
-- 3 aylık tahmin: $2.750/Ton (arz sıkışıklığı nedeniyle)
+#### 3. FİYAT TRENDİ VE TAHMİN
+- Güncel LME Alüminyum: $2.620/ton
+- 1 aylık değişim: +%3.2
+- 3 aylık tahmin: $2.750/ton (yukarı yönlü)
+
+#### 4. TİCARET FIRMALARI
+{company_table}
+
+#### 5. EXW/FOB/CIF ALTERNATİFLERİ
+| Teslim Şekli | Fiyat ($/ton) | Açıklama |
+|--------------|---------------|----------|
+| EXW (Kazakistan) | 2.550 | Fabrika çıkışı |
+| FOB (Aktau) | 2.600 | Limanda yükleme |
+| CIF (İzmir) | 2.680 | Sigorta+navlun dahil |
+| Bölgesel prim | +$50 | Kazakistan-Türkiye arası ek maliyet |
+
+> **Not:** Bu rapor önizleme amaçlıdır. Gerçek zamanlı veri ve tam firma bilgileri için premium sürüme geçin.
 """
 
-# ------------------- 📄 PDF OLUŞTURUCU (AFİLLİ VE KAPSAMLI) -------------------
+# ------------------- PDF OLUŞTURUCU (TÜRKÇE FONT DÜZELTMELİ) -------------------
 def create_pdf_report(query, report_md):
-    """reportlab ile grafikli, tablolu profesyonel PDF oluştur."""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             rightMargin=2*cm, leftMargin=2*cm,
@@ -292,13 +444,17 @@ def create_pdf_report(query, report_md):
     styles = getSampleStyleSheet()
     story = []
 
-    # Başlık Stili
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=18, textColor=colors.darkblue, alignment=TA_CENTER, spaceAfter=12)
-    sub_style = ParagraphStyle('SubStyle', parent=styles['Heading2'], fontSize=12, textColor=colors.grey, alignment=TA_CENTER)
-    body_style = styles['BodyText']
-    h2_style = ParagraphStyle('H2Style', parent=styles['Heading2'], fontSize=14, textColor=colors.darkblue, spaceAfter=6)
+    try:
+        pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
+        font_name = 'DejaVu'
+    except:
+        font_name = 'Helvetica'
 
-    # 1. Başlık
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontName=font_name, fontSize=18, textColor=colors.darkblue, alignment=TA_CENTER, spaceAfter=12)
+    sub_style = ParagraphStyle('SubStyle', parent=styles['Heading2'], fontName=font_name, fontSize=12, textColor=colors.grey, alignment=TA_CENTER)
+    body_style = ParagraphStyle('BodyStyle', parent=styles['BodyText'], fontName=font_name, fontSize=10)
+    h2_style = ParagraphStyle('H2Style', parent=styles['Heading2'], fontName=font_name, fontSize=14, textColor=colors.darkblue, spaceAfter=6)
+
     story.append(Paragraph("INTERLOCK GLOBAL AI TERMINAL", title_style))
     story.append(Paragraph(f"Kapsamlı Emtia İstihbarat Raporu", sub_style))
     story.append(Paragraph(f"Rapor Tarihi: {datetime.now().strftime('%d-%m-%Y %H:%M')}", sub_style))
@@ -306,11 +462,11 @@ def create_pdf_report(query, report_md):
     story.append(Paragraph(f"<b>Konu:</b> {query.upper()}", body_style))
     story.append(Spacer(1, 0.3*cm))
 
-    # 2. Grafik Ekle (Matplotlib ile çizilmiş simüle fiyat)
+    # Grafik
     fig, ax = plt.subplots(figsize=(6, 3))
     days = list(range(1, 31))
-    base_price = random.randint(500, 3000)
-    prices = [base_price + sum(random.uniform(-5, 5) for _ in range(i)) for i in range(30)]
+    base = random.randint(500, 3000)
+    prices = [base + sum(random.uniform(-5, 5) for _ in range(i)) for i in range(30)]
     ax.plot(days, prices, marker='o', linestyle='-', color='#1a3a6a', linewidth=2)
     ax.set_title(f"{query.upper()} - Son 30 Gün Fiyat Trendi", fontsize=10)
     ax.set_xlabel("Gün")
@@ -324,7 +480,7 @@ def create_pdf_report(query, report_md):
     story.append(img)
     story.append(Spacer(1, 0.5*cm))
 
-    # 3. Rapor Metnini Parse et (Markdown'dan temizle)
+    # Rapor metni
     lines = report_md.split('\n')
     for line in lines:
         if line.strip().startswith('#'):
@@ -333,56 +489,30 @@ def create_pdf_report(query, report_md):
             story.append(Paragraph(line.strip(), body_style))
         story.append(Spacer(1, 0.1*cm))
 
-    # 4. Tablo: Potansiyel Alıcı/Satıcı Firmalar
-    story.append(Paragraph("Potansiyel Ticaret Firmaları", h2_style))
-    data = [
-        ['Firma Adı', 'Rol', 'Ülke'],
-        ['Global Metal Trading', 'Alıcı', 'Türkiye'],
-        ['Eurasian Resources', 'Satıcı', 'Kazakistan'],
-        ['İzmir Alüminyum A.Ş.', 'Alıcı', 'Türkiye'],
-        ['Almaty Export Hub', 'Satıcı', 'Kazakistan'],
-        ['MSC Logistics', 'Navlun', 'İsviçre']
-    ]
-    table = Table(data, colWidths=[5*cm, 4*cm, 4*cm])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.darkblue),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 8),
-        ('GRID', (0,0), (-1,-1), 1, colors.lightgrey),
-        ('BACKGROUND', (0,1), (-1,-1), colors.whitesmoke),
-        ('TEXTCOLOR', (0,1), (-1,-1), colors.black),
-    ]))
-    story.append(table)
-    story.append(Spacer(1, 0.5*cm))
-
-    # 5. Footer (Ücret Uyarısı)
-    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, textColor=colors.red, alignment=TA_CENTER)
-    story.append(Paragraph("<b>⚠️ ÖNEMLİ UYARI:</b> Bu rapor önizleme amaçlıdır. Tam sürüm ve gerçek zamanlı veri akışı için ileride $19.99/rapor ücretlendirmesi uygulanacaktır.", footer_style))
+    # Footer uyarı
+    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontName=font_name, fontSize=9, textColor=colors.red, alignment=TA_CENTER)
+    story.append(Paragraph("<b>⚠️ UYARI:</b> Bu rapor önizleme amaçlıdır. Tam sürüm ve gerçek zamanlı veri için ileride $19.99/rapor ücretlendirmesi uygulanacaktır.", footer_style))
     story.append(Spacer(1, 0.2*cm))
-    story.append(Paragraph("© 2025 Interlock Global - Tüm hakları saklıdır.", ParagraphStyle('Copy', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER)))
+    story.append(Paragraph("© 2025 Interlock Global - Tüm hakları saklıdır.", ParagraphStyle('Copy', parent=styles['Normal'], fontName=font_name, fontSize=8, alignment=TA_CENTER)))
 
     doc.build(story)
     buffer.seek(0)
     return buffer
 
-# ------------------- ANA SAYFA RAPOR + PDF BUTONU -------------------
+# ------------------- ANA SAYFA RAPOR + PDF -------------------
 if st.session_state.menu_page == "agent":
     if search_clicked and query.strip():
         with st.spinner("🔄 Yapay zeka ajanları taranıyor..."):
             report_text = generate_report(query)
         
         if report_text:
-            # Ekran Gösterimi
             st.markdown(f'<div class="report-section"><h3>📌 RAPOR: {query.upper()}</h3>', unsafe_allow_html=True)
             st.markdown(report_text)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # 1. PAYWALL GÖRÜNÜMÜ (Firmalar)
             st.markdown("""
             <div class="paywall-box">
-                <h4>🔒 Premium Raporun Tamamı (5 Gerçek Firma + Incoterms)</h4>
+                <h4>🔒 Premium Raporun Tamamı (5 Gerçek Firma + İletişim)</h4>
                 <div class="email-list">
                     📧 info@globaltraders.com • 📧 sales@agriexport.com • 📧 trade@metalhub.com<br>
                     📧 procurement@logisticsworld.com • 📧 cargo@shippingline.com
@@ -392,7 +522,6 @@ if st.session_state.menu_page == "agent":
                 </div>
             """, unsafe_allow_html=True)
             
-            # 2. PDF İNDİR BUTONU (Şimdilik Ücretsiz, Uyarılı)
             pdf_bytes = create_pdf_report(query, report_text)
             st.download_button(
                 label="📄 Bu Raporu PDF Olarak İndir (Ücretsiz Deneme)",
