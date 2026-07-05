@@ -33,13 +33,10 @@ st.markdown("""
         display: flex; flex-direction: column; justify-content: center; perspective: 1000px;
         position: relative; width: 100% !important;
     }
-    
-    /* 📏 TAM ORTADAN GEÇEN İNCE MEKANİK PLAKA ÇİZGİSİ (BÜTÜNLÜĞÜ BOZMAYAN YATAY ÇİZGİ) */
     .split-flap-card::after {
         content: ""; position: absolute; left: 0; top: 50%; width: 100%; height: 2px;
         background: #111625 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.8); z-index: 10;
     }
-    
     .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; z-index: 5; }
     
     /* SAF BEYAZ NOSTALJİK RAKAMLAR VE 0.4 SN PIRRR DİK KART ANİMASYONU */
@@ -76,9 +73,8 @@ st.markdown("""
     h1, h2, h3, p, span, label { color: #ffffff !important; font-family: 'Courier New', monospace !important; }
     </style>
     """, unsafe_allow_html=True)
-
 # 📟 YATAY ÜST KUMANDA PANELİ (SIFIR KİLİTLENME VE TAM UYUMLULUK DÜZENİ)
-col_top1, col_top2 = st.columns([3, 1])
+col_top1, col_top2 = st.columns(2)
 with col_top2:
     lang = st.selectbox("🌐 LANGUAGE / DİL:", ["English", "Türkçe"], label_visibility="collapsed")
 
@@ -122,7 +118,7 @@ def generate_advanced_pdf(query, ai_data, mode):
     buffer.seek(0)
     return buffer
 
-# BÖLGESEL HAFIZA: SADECE KADRANLARI YENİLER, SAYFAYI ASLA KARARTMAZ VEYA KIRPMAZ
+# BÖLGESEL HAFIZA: SADECE KADRANLARI YENİLER, EKRANI ASLA KARARTMAZ VEYA KIRPMAZ
 @st.fragment
 def show_mechanical_radar(lang):
     ali_p = 3266.50; cu_p = 9120.00; sugar_p = 329.72; wheat_p = 245.00; oil_p = 71.38
@@ -177,7 +173,6 @@ def show_mechanical_radar(lang):
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• PLASTİK HAMMADDELER</div><div class="split-flap-value">$1,150</div><div class="split-flap-sub">PVC GRANÜL / TON</div></div>', unsafe_allow_html=True)
     with c_b6:
         st.markdown('<div class="split-flap-card"><div class="split-flap-title">• KÜRESEL NAVLUN ENDEKSİ</div><div class="split-flap-value">1,480</div><div class="split-flap-sub">BDI BALTIK KURUYÜK</div></div>', unsafe_allow_html=True)
-
 if menu in [mod1, "🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     show_mechanical_radar(lang)
     st.divider()
@@ -190,7 +185,6 @@ if menu in [mod1, "🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     search_placeholder = "e.g., flaxseed kazakhstan - germany or quinoa" if lang == "English" else "Örn: keten tohumu kazakistan - almanya VEYA sadece 'kinoa', 'chia' gibi ürün ismi"
     search_label = "Advanced AI Intelligence Search (Unlimited Commodities):" if lang == "English" else "Gemi İstihbarat Motoru (Sonsuz Emtia Özgürlüğü):"
     
-    # SAF VE BAĞIMSIZ STRIP METİN GİRİŞİ (HATA ORANI %0)
     search_query = st.text_input(search_label, placeholder=search_placeholder, key="unrestricted_ai_query")
     
     submit_btn_label = "EXECUTE SEARCH (ENTER)" if lang == "English" else "İSTİHBARATI BAŞLAT (ENTER)"
@@ -271,10 +265,11 @@ if menu in [mod1, "🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             st.warning("🔓 Premium veriler holding kasasındadır. Aşağıdan indirin.")
             
             st.markdown(f"#### 📈 GLOBAL {product.upper()} PRICE TREND (6-MONTH PROJECTION)")
-            chart_data = pd.DataFrame(, columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+            # 🔑 İMLA HATASI TAMAMEN TEMİZLENDİ VE SİBER VERİLER GÖMÜLDÜ!
+            chart_data = pd.DataFrame([10, 15, 12, 18, 20, 25], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
             st.line_chart(chart_data)
             
-            pay_desc = "5 adet gerçek üretici/ithalatçı mailini bir OpenCorporates sicil kayıtlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier/buyer corporate emails and official OpenCorporates registry data instantly."
+            pay_desc = "5 adet gerçek üretici/ithalatçı mailini ve OpenCorporates sicil kayıtlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier/buyer corporate emails and official OpenCorporates registry data instantly."
             st.markdown(f"""
                 <div style="background-color: #04091a; padding: 25px; border-radius: 8px; border: 2px dashed #d4af37; text-align:center; margin-top:20px;">
                     <h3 style="color:#d4af37; font-family:'Courier New', monospace;">🪙 PREMIUM REPORT OVERVIEW ($19.99)</h3>
