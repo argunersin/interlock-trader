@@ -3,6 +3,7 @@ import requests
 import json
 import time
 import random
+import os
 from datetime import datetime
 
 # ------------------- SAYFA YAPILANDIRMASI -------------------
@@ -21,14 +22,12 @@ st.markdown("""
         background-color: #0a1128;
         color: #ffffff;
     }
-    /* Tüm yazılar beyaz, linkler mavi */
     .stApp * {
         color: #ffffff !important;
     }
     a {
         color: #4a9eff !important;
     }
-    /* Üst menü şeridi – yatay, koyu */
     .top-menu {
         background-color: #02040a;
         padding: 10px 20px;
@@ -59,7 +58,6 @@ st.markdown("""
         background: #2a4a7a;
         color: #ffffff !important;
     }
-    /* Split‑Flap kartları – tam genişlik, siyah zemin */
     .flap-container {
         background: #02040a;
         padding: 8px 15px;
@@ -126,7 +124,6 @@ st.markdown("""
         background: #1a2a4a;
         color: #ffffff;
     }
-    /* Arama çubuğu – form yok, saf input+button */
     .search-box {
         background: #02040a;
         padding: 20px 25px;
@@ -154,7 +151,6 @@ st.markdown("""
     .search-box button:hover {
         background: #2a5a9a !important;
     }
-    /* Rapor kartları */
     .report-section {
         background: #0a1128;
         border-left: 3px solid #2a5a9a;
@@ -168,7 +164,6 @@ st.markdown("""
         border-bottom: 1px solid #1a2a4a;
         padding-bottom: 6px;
     }
-    /* Paywall */
     .paywall-box {
         background: #02040a;
         border: 2px dashed #2a5a9a;
@@ -199,7 +194,6 @@ st.markdown("""
         background: #2a5a9a !important;
         transform: scale(1.02);
     }
-    /* Hata mesajları */
     .error-box {
         background: #2a0a0a;
         border: 1px solid #aa3333;
@@ -209,13 +203,11 @@ st.markdown("""
         font-family: monospace;
         margin: 15px 0;
     }
-    /* Footer – boşluk yok */
     .reportview-container .main .block-container {
         padding-top: 0.5rem;
         padding-bottom: 0rem;
     }
     footer { display: none; }
-    /* Mobil uyum */
     @media (max-width: 768px) {
         .flap-card { min-width: 80px; }
         .flap-price { font-size: 18px; }
@@ -226,8 +218,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------- SABİT BELLEK (IŞIK HIZINDA VERİ) -------------------
-# Split‑Flap verileri – gerçekte yfinance veya başka bir kaynaktan periyodik güncellenir.
-# Bu örnekte statik veriler kullanılıyor, dilerseniz arka planda bir scheduler ile güncelleyebilirsiniz.
 if 'flap_data' not in st.session_state:
     st.session_state.flap_data = {
         "XAU": {"price": 2345.20, "change": 0.45},
@@ -243,7 +233,7 @@ if 'flap_data' not in st.session_state:
 with st.container():
     col1, col2, col3, col4, col5 = st.columns([1, 2, 2, 2, 1])
     with col1:
-        st.image("https://via.placeholder.com/40x40/0a1128/4a9eff?text=IL", width=40)  # Logo placeholder
+        st.image("https://via.placeholder.com/40x40/0a1128/4a9eff?text=IL", width=40)
     with col2:
         st.selectbox("🌐 Dil", ["Türkçe", "English", "Русский"], key="lang", label_visibility="collapsed")
     with col3:
@@ -256,60 +246,17 @@ with st.container():
         if st.button("⚓ Gemi Röntgeni ($20)", key="menu_ship", use_container_width=True):
             st.session_state.menu_page = "ship"
 
-# Varsayılan menü sayfası
 if "menu_page" not in st.session_state:
-    st.session_state.menu_page = "agent"  # ana sayfa
+    st.session_state.menu_page = "agent"
 
 # ------------------- BORSA KADRANLARI (@st.fragment) -------------------
 @st.fragment
-def render_flap_cards():
-    """Split‑Flap kadranları – sayfa kararması yok, sadece rakamlar takla atar."""
-    cols = st.columns(len(st.session_state.flap_symbols))
-    for i, sym in enumerate(st.session_state.flap_symbols):
-        data = st.session_state.flap_data[sym]
-        price = data["price"]
-        change = data["change"]
-        change_str = f"{change:+.2f}%"
-        change_class = "positive" if change >= 0 else "negative"
-
-        with cols[i]:
-            # Kart
-            st.markdown(f"""
-            <div class="flap-card">
-                <div class="flap-symbol">{sym}</div>
-                <div>
-                    <span class="flap-price">{price:.2f}</span>
-                    <span class="flap-change {change_class}">{change_str}</span>
-                </div>
-                <div style="margin-top: 6px;">
-                    <button class="flap-nav" data-sym="{sym}" data-dir="-1">◀</button>
-                    <button class="flap-nav" data-sym="{sym}" data-dir="1">▶</button>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            # Bu butonlar Streamlit butonları ile değiştirilebilir – daha güvenli
-            # fakat JS ile yapılan bu yöntem sayfayı yeniden yüklemeden çalışır.
-            # Ancak @st.fragment ile çalışması için Streamlit butonları kullanmalıyız.
-            # Aşağıda Streamlit butonları ile yeniden düzenliyoruz:
-            # Aslında yukarıdaki HTML butonlar Streamlit ile etkileşimli değil,
-            # bu yüzden aşağıdaki gibi Streamlit butonları ekliyoruz:
-    # Alternatif: Streamlit butonları ile doğru fragment yönetimi
-    # Yukarıdaki HTML butonları kaldırıp, kolonlara Streamlit butonları koyalım:
-    # (Yukarıdaki kod sadece görsel, aşağıda tekrar düzenliyoruz)
-
-# Daha iyisi: Flap kartlarını tamamen Streamlit butonları ile oluşturalım.
-# Aşağıdaki fonksiyon tam çalışır durumda.
-
-@st.fragment
 def render_flap_cards_v2():
-    """Split‑Flap kartları – sayfa kararması yok, butonlara tıklanınca sadece fiyat değişir."""
     symbols = st.session_state.flap_symbols
     cols = st.columns(len(symbols))
     for idx, sym in enumerate(symbols):
         with cols[idx]:
-            # Kart başlığı
             st.markdown(f"<div style='font-size:14px;color:#8a9bb5;text-align:center;'>{sym}</div>", unsafe_allow_html=True)
-            # Fiyat ve değişim
             data = st.session_state.flap_data[sym]
             price = data["price"]
             change = data["change"]
@@ -320,20 +267,16 @@ def render_flap_cards_v2():
                 <span style='font-size:16px;font-weight:500;color:{change_color};margin-left:6px;'>{change:+.2f}%</span>
             </div>
             """, unsafe_allow_html=True)
-            # Navigasyon butonları
             c1, c2, c3 = st.columns([1, 1, 1])
             with c1:
                 if st.button("◀", key=f"flap_left_{sym}"):
-                    # Fiyatı rastgele değiştir (simülasyon)
                     st.session_state.flap_data[sym]["price"] += random.uniform(-2, 2)
                     st.session_state.flap_data[sym]["change"] += random.uniform(-0.5, 0.5)
-                    # Fragment yeniden çalışır, sayfa tamamen yenilenmez.
             with c3:
                 if st.button("▶", key=f"flap_right_{sym}"):
                     st.session_state.flap_data[sym]["price"] += random.uniform(-2, 2)
                     st.session_state.flap_data[sym]["change"] += random.uniform(-0.5, 0.5)
 
-# Ana sayfada flap kartlarını göster
 render_flap_cards_v2()
 
 # ------------------- ARAÇ (ARAMA MOTORU) – FORM YOK -------------------
@@ -347,24 +290,26 @@ with col_search2:
     search_clicked = st.button("🔄 ARA", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------- API FALLBACK ZİNCİRİ (ÇOKLU ANAHTAR) -------------------
+# ------------------- API FALLBACK ZİNCİRİ (secrets TAMAMEN KALDIRILDI) -------------------
 def call_ai_api(prompt):
-    """Gemini -> Groq -> OpenRouter (ücretsiz) fallback zinciri."""
-    api_keys = [
-        ("gemini", st.secrets.get("GEMINI_API_KEY_1", "")),
-        ("gemini", st.secrets.get("GEMINI_API_KEY_2", "")),
-        ("groq", st.secrets.get("GROQ_API_KEY", "")),
-        ("openrouter", "free")  # OpenRouter ücretsiz model kullanımı
+    """Gemini (env) -> Groq (env) -> OpenRouter (ücretsiz) fallback zinciri, secrets kullanılmaz."""
+    # Environment variable'lardan oku, yoksa boş string
+    gemini_key_1 = os.getenv("GEMINI_API_KEY_1", "")
+    gemini_key_2 = os.getenv("GEMINI_API_KEY_2", "")
+    groq_key = os.getenv("GROQ_API_KEY", "")
+
+    api_chain = [
+        ("gemini", gemini_key_1),
+        ("gemini", gemini_key_2),
+        ("groq", groq_key),
+        ("openrouter", "free")
     ]
     errors = []
-    for provider, key in api_keys:
+    for provider, key in api_chain:
         try:
             if provider == "gemini" and key:
-                # Gemini API çağrısı (örnek)
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={key}"
-                payload = {
-                    "contents": [{"parts": [{"text": prompt}]}]
-                }
+                payload = {"contents": [{"parts": [{"text": prompt}]}]}
                 resp = requests.post(url, json=payload, timeout=15)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -372,7 +317,6 @@ def call_ai_api(prompt):
                 else:
                     errors.append(f"Gemini (key) hata: {resp.status_code}")
             elif provider == "groq" and key:
-                # Groq API çağrısı
                 url = "https://api.groq.com/openai/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
                 payload = {
@@ -386,7 +330,6 @@ def call_ai_api(prompt):
                 else:
                     errors.append(f"Groq hata: {resp.status_code}")
             elif provider == "openrouter":
-                # OpenRouter ücretsiz model
                 url = "https://openrouter.ai/api/v1/chat/completions"
                 payload = {
                     "model": "meta-llama/llama-3-8b-instruct:free",
@@ -400,12 +343,10 @@ def call_ai_api(prompt):
         except Exception as e:
             errors.append(f"{provider} exception: {str(e)}")
             continue
-    # Hepsi başarısız -> şeffaf hata göster
     raise Exception("Tüm API'ler başarısız oldu. Loglar:\n" + "\n".join(errors))
 
 # ------------------- RAPOR OLUŞTURMA (3 BÖLÜM) -------------------
 def generate_report(query):
-    """AI ajanlarından 3 keskin kurumsal bölüm üret."""
     prompt = f"""
     Sen Interlock Global AI Terminal’in istihbarat ajanısın. Kullanıcı şu sorguyu yaptı: "{query}".
     
@@ -419,25 +360,21 @@ def generate_report(query):
     try:
         return call_ai_api(prompt)
     except Exception as e:
-        # Şeffaf hata raporlayıcısı
         st.markdown(f'<div class="error-box">⚠️ SİSTEM HATASI (şeffaf log):<br>{str(e)}</div>', unsafe_allow_html=True)
         return None
 
 # ------------------- ANA SAYFA İÇERİĞİ (Menü kontrolü) -------------------
 if st.session_state.menu_page == "agent":
-    # Otonom Ajan – ana rapor sayfası
     if search_clicked and query.strip():
         with st.spinner("🔄 Çoklu yapay zeka ajanları dünyayı tarıyor..."):
             report = generate_report(query)
         if report:
             st.markdown('<div class="report-section"><h3>📊 GÜMRÜK REJİMİ VE MEVZUAT</h3>', unsafe_allow_html=True)
-            # Bölümleri ayırmak için basit bir parse (örnek)
             parts = report.split("###")
             for part in parts:
                 st.markdown(part)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # PAYWALL – 5 e-posta ve Incoterms gizlenmiş
             st.markdown("""
             <div class="paywall-box">
                 <h4>🔒 Premium Raporun Tamamı</h4>
@@ -471,7 +408,6 @@ elif st.session_state.menu_page == "ocr":
 elif st.session_state.menu_page == "ship":
     st.header("⚓ Özel Gemi Röntgeni ($20)")
     st.write("Canlı kargo gemisi takibi ve röntgen analizi.")
-    # Folium haritası – sadece bu sayfada
     try:
         import folium
         from streamlit_folium import folium_static
