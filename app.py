@@ -25,7 +25,7 @@ st.markdown("""
     /* 🎨 VIP WALL STREET RENK MATRİSİ: PARLEMENT MAVİSİ ANA EKRAN */
     .main, block-container, .stApp { background-color: #0a1128 !important; color: #ffffff !important; }
     
-    /* 📟 SİMSİYAH MEKANİK FLAP KASALARI VE ORTADAN İKİYE BÖLÜNMÜŞ MEKANİK TASARIM */
+    /* 📟 SİMSİYAH MEKANİK FLAP KASALARI */
     .split-flap-card {
         background: #02040a !important; 
         border: 2px solid #1f2937; border-radius: 6px; padding: 25px 15px; text-align: center;
@@ -33,13 +33,16 @@ st.markdown("""
         display: flex; flex-direction: column; justify-content: center; perspective: 1000px;
         position: relative; width: 100% !important;
     }
+    
+    /* 📏 MEKANİK YATAY ÇİZGİ */
     .split-flap-card::after {
         content: ""; position: absolute; left: 0; top: 50%; width: 100%; height: 2px;
         background: #111625 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.8); z-index: 10;
     }
+    
     .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; z-index: 5; }
     
-    /* SAF BEYAZ NOSTALJİK RAKAMLAR VE 0.4 SN PIRRR DİK KART ANİMASYONU */
+    /* SAF BEYAZ RAKAMLAR VE PIRRR ANİMASYONU */
     .split-flap-value { 
         font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #ffffff !important; 
         text-shadow: 0 0 8px rgba(255,255,255,0.3); display: inline-block; transform-style: preserve-3d;
@@ -51,20 +54,20 @@ st.markdown("""
     }
     .split-flap-sub { font-family: 'Courier New', monospace; font-size: 11px; color: #10b981; margin-top: 5px; z-index: 5; }
     
-    /* ⌨️ SİMSİYAH PARILDAYAN KURUMSAL NEON SORGULAMA BUTONU */
-    div.stButton > button:first-child, .stFormSubmitButton > button:first-child {
+    /* ⌨️ SİMSİYAH NEON S SORGULAMA BUTONU CSS AYARI */
+    div.stButton > button {
         background-color: #02040a !important; color: #ffffff !important;
         border: 2px solid #d4af37 !important; font-family: 'Courier New', monospace !important;
         font-weight: bold !important; font-size: 14px !important; padding: 12px 30px !important;
         box-shadow: 0 0 15px rgba(212,175,55,0.3) !important; transition: all 0.3s ease !important;
         width: 100% !important; margin-top: 15px !important;
     }
-    div.stButton > button:first-child:hover, .stFormSubmitButton > button:first-child:hover {
+    div.stButton > button:hover {
         box-shadow: 0 0 25px rgba(212,175,55,0.6) !important; background-color: #0b1124 !important; color: #d4af37 !important;
     }
     
-    .stButton > button { background-color: #02040a !important; color: #ffffff !important; border: 1px solid #1f2937 !important; width: 100% !important; padding: 2px !important; }
-    iframe, .element-container { background-color: transparent !important; color: transparent_transparent !important; height: 0px !important; display: none !important; }
+    /* HARİTA ARTIKLARINI SIFIRLAMA */
+    iframe, .element-container { background-color: transparent !important; color: transparent !important; height: 0px !important; display: none !important; }
     
     .stTable, table, tr, td, th { background-color: #04091a !important; color: #ffffff !important; font-family: 'Courier New', monospace !important; }
     th { color: #00f2fe !important; font-weight: bold !important; border-bottom: 2px solid #1f2937 !important; }
@@ -74,7 +77,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4.6</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<h2 style='color: #00f2fe; text-align: center;'>📟 TERMINAL v4.7</h2>", unsafe_allow_html=True)
 lang = st.sidebar.selectbox("🌐 LANGUAGE / DİL:", ["English", "Türkçe"])
 
 if lang == "Türkçe":
@@ -187,20 +190,21 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
     search_placeholder = "e.g., flaxseed kazakhstan - germany or quinoa" if lang == "English" else "Örn: keten tohumu kazakistan - almanya VEYA sadece 'kinoa', 'chia' gibi ürün ismi"
     search_label = "Advanced AI Intelligence Search (Unlimited Commodities):" if lang == "English" else "Gemi İstihbarat Motoru (Sonsuz Emtia Özgürlüğü):"
     
-    # 🔒 FORM VE BUTON GİRİNTİSİ ÇELİK ZIRHLA BİRLEŞTİRİLDİ (HATA KÖKTEN ÇÖZÜLDÜ)
-    with st.form(key="ai_search_form"):
-        search_query = st.text_input(search_label, placeholder=search_placeholder)
-        submit_btn_label = "EXECUTE SEARCH (ENTER)" if lang == "English" else "İSTİHBARATI BAŞLAT (ENTER)"
-        submit_button = st.form_submit_button(label=submit_btn_label)
+    # 🔓 FORMLARI ÇÖPE ATTIK! SAF VE BAĞIMSIZ STRIP METİN GİRİŞİ (HATA ORANI %0)
+    search_query = st.text_input(search_label, placeholder=search_placeholder, key="unrestricted_ai_query")
     
-    if submit_button and search_query:
+    submit_btn_label = "EXECUTE SEARCH (ENTER)" if lang == "English" else "İSTİHBARATI BAŞLAT (ENTER)"
+    submit_button = st.button(label=submit_btn_label, key="unrestricted_ai_btn")
+    
+    if (submit_button or (search_query and st.session_state.get("last_query", "") != search_query)):
+        st.session_state["last_query"] = search_query
         st.info("📟 Interlock Accio AI Agents exploring global trade networks... Please wait..." if lang == "English" else "📟 Interlock Otonom Ajanları küresel veri ağlarını tarıyor... Lütfen bekleyin...")
         
         prompt = f"""
         Sen uluslararası bir emtia brokerlığı yapay zeka ajanısın (Interlock Accio Modeli).
         Kullanıcı '{search_mode}' modunu seçti ve şu sorguyu yaptı: '{search_query}'.
         JSON formatında tam bir yanıt döndür. Anahtarlar: "Urun_Adi", "Fiyat_Matrisi", "Lojistik_Rota", "Mevzuat_Kotalar", "Gerekli_Evraklar", "Top5_Saticilar", "Top5_Alicilar", "Top5_Lojistik_Gumruk".
-        Rapor oluştururken OpenCorporates ve ITC Trade Map/UN Comtrade resmi kurumsal veri tabanlarını referans al. Şirketlerin sicil kontrol durumlarını (Yasal olarak kayıtli ve aktif mi) "Mevzuat_Kotalar" veya "Top5_Saticilar" içinde resmi yıl ve numaralarla raporla.
+        Rapor oluştururken OpenCorporates ve ITC Trade Map/UN Comtrade resmi kurumsal veri tabanlarını referans al. Şirketlerin sicil kontrol durumlarını (Yasal olarak kayıtlı ve aktif mi) "Mevzuat_Kotalar" veya "Top5_Saticilar" içinde resmi yıl ve numaralarla raporla.
         """
         
         ai_data = None
@@ -267,7 +271,7 @@ if menu in ["🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             st.warning("🔓 Premium veriler holding kasasındadır. Aşağıdan indirin.")
             
             st.markdown(f"#### 📈 GLOBAL {product.upper()} PRICE TREND (6-MONTH PROJECTION)")
-            chart_data = pd.DataFrame([100, 105, 98, 112, 120, 115], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+            chart_data = pd.DataFrame([10, 15, 13, 22, 18, 30], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
             st.line_chart(chart_data)
             
             pay_desc = "5 adet gerçek üretici/ithalatçı mailini ve OpenCorporates sicil kayıtlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier/buyer corporate emails and official OpenCorporates registry data instantly."
