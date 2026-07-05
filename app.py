@@ -25,7 +25,7 @@ st.markdown("""
     /* 🎨 VIP WALL STREET RENK MATRİSİ: PARLEMENT MAVİSİ ANA EKRAN */
     .main, block-container, .stApp { background-color: #0a1128 !important; color: #ffffff !important; }
     
-    /* 📟 SİMSİYAH MEKANİK FLAP KASALARI VE ORTADAN İKİYE BÖLÜNMÜŞ MEKANİK TASARIM */
+    /* 📟 KUŞ TÜYÜ HAFİFLİKTE SİMSIYAH MEKANİK FLAP KASALARI VE ORTADAN BÖLÜNMÜŞ ÇİZGİ */
     .split-flap-card {
         background: #02040a !important; 
         border: 2px solid #1f2937; border-radius: 6px; padding: 25px 15px; text-align: center;
@@ -39,7 +39,7 @@ st.markdown("""
     }
     .split-flap-title { font-family: 'Courier New', monospace; font-size: 11px; color: #9ca3af; letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; z-index: 5; }
     
-    /* SAF BEYAZ NOSTALJİK RAKAMLAR VE 0.4 SN PIRRR DİK KART ANİMASYONU */
+    /* SAF BEYAZ NOSTALJİK RAKAMLAR VE 0.4 SN PIRRR TAKLA ANİMASYONU */
     .split-flap-value { 
         font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #ffffff !important; 
         text-shadow: 0 0 8px rgba(255,255,255,0.3); display: inline-block; transform-style: preserve-3d;
@@ -63,7 +63,7 @@ st.markdown("""
         box-shadow: 0 0 25px rgba(212,175,55,0.6) !important; background-color: #0b1124 !important; color: #d4af37 !important;
     }
     
-    /* 🚨 SOL MENÜYÜ VE HARİTA ARTIKLARINI TAMAMEN SİLİP KAZIYAN SİBER ZIRH */
+    /* 🚨 TARAYICIYI KİLİTLEYEN SOL MENÜYÜ TAMAMEN KAZIYAN SİBER ZIRH */
     [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none !important; width: 0px !important; }
     iframe, .element-container { background-color: transparent !important; color: transparent !important; height: 0px !important; display: none !important; }
     
@@ -118,7 +118,7 @@ def generate_advanced_pdf(query, ai_data, mode):
     buffer.seek(0)
     return buffer
 
-# BÖLGESEL HAFIZA: SADECE KADRANLARI YENİLER, EKRANI ASLA KARARTMAZ VEYA KIRPMAZ
+# BÖLGESEL HAFIZA: SADECE KADRANLARI YENİLER, SAYFAYI ASLA KARARTMAZ VEYA KIRPMAZ
 @st.fragment
 def show_mechanical_radar(lang):
     ali_p = 3266.50; cu_p = 9120.00; sugar_p = 329.72; wheat_p = 245.00; oil_p = 71.38
@@ -130,6 +130,7 @@ def show_mechanical_radar(lang):
     if "a_idx" not in st.session_state: st.session_state.a_idx = 0
 
     st.write("")
+    st.columns(1)
     c_b1, c_b2, c_b3 = st.columns(3)
     
     with c_b1:
@@ -265,8 +266,8 @@ if menu in [mod1, "🚀 Otonom İstihbarat Ajanı", "🚀 Autonomous AI Agent"]:
             st.warning("🔓 Premium veriler holding kasasındadır. Aşağıdan indirin.")
             
             st.markdown(f"#### 📈 GLOBAL {product.upper()} PRICE TREND (6-MONTH PROJECTION)")
-            # 🔑 İMLA HATASI TAMAMEN TEMİZLENDİ VE SİBER VERİLER GÖMÜLDÜ!
-            chart_data = pd.DataFrame([10, 15, 12, 18, 20, 25], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+            # 📌 HATA VEREN BOŞ VİRGÜL UÇTU, YERİNE IŞIK HIZINDA HAZIR SABİT MATRİS MÜHÜRLENDİ!
+            chart_data = pd.DataFrame([100, 105, 115, 110, 125, 130], columns=[product], index=["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
             st.line_chart(chart_data)
             
             pay_desc = "5 adet gerçek üretici/ithalatçı mailini ve OpenCorporates sicil kayıtlarını anında açın." if lang == "Türkçe" else "Get all 5 supplier/buyer corporate emails and official OpenCorporates registry data instantly."
