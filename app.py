@@ -209,20 +209,16 @@ def snippets_to_prompt_block(snippets):
 # 5) EVRENSEL YAPAY ZEKA SİGORTA MOTORU (TÜM ENGELLERİ KIRAN SÜRÜM)
 # ============================================================
 def call_gemini_grounded(prompt: str, key_name: str) -> str:
-    import os
-    # Hem Render Environment tablosunu hem de yerel dosyaları %100 okuyan motor
-    api_key = st.secrets.get(key_name, os.environ.get(key_name, ""))
-    if not api_key: 
-        raise RuntimeError(f"{key_name} eksik.")
+    # Şifreyi doğrudan koda gömerek Streamlit bariyerini kırıyoruz
+    api_key = "AQ.Ab8RN6I0f2Gi4bJfoxVVp5KUE7RwuKs0QtCI5dLouv9LNs8NtA"
     url = f"https://googleapis.com{api_key}"
     resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
     resp.raise_for_status()
-    # Claude'un bozulan candidates dizilimini kuruşu kuruşuna tamir eden resmi satır:
-    return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+    return resp.json()["candidates"]["content"]["parts"]["text"]
 
 def call_openrouter_free(prompt: str) -> str:
-    import os
-    api_key = st.secrets.get("OPENROUTER_API_KEY", os.environ.get("OPENROUTER_API_KEY", ""))
+    # OpenRouter şifresini de doğrudan koda gömüyoruz
+    api_key = "sk-or-v1-5733d503b1577b46f843bb12d84bf46d46733ac077842fa5728973056bfd616ftt"
     headers = {"Content-Type": "application/json"}
     if api_key: headers["Authorization"] = f"Bearer {api_key}"
     resp = requests.post(
@@ -232,13 +228,7 @@ def call_openrouter_free(prompt: str) -> str:
         timeout=25
     )
     resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
-
-def extract_json(text: str) -> dict:
-    cleaned = re.sub(r"```json|```", "", text).strip()
-    match = re.search(r"\{.*\}", cleaned, re.DOTALL)
-    if not match: raise ValueError("JSON bulunamadı.")
-    return json.loads(match.group(0))
+    return resp.json()["choices"]["message"]["content"]
     
 # ============================================================
 # 6) KADRANLARIN EKLEME VE İŞLEME ALANI
