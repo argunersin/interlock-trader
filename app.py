@@ -159,53 +159,53 @@ COMMODITY_GROUPS = {
 # ============================================================
 # 2) KÜRESEL CSS — Parlement Mavisi tema
 # ============================================================
-st.markdown(f"""
+st.markdown("""
 <style>
-    .stApp {{
-        background-color: {NAVY};
+    .stApp {
+        background-color: #0a1128;
         color: #e8ecf5;
-    }}
-    #MainMenu, footer, header {{visibility: hidden;}}
-    .block-container {{
+    }
+    #MainMenu, footer, header {visibility: hidden;}
+    .block-container {
         padding-top: 1rem;
         padding-bottom: 0rem;
         max-width: 100%;
-    }}
-    div[data-testid="stVerticalBlock"] > div:empty {{
+    }
+    div[data-testid="stVerticalBlock"] > div:empty {
         display: none !important;
-    }}
+    }
 
-    .group-card {{
+    .group-card {
         background-color: #050a1c;
         border: 1px solid #1c2440;
         border-radius: 10px;
         padding: 10px 12px 14px 12px;
         margin-bottom: 14px;
-    }}
-    .group-title {{
+    }
+    .group-title {
         font-size: 14px;
         font-weight: 700;
         color: #cdd4ee;
         letter-spacing: 0.5px;
         margin-bottom: 8px;
-    }}
+    }
 
-    .scroll-row {{
+    .scroll-row {
         display: flex;
         overflow-x: auto;
         gap: 10px;
         padding-bottom: 6px;
         scrollbar-width: thin;
-        scrollbar-color: {ACCENT} #0d1533;
-    }}
-    .scroll-row::-webkit-scrollbar {{ height: 7px; }}
-    .scroll-row::-webkit-scrollbar-thumb {{
-        background-color: {ACCENT}; border-radius: 4px;
-    }}
-    .scroll-row::-webkit-scrollbar-track {{ background-color: #0d1533; }}
+        scrollbar-color: #4a5fd9 #0d1533;
+    }
+    .scroll-row::-webkit-scrollbar { height: 7px; }
+    .scroll-row::-webkit-scrollbar-thumb {
+        background-color: #4a5fd9; border-radius: 4px;
+    }
+    .scroll-row::-webkit-scrollbar-track { background-color: #0d1533; }
 
-    .flap-card {{
-        background-color: {BLACK};
+    .flap-card {
+        background-color: #02040a;
         border: 1px solid #1c2440;
         border-radius: 6px;
         text-align: center;
@@ -214,38 +214,38 @@ st.markdown(f"""
         min-width: 148px;
         flex: 0 0 auto;
         box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }}
-    .flap-card::after {{
+    }
+    .flap-card::after {
         content: "";
         position: absolute;
         left: 0; right: 0; top: 50%;
         height: 1px;
         background: rgba(232,236,245,0.15);
-    }}
-    .flap-symbol {{
+    }
+    .flap-symbol {
         font-size: 11px;
-        color: {GREY};
+        color: #7a86b8;
         letter-spacing: 0.5px;
         margin-bottom: 4px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-    }}
-    .flap-value {{
+    }
+    .flap-value {
         font-size: 19px;
         font-weight: 700;
         font-family: 'Courier New', monospace;
         color: #f5f7fb;
-    }}
-    .flap-delta-up {{ color: {GREEN}; font-size: 12px; }}
-    .flap-delta-down {{ color: {RED}; font-size: 12px; }}
-    .flap-tag {{
+    }
+    .flap-delta-up { color: #2ecc71; font-size: 12px; }
+    .flap-delta-down { color: #e74c3c; font-size: 12px; }
+    .flap-tag {
         font-size: 9px;
         color: #55608a;
         margin-top: 3px;
-    }}
+    }
 
-    .top-strip {{
+    .top-strip {
         display: flex;
         gap: 8px;
         background-color: #050a1c;
@@ -253,28 +253,28 @@ st.markdown(f"""
         border-radius: 8px;
         border: 1px solid #1c2440;
         margin-bottom: 14px;
-    }}
-    .stButton>button {{
+    }
+    .stButton>button {
         background-color: #11183a;
         color: #e8ecf5;
         border: 1px solid #2a3563;
         border-radius: 6px;
         font-weight: 600;
-    }}
-    .stButton>button:hover {{ border-color: {ACCENT}; color: #ffffff; }}
-    .stTextInput>div>div>input {{
+    }
+    .stButton>button:hover { border-color: #4a5fd9; color: #ffffff; }
+    .stTextInput>div>div>input {
         background-color: #050a1c;
         color: #e8ecf5;
         border: 1px solid #2a3563;
-    }}
-    .report-section {{
+    }
+    .report-section {
         background-color: #0d1533;
         border: 1px solid #1c2440;
         border-radius: 10px;
         padding: 18px 22px;
         margin-bottom: 14px;
-    }}
-    .price-tag {{
+    }
+    .price-tag {
         display: inline-block;
         font-size: 11px;
         padding: 1px 6px;
@@ -296,6 +296,7 @@ st.markdown(f"""
     }
 </style>
 """, unsafe_allow_html=True)
+
 
 # ============================================================
 # 3) SESSION STATE
