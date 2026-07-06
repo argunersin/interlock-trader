@@ -7,3 +7,4 @@ reportlab
 google-generativeai
 matplotlib
 reportlab
+duckduckgo_search
