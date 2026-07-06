@@ -345,16 +345,20 @@ def snippets_to_prompt_block(snippets):
     return "\n".join(lines)
 
 # ============================================================
-# 5) LLM SİGORTA ZİNCİRİ (LİMİTSİZ YENİ YAPI)
+# # 5) LLM SİGORTA ZİNCİRİ (LİMİTSİZ YENİ YAPI)
 # ============================================================
 def call_gemini_grounded(prompt: str, key_name: str) -> str:
-    api_key = st.secrets.get(key_name, "")
+    import os
+    # Hem Render tablosunu hem toml dosyasını okuyan evrensel şifre motoru
+    api_key = st.secrets.get(key_name, os.environ.get(key_name, ""))
     if not api_key:
         raise RuntimeError(f"{key_name} tanımlı değil.")
+    
     url = f"https://googleapis.com{api_key}"
     resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
     resp.raise_for_status()
-    return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+
 
 def call_gemini_plain(prompt: str, key_name: str) -> str:
     return call_gemini_grounded(prompt, key_name)
@@ -363,11 +367,25 @@ def call_groq(prompt: str) -> str:
     return call_openrouter_free(prompt)
 
 def call_openrouter_free(prompt: str) -> str:
-    api_key = st.secrets.get("OPENROUTER_API_KEY", "")
+    import os
+    # OpenRouter için hem Render tablosunu hem toml dosyasını okuyan evrensel motor
+    api_key = st.secrets.get("OPENROUTER_API_KEY", os.environ.get("OPENROUTER_API_KEY", ""))
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
+    
     resp = requests.post(
+        "https://openrouter.ai",
+        headers=headers,
+        json={
+            "model": "meta-llama/llama-3-8b-instruct:free",
+            "messages": [{"role": "user", "content": prompt}],
+        },
+        timeout=25,
+    )
+    resp.raise_for_status()
+    return resp.json()["choices"][0]["message"]["content"]
+
         "https://openrouter.ai",
         headers=headers,
         json={
