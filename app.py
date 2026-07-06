@@ -206,17 +206,22 @@ def snippets_to_prompt_block(snippets):
     return "\n".join([f"[{i+1}] {s['title']} — {s['snippet']} (Kaynak: {s['link']})" for i, s in enumerate(snippets)])
 
 # ============================================================
-# 5) EVRENSEL YAPAY ZEKA SİGORTA MOTORU
+# 5) EVRENSEL YAPAY ZEKA SİGORTA MOTORU (TÜM ENGELLERİ KIRAN SÜRÜM)
 # ============================================================
 def call_gemini_grounded(prompt: str, key_name: str) -> str:
+    import os
+    # Hem Render Environment tablosunu hem de yerel dosyaları %100 okuyan motor
     api_key = st.secrets.get(key_name, os.environ.get(key_name, ""))
-    if not api_key: raise RuntimeError(f"{key_name} eksik.")
+    if not api_key: 
+        raise RuntimeError(f"{key_name} eksik.")
     url = f"https://googleapis.com{api_key}"
     resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
     resp.raise_for_status()
-    return resp.json()["candidates"]["content"]["parts"][0]["text"]
+    # Claude'un bozulan candidates dizilimini kuruşu kuruşuna tamir eden resmi satır:
+    return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
 
 def call_openrouter_free(prompt: str) -> str:
+    import os
     api_key = st.secrets.get("OPENROUTER_API_KEY", os.environ.get("OPENROUTER_API_KEY", ""))
     headers = {"Content-Type": "application/json"}
     if api_key: headers["Authorization"] = f"Bearer {api_key}"
@@ -234,6 +239,7 @@ def extract_json(text: str) -> dict:
     match = re.search(r"\{.*\}", cleaned, re.DOTALL)
     if not match: raise ValueError("JSON bulunamadı.")
     return json.loads(match.group(0))
+    
 # ============================================================
 # 6) KADRANLARIN EKLEME VE İŞLEME ALANI
 # ============================================================
