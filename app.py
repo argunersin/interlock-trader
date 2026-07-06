@@ -357,7 +357,7 @@ def call_gemini_grounded(prompt: str, key_name: str) -> str:
     url = f"https://googleapis.com{api_key}"
     resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
     resp.raise_for_status()
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
 
 
 def call_gemini_plain(prompt: str, key_name: str) -> str:
