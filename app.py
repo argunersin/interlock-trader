@@ -470,7 +470,7 @@ def render_ticker_wall():
 # 7) ÜST YATAY MENÜ
 # ============================================================
 def render_top_strip():
-    c1, c2, c3, c4 = st.columns()
+    c1, c2, c3, c4 = st.columns(4)
     departments = {
         "🤖 Otonom Ajan & Rapor": "Otonom Ajan",
         "📄 OCR Evrak Doğrulama": "OCR Evrak Doğrulama",
