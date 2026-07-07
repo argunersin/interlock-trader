@@ -1,5 +1,5 @@
 # ==========================================
-# istihbarat_odasi.py - 2. MODÜL (DERİN AI RAPORU & UNICODE PDF)
+# istihbarat_odasi.py - 2. MODÜL (A BÖLÜMÜ: AI MOTORU & UNICODE PDF)
 # ==========================================
 import streamlit as st
 import pandas as pd
@@ -13,10 +13,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-
-# PDF Türkçe Karakter Koruması için Yerleşik Helvetica Kayıtları
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttcounts import TTFontData
 
 def extract_json_from_response(text):
     if not text:
@@ -117,16 +113,19 @@ def draw_risk_chart(risk_score):
     ax.text(risk_score + 2, 0, f"%{risk_score}", color=color, va='center', fontweight='bold', fontsize=12)
     plt.tight_layout()
     return fig
+# ==========================================
+# istihbarat_odasi.py - 2. MODÜL (B BÖLÜMÜ: PDF TABLO & ARAYÜZ)
+# ==========================================
 
-# PDF Karakter ve Tasarım Yenileme Motoru
 def generate_pdf_report(prompt_data, ai_report):
+    """
+    Ayıklanan tüm verileri resmi ve kurumsal bir PDF raporuna dönüştürür.
+    """
     pdf_filename = f"ticaret_istihbarat_raporu_{datetime.now().strftime('%Y%m%d%H%M')}.pdf"
     doc = SimpleDocTemplate(pdf_filename, pagesize=letter, leftMargin=40, rightMargin=40, topMargin=40, bottomMargin=40)
     story = []
-    
     styles = getSampleStyleSheet()
     
-    # Standart Helvetica fontunu Türkçe haritalama ile çökmeden kullanmak için stil kuralları
     title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=18, textColor=colors.HexColor('#1e3a8a'), spaceAfter=15)
     section_style = ParagraphStyle('SecStyle', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=13, textColor=colors.HexColor('#2563eb'), spaceBefore=12, spaceAfter=6)
     body_style = ParagraphStyle('BodyStyle', parent=styles['BodyText'], fontName='Helvetica', fontSize=10, leading=14, spaceAfter=8)
@@ -140,7 +139,7 @@ def generate_pdf_report(prompt_data, ai_report):
         [Paragraph("<b>Teslim Noktasi:</b>", body_style), Paragraph(prompt_data.get('teslim_limani', '-'), body_style)],
         [Paragraph("<b>Urun / GTIP Tanimi:</b>", body_style), Paragraph(prompt_data.get('mal_tanimi', '-'), body_style)]
     ]
-    t = Table(data, colWidths=[130, 370])
+    t = Table(data, colWidths=[150, 350])
     t.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f3f4f6')),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d1d5db')),
@@ -184,3 +183,43 @@ def render_istihbarat_odasi(gemini_key, openrouter_key):
     if st.button("🚀 Akıllı Küresel İstihbarat Raporu Oluştur", key="mod_ai_btn"):
         prompt_data = {"yukleme_limani": yukleme_limani, "teslim_limani": teslim_limani, "mal_tanimi": mal_tanimi}
         with st.spinner("Yapay zeka derin ticaret veritabanını tarıyor, kurumsal rapor oluşturuluyor..."):
+            report_res = generate_intelligence_report(prompt_data, gemini_key, openrouter_key)
+            if report_res:
+                st.session_state.ai_report_data = report_res
+                st.session_state.ai_prompt_data = prompt_data
+
+    if st.session_state.ai_report_data and st.session_state.ai_prompt_data:
+        report_res = st.session_state.ai_report_data
+        prompt_data = st.session_state.ai_prompt_data
+        
+        st.success("🎯 Kurumsal İstihbarat Analizi Başarıyla Tamamlandı!")
+        col_rep1, col_rep2 = st.columns(2)
+        
+        with col_rep1:
+            st.markdown("### 🛃 Gümrük Mevzuatı & Şirket İstihbaratı")
+            st.info(report_res.get("gümrük_özeti", "-"))
+            st.markdown("### 💰 Navlun & Fiyat Maliyet Matrisi")
+            st.info(report_res.get("fiyat_matrisi", "-"))
+        
+        with col_rep2:
+            st.markdown("### ⚠️ Risk Yönetim Endeksi")
+            r_score = report_res.get("risk_skoru", report_res.get("risk_score", 50))
+            st.pyplot(draw_risk_chart(r_score))
+            st.markdown("**Tespit Edilen Kritik Risk Faktörleri:**")
+            for r_reason in report_res.get("risk_nedenleri", ["Stratejik koridor oynaklığı"]):
+                st.write(f"🛑 {r_reason}")
+        
+        st.markdown("### 🗺️ Stratejik Güvenli Koridor Rotaları")
+        for r_path in report_res.get("rotalar", []):
+            st.success(f"📍 {r_path}")
+            
+        pdf_file = generate_pdf_report(prompt_data, report_res)
+        if pdf_file and os.path.exists(pdf_file):
+            with open(pdf_file, "rb") as f:
+                st.download_button(
+                    label="📥 Resmi İstihbarat Raporunu (PDF) İndir",
+                    data=f,
+                    file_name=pdf_file,
+                    mime="application/pdf",
+                    key="mod_pdf_dl"
+                )
