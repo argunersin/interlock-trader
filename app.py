@@ -1,53 +1,27 @@
 # ==========================================
-# 1. PARÇA: KÜTÜPHANELER VE GÜVENLİK SİGORTASI
+# app.py veya main.py - ORKESTRA ŞEFİ (ANA DOSYA)
 # ==========================================
 import streamlit as st
-import pandas as pd
-import numpy as np
-import yfinance as yf
-import matplotlib.pyplot as plt
-import google.generativeai as genai
-import folium
-from streamlit_folium import st_folium
-import requests
-import json
-import re
 import os
-from datetime import datetime
-from PIL import Image
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 
-# Ekranı geniş modda açıyoruz ve telefonlarda kilitlenen sidebar'ı tamamen engelliyoruz.
+# Ekran genişlik ve telefon uyumluluk ayarları
 st.set_page_config(
     page_title="Küresel Emtia & Ticaret İstihbarat Paneli",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Telefon ekranlarında yan menünün yanlışlıkla bile açılmasını engellemek için CSS şırınga ediyoruz
+# Sidebar'ı telefonda kilitlenmesin diye CSS ile tamamen yok ediyoruz
 st.markdown("""
     <style>
         [data-testid="stSidebar"] { display: none !important; }
         [data-testid="collapsedControl"] { display: none !important; }
-        .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-        .stTabs [data-baseweb="tab"] { padding: 10px 20px; font-size: 16px; font-weight: bold; }
+        .stTabs [data-baseweb="tab-list"] { gap: 12px; }
+        .stTabs [data-baseweb="tab"] { padding: 12px 24px; font-size: 16px; font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
-# Oturum Hafızasını (Session State) en başta tanımlıyoruz ki fiyatlar ve raporlar sıfırlanmasın
-if "ai_report_data" not in st.session_state:
-    st.session_state.ai_report_data = None
-if "ai_prompt_data" not in st.session_state:
-    st.session_state.ai_prompt_data = None
-if "ocr_result" not in st.session_state:
-    st.session_state.ocr_result = None
-if "gemi_sorgu_sonuc" not in st.session_state:
-    st.session_state.gemi_sorgu_sonuc = None
-
-# Asla Çökmeyen Akıllı Şifre ve API Anahtarı Sigorta Zinciri
+# Güvenli Şifre Çözücü Sigorta Fonksiyonu
 def get_api_key(key_name):
     try:
         if hasattr(st, "secrets") and key_name in st.secrets:
@@ -70,342 +44,11 @@ def get_api_key(key_name):
 
 GEMINI_API_KEY = get_api_key("GEMINI_API_KEY")
 OPENROUTER_API_KEY = get_api_key("OPENROUTER_API_KEY")
-# ==========================================
-# 2. PARÇA: GERÇEK EMTİA MOTORU VE GRAFİK ALTYAPISI
-# ==========================================
 
-COMMODITY_GROUPS = {
-    "Enerji": {
-        "Ham Petrol (WTI)": "CL=F", "Brent Petrol": "BZ=F", "Doğalgaz": "NG=F",
-        "Isıtma Yağı": "HO=F", "RBOB Benzin": "RB=F", "Kömür (Rotterdam)": "MTF=F",
-        "Etanol": "CU=F", "Uranyum": "UX=F", "Karbon İzinleri": "CFI=F"
-    },
-    "Değerli Metaller": {
-        "Altın": "GC=F", "Gümüş": "SI=F", "Platin": "PL=F",
-        "Paladyum": "PA=F", "Rodyum (İndeks)": "RHO", "İridyum (İndeks)": "IRD"
-    },
-    "LME Endüstriyel Metaller": {
-        "Bakır": "HG=F", "Alüminyum": "ALI=F", "Çinko": "ZNC=F",
-        "Kurşun": "PB=F", "Nikel": "NIL=F", "Kalay": "TIN=F",
-        "Demir Cevheri": "TIO=F", "Çelik Hurda": "HRF=F", "Lityum Karbonat": "LTH=F"
-    },
-    "Tarım & Gıda": {
-        "Buğday": "W=F", "Mısır": "C=F", "Soya Fasulyesi": "S=F",
-        "Kahve (Arabica)": "KC=F", "Kakao": "CC=F", "Pamuk": "CT=F",
-        "Şeker": "SB=F", "Canlı Sığır": "LC=F", "Kinoa (İndeks)": "QN=F",
-        "Pirinç": "ZR=F", "Yulaf": "O=F", "Kereste": "LBS=F"
-    },
-    "Kimyasallar & Plastik": {
-        "Polipropilen": "PP=F", "Polietilen": "PE=F", "PVC": "PVC=F",
-        "Metanol": "MET=F", "Üre (Gübre)": "UREA=F", "Amonyak": "AM=F",
-        "Kaustik Soda": "CS=F", "Kostik": "KST=F"
-    },
-    "Navlun & Lojistik (Konteyner/Kuru Yük)": {
-        "Baltık Kuru Yük (BDI)": "^BDI", "Konteyner Endeksi (WCI)": "WCI=F",
-        "Rotterdam-Şanghay": "RSH=F", "Şanghay-Los Angeles": "SLA=F",
-        "Süveyş Geçiş Maliyeti": "SUZ=F", "Panama Geçiş Maliyeti": "PAN=F",
-        "Tanker Navlun Endeksi": "BDTI", "Hava Kargo Endeksi (BAI)": "BAI=F"
-    },
-    "Çoklu Kur Ticaret Paneli": {
-        "Dolar / TL": "USDTRY=X", "Euro / TL": "EURTRY=X", "Euro / Dolar": "EURUSD=X",
-        "Sterlin / Dolar": "GBPUSD=X", "Dolar / Ruble": "RUB=X", "Dolar / Yuan": "CNY=X",
-        "Dolar / Yen": "JPY=X", "Dolar / İsviçre Frangı": "CHF=X"
-    }
-}
-
-@st.cache_data(ttl=300)
-def fetch_live_commodity_data():
-    """
-    Limitsiz Veri Sigortası: yfinance engellerini aşmak için Google Finance üzerinden
-    web scraping (veri kazıma) yapar. Hafta sonu veya gece kilitlenmelerini tamamen engeller.
-    """
-    rows = []
-    tickers_to_fetch = []
-    ticker_to_name = {}
-    ticker_to_group = {}
-
-    for group, commodities in COMMODITY_GROUPS.items():
-        for name, ticker in commodities.items():
-            tickers_to_fetch.append(ticker)
-            ticker_to_name[ticker] = name
-            ticker_to_group[ticker] = group
-
-    # Google Finance kazıma motoru için temiz tarayıcı taklidi başlıkları
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-
-    for ticker in tickers_to_fetch:
-        name = ticker_to_name[ticker]
-        group = ticker_to_group[ticker]
-        price = 0.0
-        change = 0.0
-        status = "Canlı"
-        
-        try:
-            # Sembolü Google Finance formatına uyduruyoruz (Örn: CL=F -> CL)
-            clean_ticker = ticker.replace("=X", "").replace("=F", "").replace("^", "")
-            
-            # Google Finance üzerinde arama ve kazıma linki oluşturma
-            url = f"https://google.com{clean_ticker}"
-            response = requests.get(url, headers=headers, timeout=5)
-            
-            if response.status_code == 200:
-                # Düzenli ifadeler (Regex) ile sayfa içindeki ham fiyat elementini şak diye söküyoruz
-                price_match = re.search(r'data-last-price="([^"]+)"', response.text)
-                change_match = re.search(r'data-price-change-percent="([^"]+)"', response.text)
-                
-                if price_match:
-                    price = float(price_match.group(1))
-                if change_match:
-                    change = float(change_match.group(1))
-            
-            # Eğer Google Finance veriyi vermezse, yedek olarak yfinance history mekanizmasını anlık tetikle
-            if price == 0.0:
-                t_obj = yf.Ticker(ticker)
-                backup = t_obj.history(period="1d")
-                if not backup.empty:
-                    price = float(backup['Close'].iloc[-1])
-                    status = "Yedek Kanal"
-        except Exception:
-            status = "Bağlantı Hatası"
-
-        rows.append({
-            "Grup": group,
-            "Emtia/Kur Adı": name,
-            "Sembol": ticker,
-            "Son Fiyat": price if price > 0 else 0.0,
-            "Günlük Değişim (%)": change,
-            "Durum": status
-        })
-
-    return pd.DataFrame(rows) if rows else pd.DataFrame(columns=["Grup", "Emtia/Kur Adı", "Sembol", "Son Fiyat", "Günlük Değişim (%)", "Durum"])
-
-# Yapay zekadan gelen ham metni güvenle söken fonksiyon
-def extract_json_from_response(text):
-    if not text:
-        return None
-    try:
-        cleaned = re.sub(r"```json\s*", "", text)
-        cleaned = re.sub(r"```\s*", "", cleaned)
-        cleaned = cleaned.strip()
-        start_idx = cleaned.find("{")
-        end_idx = cleaned.rfind("}")
-        if start_idx != -1 and end_idx != -1:
-            return json.loads(cleaned[start_idx:end_idx + 1])
-        return json.loads(cleaned)
-    except Exception:
-        return {
-            "gümrük_özeti": "Derin gümrük analizi ve mevzuat detayları ayrıştırılamadı.",
-            "fiyat_matrisi": "Küresel fiyat endeksleri matrisi yüklenemedi.",
-            "rotalar": ["Alternatif Deniz Koridoru -> Süveyş Geçişli Rota"],
-            "risk_skoru": 55,
-            "risk_nedenleri": ["Sistem veri okuma gecikmesi"]
-        }
-
-# Matplotlib risk analiz grafiği çizici
-def draw_risk_chart(risk_score):
-    fig, ax = plt.subplots(figsize=(6, 1.5))
-    fig.patch.set_facecolor('#0e1117')
-    ax.set_facecolor('#0e1117')
-    # Hata veren yer düzeltildi: Araya [100] eklendi
-    ax.barh(["Risk Endeksi"], [100], color="#1f2937", height=0.4)
-    color = "#00ffcc" if risk_score < 40 else "#ffcc00" if risk_score < 70 else "#ff3366"
-    ax.barh(["Risk Endeksi"], [risk_score], color=color, height=0.4)
-    ax.set_xlim(0, 100)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['bottom'].set_color('#4b5563')
-    ax.tick_params(colors='#ffffff', labelsize=10)
-    ax.text(risk_score + 2, 0, f"%{risk_score}", color=color, va='center', fontweight='bold', fontsize=12)
-    plt.tight_layout()
-    return fig
-# ==========================================
-# 3. PARÇA: PROFESYONEL AI VE PDF MOTORU
-# ==========================================
-
-def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
-    """
-    Kullanıcı talebine göre küresel ticaret, gümrük ve fiyat matrisi analizini derinlemesine yapar.
-    """
-    system_instruction = (
-        "Sen üst düzey bir küresel ticaret, gümrük mevzuatı ve emtia istihbarat analistisin. "
-        "Verilen gümrük yükleme, teslim ve mal tanımı bilgilerini analiz et. "
-        "Yedek metinleri kullanma, tamamen profesyonel, sektörel terimler içeren derin bir analiz yaz. "
-        "Yanıtını mutlaka ve sadece şu geçerli JSON formatında döndür, başka hiçbir metin ekleme:\n"
-        '{"gümrük_özeti": "Hedef ülkelerin güncel gümrük vergileri, antidamping uygulamaları, GTİP bazlı kısıtlamaları ve kırmızı/sarı hat denetim süreçlerinin detaylı mevzuat analizi...", '
-        '"fiyat_matrisi": "Lojistik navlun endeksleri (WCI, BDI), sigorta maliyetleri, emtia borsası oynaklıkları ve arz-talep dengesizliklerinin fiyat üzerindeki kırılımları...", '
-        '"rotalar": ["1. Ana Güvenli Rota Açıklaması", "2. Alternatif Lojistik Koridoru Açıklaması"], '
-        '"risk_skoru": 75, '
-        '"risk_nedenleri": ["Mevzuat/Tarife değişiklikleri riski", "Jeopolitik koridor ve navlun oynaklığı riski"]}'
-    )
-    
-    # 1. Öncelik: Resmi Gemini API Entegrasyonu
-    if gemini_key:
-        try:
-            genai.configure(api_key=gemini_key)
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-                generation_config={"response_mime_type": "application/json"}
-            )
-            response = model.generate_content(f"{system_instruction}\n\nTalebi analiz et:\n{prompt_data}")
-            return extract_json_from_response(response.text)
-        except Exception:
-            pass
-
-    # 2. Öncelik: OpenRouter Entegrasyonu
-    if openrouter_key:
-        try:
-            url = "https://openrouter.ai"
-            headers = {"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"}
-            payload = {
-                "model": "google/gemini-flash-1.5",
-                "messages": [
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": str(prompt_data)}
-                ]
-            }
-            res = requests.post(url, headers=headers, json=payload, timeout=15)
-            if res.status_code == 200:
-                res_json = res.json()
-                if "choices" in res_json and len(res_json["choices"]) > 0:
-                    return extract_json_from_response(res_json["choices"][0]["message"]["content"])
-        except Exception:
-            pass
-
-    # Her iki API de başarısız olursa çalışacak detaylandırılmış derin simülasyon yapısı
-    return {
-        "gümrük_özeti": f"{prompt_data.get('mal_tanimi', 'Emtia')} sevkiyatı için ithalat/ihracat rejimleri, gümrük tarife istatistik pozisyonu (GTİP) uyumlulukları, gözetim belgeleri ve standart denetim süreçleri analiz edilmiştir. Kırmızı hat risk yönetimi ve menşe şahadetnamesi kontrolleri titizlikle takip edilmelidir.",
-        "fiyat_matrisi": "Güncel LME (London Metal Exchange) ve küresel emtia borsalarındaki fiyat hareketleri, konteyner başı spot navlun endeksleri ile sigorta (Kloş A) prim maliyetlerinin pazar dinamikleri üzerindeki finansal kırılımları hesaplanmıştır.",
-        "rotalar": [
-            f"{prompt_data.get('yukleme_limani', 'Çıkış')} -> Süveyş Kanalı Geçişi -> Akdeniz Koridoru -> {prompt_data.get('teslim_limani', 'Varış')}",
-            f"{prompt_data.get('yukleme_limani', 'Çıkış')} -> Ümit Burnu (Cape of Good Hope) Yedek Rotası -> {prompt_data.get('teslim_limani', 'Varış')}"
-        ],
-        "risk_skoru": 48,
-        "risk_nedenleri": ["Küresel navlun ve konteyner tedarik sıkışıklığı", "Gümrük kapılarındaki tarife dışı engeller ve bürokratik gecikmeler"]
-    }
-
-def generate_pdf_report(prompt_data, ai_report):
-    """
-    Ayıklanan tüm verileri resmi ve kurumsal bir PDF raporuna dönüştürür.
-    """
-    pdf_filename = f"ticaret_istihbarat_raporu_{datetime.now().strftime('%Y%m%d%H%M')}.pdf"
-    doc = SimpleDocTemplate(pdf_filename, pagesize=letter, leftMargin=40, rightMargin=40, topMargin=40, bottomMargin=40)
-    story = []
-    styles = getSampleStyleSheet()
-    
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=18, textColor=colors.HexColor('#1e3a8a'), spaceAfter=15)
-    section_style = ParagraphStyle('SecStyle', parent=styles['Heading2'], fontSize=13, textColor=colors.HexColor('#2563eb'), spaceBefore=12, spaceAfter=6)
-    body_style = ParagraphStyle('BodyStyle', parent=styles['BodyText'], fontSize=10, leading=14, spaceAfter=8)
-    
-    story.append(Paragraph("KÜRESEL TİCARET VE EMTİA İSTİHBARAT RAPORU", title_style))
-    story.append(Paragraph(f"<b>Rapor Tarihi:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}", body_style))
-    story.append(Spacer(1, 10))
-    
-    data = [
-        [Paragraph("<b>Yükleme Noktası:</b>", body_style), Paragraph(prompt_data.get('yukleme_limani', '-'), body_style)],
-        [Paragraph("<b>Teslim Noktası:</b>", body_style), Paragraph(prompt_data.get('teslim_limani', '-'), body_style)],
-        [Paragraph("<b>Ürün / GTİP Tanımı:</b>", body_style), Paragraph(prompt_data.get('mal_tanimi', '-'), body_style)]
-    ]
-    t = Table(data, colWidths=[150, 370])
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f3f4f6')),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d1d5db')),
-        ('PADDING', (0,0), (-1,-1), 6),
-    ]))
-    story.append(t)
-    story.append(Spacer(1, 15))
-    
-    story.append(Paragraph("1. Gümrük Mevzuatı ve Süreç Analizi", section_style))
-    story.append(Paragraph(ai_report.get('gümrük_özeti', 'Veri yok.'), body_style))
-    
-    story.append(Paragraph("2. Küresel Borsa ve Fiyat Matrisi Değerlendirmesi", section_style))
-    story.append(Paragraph(ai_report.get('fiyat_matrisi', 'Veri yok.'), body_style))
-    
-    story.append(Paragraph("3. Önerilen Güvenli Sevkiyat Rotaları", section_style))
-    for rota in ai_report.get('rotalar', []):
-        story.append(Paragraph(f"• {rota}", body_style))
-        
-    story.append(Spacer(1, 10))
-    story.append(Paragraph(f"<b>Genel Lojistik Risk Skoru:</b> %{ai_report.get('risk_skoru', 50)}", body_style))
-    
-    try:
-        doc.build(story)
-        return pdf_filename
-    except Exception:
-        return None
-# ==========================================
-# 4. PARÇA - A BÖLÜMÜ: BORSA MOTORU VE İLK İKİ SEKME
-# ==========================================
-
-# --- YENİLENEN GÜVENLİ BORSA VERİ MOTORU ---
-# Hafta sonu, gece saatleri veya yfinance IP engellemelerinde fiyatların sıfırlanmasını (0.00)
-# engellemek için doğrudan günlük geçmiş sorgulayan (history) mimariye geçildi.
-def fetch_live_commodity_data():
-    rows = []
-    tickers_to_fetch = []
-    ticker_to_name = {}
-    ticker_to_group = {}
-
-    for group, commodities in COMMODITY_GROUPS.items():
-        for name, ticker in commodities.items():
-            tickers_to_fetch.append(ticker)
-            ticker_to_name[ticker] = name
-            ticker_to_group[ticker] = group
-
-    try:
-        # 1 günlük yerine son 2 günlük veri sorgulanarak veri sürekliliği garanti altına alınır
-        for ticker in tickers_to_fetch:
-            name = ticker_to_name[ticker]
-            group = ticker_to_group[ticker]
-            price, change, status = 0.0, 0.0, "Canlı"
-            try:
-                t_obj = yf.Ticker(ticker)
-                backup = t_obj.history(period="2d")
-                if len(backup) >= 1:
-                    price = float(backup['Close'].iloc[-1])
-                    if len(backup) >= 2:
-                        change = ((price - backup['Close'].iloc[-2]) / backup['Close'].iloc[-2]) * 100
-                else:
-                    status = "Bağlantı Yok"
-            except Exception:
-                status = "Bağlantı Hatası"
-
-            rows.append({"Grup": group, "Emtia/Kur Adı": name, "Sembol": ticker, "Son Fiyat": price, "Günlük Değişim (%)": change, "Durum": status})
-    except Exception:
-        pass
-    return pd.DataFrame(rows) if rows else pd.DataFrame(columns=["Grup", "Emtia/Kur Adı", "Sembol", "Son Fiyat", "Günlük Değişim (%)", "Durum"])
-
-with st.spinner("Küresel veri hatları bağlanıyor ve canlı fiyatlar yükleniyor..."):
-    df_market = fetch_live_commodity_data()
-
-# Üst Bloomberg Kayan Fiyat Bandı (Ticker)
-if not df_market.empty:
-    ticker_items = []
-    ticker_df = df_market[df_market["Son Fiyat"] > 0].head(25)
-    for _, row in ticker_df.iterrows():
-        color = "#00ffcc" if row["Günlük Değişim (%)"] >= 0 else "#ff3366"
-        sign = "+" if row["Günlük Değişim (%)"] >= 0 else ""
-        ticker_items.append(
-            f'<span style="color:#ffffff; font-weight:bold; margin-right:5px;">{row["Emtia/Kur Adı"]}:</span> '
-            f'<span style="color:{color}; font-weight:bold;">{row["Son Fiyat"]:.2f} ({sign}{row["Günlük Değişim (%)"]:.2f}%)</span>'
-        )
-    ticker_text = " &nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp; ".join(ticker_items)
-    st.markdown(f"""
-        <div style="background-color: #0e1117; border-bottom: 2px solid #1f2937; padding: 10px 0; overflow: hidden; white-space: nowrap; width: 100%;">
-            <marquee behavior="scroll" direction="left" scrollamount="5" style="font-family: monospace; font-size: 14px;">
-                {ticker_text}
-            </marquee>
-        </div>
-        <br>
-    """, unsafe_allow_html=True)
-
-# ANA UYGULAMA GİRİŞİ
 st.title("🌐 Küresel Emtia & Ticaret İstihbarat Deposu")
-st.caption("Tek Dosya Mimarisi, Gerçek Zamanlı Veriler ve Gelişmiş Yapay Zeka Odaları")
+st.caption("Tam Modüler Mimari, Gerçek Zamanlı Veriler ve Gelişmiş Yapay Zeka Üssü")
 
-# İstediğin Yepyeni Giriş Düzeni: 4 Bağımsız Sekme Halinde Odalar Açılıyor
+# 4 Bağımsız Sekme (Tabs) burada net olarak ayrılıyor
 tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Canlı Piyasa & Hesap Makinesi", 
     "🧠 AI Ticaret İstihbarat Odası", 
@@ -413,180 +56,31 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "🚢 Gemi X-Ray & Lojistik Takip"
 ])
 
-# === SEKME 1: CANLI PİYASA & DÖVİZ HESAP MAKİNESİ ===
+# Modüllerimizi sadece çağırıyoruz (Hata lüksünü sıfıra indiriyoruz)
 with tab1:
-    st.subheader("📈 Küresel Piyasa Fiyat Matrisi (60 Kalem Canlı Motor)")
-    if not df_market.empty:
-        available_groups = df_market["Grup"].unique()
-        selected_group = st.selectbox("İncelemek İstediğiniz Sektörü Seçin:", available_groups, key="sec_sel_main")
-        filtered_df = df_market[df_market["Grup"] == selected_group].copy()
-        
-        def style_change(val):
-            return f"color: {'#00ffcc' if val >= 0 else '#ff3366'}; font-weight: bold;"
-        
-        styled_df = filtered_df.style.map(style_change, subset=['Günlük Değişim (%)']).format({
-            'Son Fiyat': '{:,.2f}', 'Günlük Değişim (%)': '{:+.2f}%'
-        })
-        st.dataframe(styled_df, use_container_width=True, hide_index=True)
-    else:
-        st.error("Veri motoru şu anda yfinance servislerine bağlanamadı. Lütfen sayfayı yenileyiniz.")
+    try:
+        import borsa_ekrani
+        borsa_ekrani.render_borsa_ekrani()
+    except Exception as e:
+        st.error(f"Piyasa ekranı yüklenirken bir hata oluştu: {str(e)}")
 
-    st.markdown("---")
-    st.subheader("🧮 Çoklu Kur Ticaret Paneli & Döviz Hesap Makinesi")
-    col_calc1, col_calc2 = st.columns(2)
-    with col_calc1:
-        source_currency = st.selectbox("Kaynak Para Birimi / Emtia:", ["USD", "EUR", "GBP", "RUB", "CNY", "JPY", "CHF", "TRY"], key="src_curr_main")
-        amount = st.number_input("Çevrilmek İstenen Tutar:", min_value=0.0, value=1000.0, step=100.0, key="amount_main")
-    with col_calc2:
-        target_currency = st.selectbox("Hedef Para Birimi / Emtia:", ["TRY", "USD", "EUR", "GBP", "RUB", "CNY", "JPY", "CHF"], key="tgt_curr_main")
-        calculated_result = amount
-        exchange_rate = 1.0
-        if source_currency != target_currency:
-            pair_ticker = f"{source_currency}{target_currency}=X"
-            if source_currency == "TRY":
-                pair_ticker = f"{target_currency}{source_currency}=X"
-            try:
-                rate_data = yf.Ticker(pair_ticker).history(period="1d")
-                if not rate_data.empty:
-                    exchange_rate = float(rate_data['Close'].iloc[-1])
-                    if source_currency == "TRY":
-                        exchange_rate = 1.0 / exchange_rate
-                    calculated_result = amount * exchange_rate
-            except Exception:
-                pass
-        st.metric(label="Hesaplanan Dönüşüm Tutarı", value=f"{calculated_result:,.2f} {target_currency}")
-        st.caption(f"Anlık Çevrim Katsayısı: 1 {source_currency} = {exchange_rate:.4f} {target_currency}")
-
-# === SEKME 2: AI TİCARET İSTİHBARAT ODASI ===
 with tab2:
-    st.subheader("🧠 Yapay Zeka Destekli Sevkiyat ve Risk Analizörü")
-    col_form1, col_form2 = st.columns(2)
-    with col_form1:
-        yukleme_limani = st.text_input("Yükleme Limanı / Çıkış Ülkesi:", value="Şanghay, Çin", key="load_main")
-        teslim_limani = st.text_input("Teslim Limanı / Varış Ülkesi:", value="Ambarlı, İstanbul", key="deliv_main")
-    with col_form2:
-        mal_tanimi = st.text_input("Mal Tanımı / Ticari Ürün veya GTİP Kodu:", value="Lityum-İyon Batarya", key="desc_main")
-        
-    if st.button("🚀 Akıllı Küresel İstihbarat Raporu Oluştur", key="btn_main"):
-        prompt_data = {"yukleme_limani": yukleme_limani, "teslim_limani": teslim_limani, "mal_tanimi": mal_tanimi}
-        with st.spinner("Yapay zeka modelleri küresel rotaları tarıyor..."):
-            report_res = generate_intelligence_report(prompt_data, GEMINI_API_KEY, OPENROUTER_API_KEY)
-            if report_res:
-                st.session_state.ai_report_data = report_res
-                st.session_state.ai_prompt_data = prompt_data
+    try:
+        import istihbarat_odasi
+        istihbarat_odasi.render_istihbarat_odasi(GEMINI_API_KEY, OPENROUTER_API_KEY)
+    except Exception as e:
+        st.error(f"İstihbarat odası yüklenirken bir hata oluştu: {str(e)}")
 
-    if st.session_state.ai_report_data and st.session_state.ai_prompt_data:
-        report_res = st.session_state.ai_report_data
-        prompt_data = st.session_state.ai_prompt_data
-        st.success("🎯 Analiz Tamamlandı! Rapor Aşağıya Çıkarılmıştır.")
-        col_rep1, col_rep2 = st.columns(2)
-        with col_rep1:
-            st.markdown("### 🛃 Gümrük Mevzuatı ve Süreçleri")
-            st.write(report_res.get("gümrük_özeti", "-"))
-            st.markdown("### 💰 Fiyat ve Maliyet Kırılımları")
-            st.write(report_res.get("fiyat_matrisi", "-"))
-        with col_rep2:
-            st.markdown("### ⚠️ Risk Endeksi")
-            r_score = report_res.get("risk_skoru", report_res.get("risk_score", 50))
-            st.pyplot(draw_risk_chart(r_score))
-            st.markdown("**Belirlenen Temel Riskler:**")
-            for r_reason in report_res.get("risk_nedenleri", []):
-                st.write(f"🛑 {r_reason}")
-        st.markdown("### 🗺️ Önerilen Güvenli Ticaret Rotaları")
-        for r_path in report_res.get("rotalar", []):
-            st.info(f"📍 {r_path}")
-        pdf_file = generate_pdf_report(prompt_data, report_res)
-        if pdf_file and os.path.exists(pdf_file):
-            with open(pdf_file, "rb") as f:
-                st.download_button(label="📥 Resmi İstihbarat Raporunu (PDF) İndir", data=f, file_name=pdf_file, mime="application/pdf", key="pdf_dl_main")
-# ==========================================
-# 4. PARÇA - B BÖLÜMÜ: TİCARI EVRAK OCR VE GEMI X-RAY SEKMELERİ
-# ==========================================
-
-# === SEKME 3: TİCARİ EVRAK OCR & DOĞRULAMA ===
 with tab3:
-    st.subheader("📝 Akıllı Ticari Evrak OCR & Belge Doğrulama")
-    col_doc1, col_doc2 = st.columns(2)
-    with col_doc1:
-        st.markdown("### 📸 Fatura & Beyanname Görsel Analizi (OCR)")
-        uploaded_file = st.file_uploader("Analiz edilecek evrak görselini yükleyin (PNG, JPG, JPEG):", type=["png", "jpg", "jpeg"], key="up_main")
-        if uploaded_file is not None:
-            st.image(uploaded_file, caption="Yüklenen Ticari Belge", width=250)
-            if st.button("🔍 Evrakı Tara ve Verileri Ayıkla", key="ocr_btn_main"):
-                if GEMINI_API_KEY:
-                    try:
-                        genai.configure(api_key=GEMINI_API_KEY)
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-                        img = Image.open(uploaded_file)
-                        prompt = (
-                            "Sana bir ticari evrak görseli veriyorum. "
-                            "İçindeki tüm firma isimlerini, GTİP kodlarını, mal tanımını, miktar ve fatura tutar verilerini "
-                            "tamamen Türkçe olarak satır satır analiz et ve okunaklı bir özet çıkar."
-                        )
-                        response = model.generate_content([prompt, img])
-                        st.session_state.ocr_result = response.text
-                    except Exception as e:
-                        st.session_state.ocr_result = f"OCR Hatası: {str(e)}"
-                else:
-                    st.session_state.ocr_result = "Gemini API Anahtarı eksik olduğundan OCR başlatılamadı. Lütfen Render panelinden anahtarınızı tanımlayın."
-        if st.session_state.ocr_result:
-            st.success("🎯 Evrak Çözümleme Tamamlandı!")
-            st.info(st.session_state.ocr_result)
-            
-    with col_doc2:
-        st.markdown("### 🔢 Evrak No / Beyanname Takip")
-        evrak_no = st.text_input("Gümrük Referans veya Beyanname Tescil No:", placeholder="Örn: 2634A123456...", key="eno_main")
-        if st.button("🔎 Evrak Durumunu Sorgula", key="ebtn_main"):
-            if evrak_no:
-                st.success(f"✓ {evrak_no} Numaralı Belge Doğrulandı!")
-                st.markdown("""
-                <div style='background-color: #1f2937; padding: 15px; border-left: 5px solid #00ffcc; border-radius: 4px;'>
-                    <p style='margin:0; color:#ffffff;'><b>Evrak Statüsü:</b> Gümrük Muayene Aşamasında (Sarı Hat)</p>
-                    <p style='margin:5px 0 0 0; color:#a1a1aa;'><b>Tescil Tarihi:</b> Bugünün Tarihi</p>
-                    <p style='margin:5px 0 0 0; color:#a1a1aa;'><b>Muayene Memuru Kod:</b> MM-9834</p>
-                </div>
-                """, unsafe_allow_html=True)
+    try:
+        import evrak_analiz
+        evrak_analiz.render_evrak_analiz(GEMINI_API_KEY)
+    except Exception as e:
+        st.error(f"Evrak analiz odası yüklenirken bir hata oluştu: {str(e)}")
 
-# === SEKME 4: GEMİ X-RAY & LOJİSTİK TAKİP ===
 with tab4:
-    st.subheader("🚢 Gemi X-Ray & Canlı Konteyner Lojistik Takip")
-    col_ship1, col_ship2 = st.columns(2)
-    with col_ship1:
-        st.markdown("### 🔍 Konteyner / Gemi Kimlik Sorgulama")
-        search_type = st.radio("Sorgulama Türü:", ["Konteyner No (BIC Kodu)", "Gemi Adı / IMO Numarası"], key="st_main")
-        input_val = st.text_input("Giriş Yapın:", value="MSCU3489210", key="sin_main")
-        if st.button("🚢 Yükü ve Rotayı Canlı Takip Et", key="sbtn_main"):
-            st.session_state.gemi_sorgu_sonuc = {
-                "gemi_adi": "MSC OSCAR", 
-                "mevcut_konum": "Kızıldeniz Girişi (Babülmendep Açıkları)", 
-                "hiz": "18.4 Knot", 
-                "xray_statusu": "Yüksek Riskli Bölge - Süveyş Girişinde Zorunlu X-Ray Taraması"
-            }
-            
-    with col_ship2:
-        st.markdown("### 🛡️ Gümrük X-Ray Muayene İstihbaratı")
-        if st.session_state.gemi_sorgu_sonuc:
-            res = st.session_state.gemi_sorgu_sonuc
-            st.markdown(f"""
-            <div style='background-color: #1f2937; padding: 15px; border-left: 5px solid #00ffcc; border-radius: 4px;'>
-                <p style='color:#ffffff; margin:0;'><b>Gemi Adı:</b> {res['gemi_adi']}</p>
-                <p style='color:#a1a1aa; margin:5px 0 0 0;'><b>Anlık Konum:</b> {res['mevcut_konum']}</p>
-                <p style='color:#a1a1aa; margin:5px 0 0 0;'><b>Seyir Hızı:</b> {res['hiz']}</p>
-                <p style='color:#ffcc00; margin:10px 0 0 0;'>⚠️ <b>X-Ray Durumu:</b> {res['xray_statusu']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.info("Canlı konum haritasını ve X-Ray istihbaratını görmek için sol taraftan sorgulama başlatın.")
-            
-    st.markdown("### 🗺️ Küresel Lojistik Koridor ve Canlı Rota Görünümü")
-    m = folium.Map(location=[24.0, 54.0], zoom_start=3, tiles="CartoDB positron")
-    # Küresel ticaret rotası çizgisi
-    folium.PolyLine(locations=[[31.23, 121.47], [1.35, 103.87], [12.78, 45.01], [30.60, 32.50], [40.97, 28.72]], color="#2563eb", weight=4).add_to(m)
-    
-    if st.session_state.gemi_sorgu_sonuc:
-        # Gemi konumu
-        folium.Marker(location=[12.78, 45.01], popup="Gemi Mevcut Konumu", icon=folium.Icon(color="blue", icon="ship", prefix="fa")).add_to(m)
-        # X-Ray istasyonu
-        folium.Marker(location=[30.60, 32.50], popup="Süveyş X-Ray İstasyonu", icon=folium.Icon(color="red", icon="exclamation-triangle", prefix="fa")).add_to(m)
-        
-    st_folium(m, width="100%", height=400, key="map_main")
+    try:
+        import gemi_xray
+        gemi_xray.render_gemi_xray()
+    except Exception as e:
+        st.error(f"Lojistik takip odası yüklenirken bir hata oluştu: {str(e)}")
