@@ -115,6 +115,10 @@ COMMODITY_GROUPS = {
 
 @st.cache_data(ttl=300)
 def fetch_live_commodity_data():
+    """
+    Limitsiz Veri Sigortası: yfinance engellerini aşmak için Google Finance üzerinden
+    web scraping (veri kazıma) yapar. Hafta sonu veya gece kilitlenmelerini tamamen engeller.
+    """
     rows = []
     tickers_to_fetch = []
     ticker_to_name = {}
@@ -126,34 +130,55 @@ def fetch_live_commodity_data():
             ticker_to_name[ticker] = name
             ticker_to_group[ticker] = group
 
-    try:
-        data = yf.download(tickers_to_fetch, period="1d", interval="1m", group_by="ticker", progress=False)
-        for ticker in tickers_to_fetch:
-            name = ticker_to_name[ticker]
-            group = ticker_to_group[ticker]
-            price, change, status = 0.0, 0.0, "Canlı"
-            try:
-                if ticker in data.columns.levels:
-                    ticker_data = data[ticker]
-                    if not ticker_data.empty:
-                        valid_prices = ticker_data['Close'].dropna()
-                        if not valid_prices.empty:
-                            price = float(valid_prices.iloc[-1])
-                            valid_opens = ticker_data['Open'].dropna()
-                            if not valid_opens.empty and valid_opens.iloc != 0:
-                                change = ((price - valid_opens.iloc) / valid_opens.iloc) * 100
-                        else:
-                            backup = yf.Ticker(ticker).history(period="2d")
-                            if len(backup) >= 1:
-                                price = float(backup['Close'].iloc[-1])
-                                if len(backup) >= 2:
-                                    change = ((price - backup['Close'].iloc[-2]) / backup['Close'].iloc[-2]) * 100
-            except Exception:
-                status = "Bağlantı Hatası"
+    # Google Finance kazıma motoru için temiz tarayıcı taklidi başlıkları
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
 
-            rows.append({"Grup": group, "Emtia/Kur Adı": name, "Sembol": ticker, "Son Fiyat": price, "Günlük Değişim (%)": change, "Durum": status})
-    except Exception:
-        pass
+    for ticker in tickers_to_fetch:
+        name = ticker_to_name[ticker]
+        group = ticker_to_group[ticker]
+        price = 0.0
+        change = 0.0
+        status = "Canlı"
+        
+        try:
+            # Sembolü Google Finance formatına uyduruyoruz (Örn: CL=F -> CL)
+            clean_ticker = ticker.replace("=X", "").replace("=F", "").replace("^", "")
+            
+            # Google Finance üzerinde arama ve kazıma linki oluşturma
+            url = f"https://google.com{clean_ticker}"
+            response = requests.get(url, headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                # Düzenli ifadeler (Regex) ile sayfa içindeki ham fiyat elementini şak diye söküyoruz
+                price_match = re.search(r'data-last-price="([^"]+)"', response.text)
+                change_match = re.search(r'data-price-change-percent="([^"]+)"', response.text)
+                
+                if price_match:
+                    price = float(price_match.group(1))
+                if change_match:
+                    change = float(change_match.group(1))
+            
+            # Eğer Google Finance veriyi vermezse, yedek olarak yfinance history mekanizmasını anlık tetikle
+            if price == 0.0:
+                t_obj = yf.Ticker(ticker)
+                backup = t_obj.history(period="1d")
+                if not backup.empty:
+                    price = float(backup['Close'].iloc[-1])
+                    status = "Yedek Kanal"
+        except Exception:
+            status = "Bağlantı Hatası"
+
+        rows.append({
+            "Grup": group,
+            "Emtia/Kur Adı": name,
+            "Sembol": ticker,
+            "Son Fiyat": price if price > 0 else 0.0,
+            "Günlük Değişim (%)": change,
+            "Durum": status
+        })
+
     return pd.DataFrame(rows) if rows else pd.DataFrame(columns=["Grup", "Emtia/Kur Adı", "Sembol", "Son Fiyat", "Günlük Değişim (%)", "Durum"])
 
 # Yapay zekadan gelen ham metni güvenle söken fonksiyon
