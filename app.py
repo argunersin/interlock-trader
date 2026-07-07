@@ -51,11 +51,14 @@ st.markdown("""
 def get_api_key(key_name):
     """
     Sırasıyla st.secrets, yerel .env dosyası ve ortam değişkenlerini tarar.
-    Asla çökme yapmaz, bulamazsa None döner.
+    StreamlitSecretNotFoundError hatasını engellemek için try-except korumalıdır.
     """
-    # 1. Aşama: Streamlit Secrets kontrolü
-    if hasattr(st, "secrets") and key_name in st.secrets:
-        return st.secrets[key_name]
+    # 1. Aşama: Streamlit Secrets kontrolü (Hata vermemesi için korumaya alındı)
+    try:
+        if hasattr(st, "secrets") and key_name in st.secrets:
+            return st.secrets[key_name]
+    except Exception:
+        pass
     
     # 2. Aşama: Doğrudan yerel .env dosyasını Python ile arkadan dolanarak okuma
     if os.path.exists(".env"):
@@ -71,7 +74,7 @@ def get_api_key(key_name):
         except Exception:
             pass
             
-    # 3. Aşama: İşletim sistemi ortam değişkenleri
+    # 3. Aşama: İşletim sistemi ortam değişkenleri (Render Dashboard üzerindeki Env Variables)
     return os.environ.get(key_name, None)
 
 # API anahtarlarını güvenli zincirden çekiyoruz
