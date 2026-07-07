@@ -209,18 +209,26 @@ def snippets_to_prompt_block(snippets):
 # 5) EVRENSEL YAPAY ZEKA SİGORTA MOTORU (TÜM ENGELLERİ KIRAN SÜRÜM)
 # ============================================================
 def call_gemini_grounded(prompt: str, key_name: str) -> str:
-    # Şifreyi doğrudan koda gömerek Streamlit bariyerini kırıyoruz
-    api_key = "AQ.Ab8RN6I0f2Gi4bJfoxVVp5KUE7RwuKs0QtCI5dLouv9LNs8NtA"
+    import os
+    # .env dosyasından şifreyi pürüzsüzce emen güvenli motor
+    api_key = st.secrets.get(key_name, os.environ.get(key_name, ""))
+    if not api_key: 
+        raise RuntimeError(f"{key_name} eksik.")
+    
+    # Adresin ve şifrenin birbirine yapışmasını engelleyen resmi Google API url yapısı:
     url = f"https://googleapis.com{api_key}"
     resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=25)
     resp.raise_for_status()
     return resp.json()["candidates"]["content"]["parts"]["text"]
 
 def call_openrouter_free(prompt: str) -> str:
-    # OpenRouter şifresini de doğrudan koda gömüyoruz
-    api_key = "sk-or-v1-5733d503b1577b46f843bb12d84bf46d46733ac077842fa5728973056bfd616ftt"
+    import os
+    api_key = st.secrets.get("OPENROUTER_API_KEY", os.environ.get("OPENROUTER_API_KEY", ""))
     headers = {"Content-Type": "application/json"}
-    if api_key: headers["Authorization"] = f"Bearer {api_key}"
+    if api_key: 
+        headers["Authorization"] = f"Bearer {api_key}"
+    
+    # OpenRouter'ın adres ve veri gövdesi bağlantısı:
     resp = requests.post(
         "https://openrouter.ai",
         headers=headers,
