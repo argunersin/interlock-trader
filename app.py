@@ -248,7 +248,7 @@ def generate_pdf_report(prompt_data, ai_report):
     s_st = ParagraphStyle('SSt', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=13, textColor=colors.HexColor('#2563eb'), spaceBefore=12, spaceAfter=6)
     b_st = ParagraphStyle('BSt', parent=styles['BodyText'], fontName='Helvetica', fontSize=10, leading=14, spaceAfter=8)
     
-    story.append(Paragraph("KURESEL TICARET VE EMTIA ISTIHBARAT RAPORU", t_st))
+    story.append(Paragraph("KURESEL TICARET VE EMTIA ISTIHBAT RAPORU", t_st))
     story.append(Paragraph(f"<b>Rapor Tarihi:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}", b_st))
     story.append(Spacer(1, 10))
     
@@ -257,7 +257,8 @@ def generate_pdf_report(prompt_data, ai_report):
         [Paragraph("<b>Teslim Noktasi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('teslim_limani', 'Genel Urun Aramasi')), b_st)],
         [Paragraph("<b>Urun / GTIP Tanimi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('mal_tanimi', '-')), b_st)]
     ]
-    t = Table(data, colWidths=)
+    # DÜZELTİLEN YER: colWidths değerleri eksiksiz girildi
+    t = Table(data, colWidths=[150, 350])
     t.setStyle(TableStyle([('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f3f4f6')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d1d5db')), ('PADDING', (0,0), (-1,-1), 6)]))
     story.append(t)
     story.append(Spacer(1, 15))
