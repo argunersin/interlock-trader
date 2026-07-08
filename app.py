@@ -147,36 +147,47 @@ def check_market_thresholds(check_commodity, target_threshold):
         alarm_triggered = False
 
     return current_p, alarm_triggered
-# --- ETKİLEŞİMLİ TESLİM ŞEKLİ MATRİSİ VE ÇALIŞTIRICI ---
+# --- ETKİLEŞİMLİ TESLİM ŞEKLİ MATRİSİ VE WEB ARAYÜZÜ ---
 def delivery_matrix_handler():
-    """
-    Uluslararası teslim şekillerini ve maliyet sorumluluklarını 
-    çoklu dil desteğine uygun olarak simüle eden etkileşimli matris yapısı.
-    """
-    # Temel Incoterms matris verisi
     matrix_data = {
         "Terim": ["EXW", "FOB", "CIF", "DDP"],
-        "Yükleme Maliyeti": ["Alıcı", "Satıcı", "Satıcı", "Satıcı"],
+        "Yükleme": ["Alıcı", "Satıcı", "Satıcı", "Satıcı"],
         "Ana Taşıma": ["Alıcı", "Alıcı", "Satıcı", "Satıcı"],
         "Sigorta": ["Alıcı", "Alıcı", "Satıcı", "Satıcı"],
         "Gümrük": ["Alıcı", "Alıcı", "Alıcı", "Satıcı"]
     }
-    df_matrix = pd.DataFrame(matrix_data)
-    return df_matrix
+    return pd.DataFrame(matrix_data)
 
-if __name__ == "__main__":
-    # 1. Matris Yapısını Hazırla
-    print(f"\n=== {lang['matrix_title']} ===")
-    matris = delivery_matrix_handler()
-    print(matris.to_string(index=False))
+# Streamlit Arayüz Başlangıcı
+import streamlit as st
 
-    # 2. Alarm Işıklarını Test Et (Ham Petrol için 70.0 Eşik Değeri)
-    print(f"\n=== {lang['radar_title']} ===")
-    
-    # Döngü içinde anlık fiyat takibi ve alarm kontrolü simülasyonu
-    for i in range(3):
-        fiyat, alarm_durumu = check_market_thresholds("Ham Petrol", 70.0)
-        print(f"[{i+1}/3] Ham Petrol Güncel Fiyat: {fiyat:.2f} | Alarm Aktif mi?: {alarm_durumu}")
-        time.sleep(1)
+# 1. Dil Seçim Butonları (En Üst Bölüm)
+col_lang1, col_lang2 = st.columns([8, 2])
+with col_lang2:
+    selected_lang = st.selectbox("Language / Dil", ["tr", "en"])
+    if selected_lang != CURRENT_LANG:
+        CURRENT_LANG = selected_lang
+        lang = LOCALES[CURRENT_LANG]
 
-    print("\n[ZIRHLI SİSTEM]: Tüm bileşenler başarıyla ayağa kaldırıldı ve kararlı durumda.")
+# 2. Ana Başlık
+st.title(lang["title"])
+
+# 3. Alarm Işıkları Paneli
+st.header(lang["radar_title"])
+fiyat, alarm_durumu = check_market_thresholds("Ham Petrol", 70.0)
+
+col1, col2 = st.columns(2)
+with col1:
+    st.metric(label=f"Ham Petrol ({lang['last_price']})", value=f"{fiyat:.2f} USD")
+with col2:
+    if alarm_durumu:
+        st.error(lang["threshold_alert"])
+    else:
+        st.success(lang["agent_status"])
+
+# 4. Teslim Şekli Matrisi Panel
+st.header(lang["matrix_title"])
+matris_df = delivery_matrix_handler()
+st.dataframe(matris_df, use_container_width=True)
+
+st.info("[ZIRHLI SİSTEM]: Tüm bileşenler başarıyla ayağa kaldırıldı.")
