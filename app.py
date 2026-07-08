@@ -153,7 +153,7 @@ def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
     m_tanimi = prompt_data.get('mal_tanimi', 'Urun')
     s_lang = prompt_data.get('target_language', 'EN')
     
-    # Canlı internet arama gözü (DuckDuckGo Entegrasyonu) aktif [1.1]
+    # Canlı internet arama gözü (DuckDuckGo Entegrasyonu) aktif
     web_news = ""
     try:
         with DDGS() as ddgs:
@@ -229,7 +229,7 @@ def generate_pdf_report(prompt_data, ai_report):
         [Paragraph("<b>Teslim Noktasi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('teslim_limani', 'Genel Urun Aramasi')), b_st)],
         [Paragraph("<b>Urun / GTIP Tanimi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('mal_tanimi', '-')), b_st)]
     ]
-    t = Table(data, colWidths=[150, 350])
+    t = Table(data, colWidths=[140, 380])
     t.setStyle(TableStyle([('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f3f4f6')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d1d5db')), ('PADDING', (0,0), (-1,-1), 6)]))
     story.append(t)
     story.append(Spacer(1, 15))
@@ -257,7 +257,7 @@ def draw_risk_chart(risk_score):
     plt.tight_layout()
     return fig
 # ==========================================
-# 3. PARÇA: BLOOMBERG ŞERİDİ, PİYASA MATRİSİ VİE ÇOKLU DİL DESTEĞİ
+# 3. PARÇA: BLOOMBERG ŞERİDİ, PİYASA MATRİSİ VE ÇOKLU DİL DESTEĞİ
 # ==========================================
 
 # Üst Bloomberg Kayan Fiyat Bandı İçin Veri Hazırlığı
@@ -325,19 +325,20 @@ with tab1:
         styled_df = filtered_df.style.map(style_change, subset=['Daily Change (%)']).format({'Price': '{:,.2f}', 'Daily Change (%)': '{:+.2f}%'})
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
         
-                    st.markdown("### 🔔 Akıllı Piyasa Eşik Radarı (Alarm Işıkları)")
-    col_al1, col_al2 = st.columns(2)
-    with col_al1:
-        check_commodity = st.selectbox("Radara Alınacak Enstrüman:", df_market["Asset Name"].unique(), key="radar_comm")
-        target_threshold = st.number_input("Kritik Üst Limit Eşiği:", value=100.0, key="radar_thresh")
-    with col_al2:
-        current_p_rows = df_market[df_market["Asset Name"] == check_commodity]["Price"].values
-        current_p = float(current_p_rows) if len(current_p_rows) > 0 else 0.0
-        
-        if current_p > target_threshold:
-            st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM:</b> {check_commodity} ({current_p:.2f}) > {target_threshold:.2f}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<div style='background-color:#064e3b; padding:15px; border-radius:5px; border-left:5px solid #00ffcc; color:white;'>🟢 <b>NORMAL:</b> {check_commodity} ({current_p:.2f}) < {target_threshold:.2f}</div>", unsafe_allow_html=True)
+        st.markdown("### 🔔 Akıllı Piyasa Eşik Radarı (Alarm Işıkları)")
+        col_al1, col_al2 = st.columns(2)
+        with col_al1:
+            check_commodity = st.selectbox("Radara Alınacak Enstrüman:", df_market["Asset Name"].unique(), key="radar_comm")
+            target_threshold = st.number_input("Kritik Üst Limit Eşiği:", value=100.0, key="radar_thresh")
+        with col_al2:
+            current_p_rows = df_market[df_market["Asset Name"] == check_commodity]["Price"].values
+            current_p = float(current_p_rows) if len(current_p_rows) > 0 else 0.0
+            
+            if current_p > target_threshold:
+                st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM:</b> {check_commodity} ({current_p:.2f}) > {target_threshold:.2f}</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div style='background-color:#064e3b; padding:15px; border-radius:5px; border-left:5px solid #00ffcc; color:white;'>🟢 <b>NORMAL:</b> {check_commodity} ({current_p:.2f}) < {target_threshold:.2f}</div>", unsafe_allow_html=True)
+    else: st.error("Veri motoruna erisilemiyor.")
 
     st.markdown("---")
     st.subheader(L["calc_title"])
@@ -445,7 +446,7 @@ with tab3:
                         genai.configure(api_key=GEMINI_API_KEY)
                         model = genai.GenerativeModel('gemini-1.5-flash')
                         img = Image.open(uploaded_file)
-                        prompt = "Bu bir ticari evraktır. İçindeki tüm unvanları, GTİP kodlarını ve fatura tutar verilerini Türkçe analiz et."
+                        prompt = "Bu bir ticari evraktır. İçindeki tüm unvanları, GTİP kodlarını health ve fatura tutar verilerini Türkçe analiz et."
                         response = model.generate_content([prompt, img])
                         st.session_state.ocr_result = response.text
                     except Exception as e: st.session_state.ocr_result = f"OCR Hatası: {str(e)}"
