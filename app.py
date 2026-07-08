@@ -331,9 +331,9 @@ with tab1:
             check_commodity = st.selectbox("Radara Alınacak Enstrüman:", df_market["Asset Name"].unique(), key="radar_comm")
             target_threshold = st.number_input("Kritik Üst Limit Eşiği:", value=100.0, key="radar_thresh")
         with col_al2:
-            current_p_rows = df_market[df_market["Asset Name"] == check_commodity]["Price"].values
-            current_p = float(current_p_rows) if len(current_p_rows) > 0 else 0.0
-            
+            current_p_rows = df_market[df_market["Asset Name"] == check_commodity]["Price"]
+            current_p = float(current_p_rows.iloc[0]) if not current_p_rows.empty else 0.0
+      
             if current_p > target_threshold:
                 st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM:</b> {check_commodity} ({current_p:.2f}) > {target_threshold:.2f}</div>", unsafe_allow_html=True)
             else:
