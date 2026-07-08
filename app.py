@@ -249,7 +249,7 @@ def generate_pdf_report(prompt_data, ai_report):
         [Paragraph("<b>Teslim Noktasi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('teslim_limani', 'Genel Urun Aramasi')), b_st)],
         [Paragraph("<b>Urun / GTIP Tanimi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('mal_tanimi', '-')), b_st)]
     ]
-    t = Table(data, colWidths=)
+    t = Table(data, colWidths=[150, 300])
     t.setStyle(TableStyle([('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f3f4f6')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d1d5db')), ('PADDING', (0,0), (-1,-1), 6)]))
     story.append(t)
     story.append(Spacer(1, 15))
