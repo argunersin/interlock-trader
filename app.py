@@ -1,9 +1,10 @@
 # ==========================================
-# 1. PARÇA: KÜTÜPHANELER, HAFIZA VE KARARLI BORSA MOTORU
+# 1. PARÇA: KÜTÜPHANELER, GÜVENLİK VE KARARLI PİYASA MOTORU
 # ==========================================
 import streamlit as st
 import pandas as pd
 import numpy as np
+import yfinance as yf
 import matplotlib.pyplot as plt
 import google.generativeai as genai
 import folium
@@ -18,6 +19,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from duckduckgo_search import DDGS
 
 # Ekran genişlik ve telefon uyumluluk ayarları
 st.set_page_config(
@@ -36,7 +38,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Oturum Hafızası (Session State) Kilitleri (Ekran titremesini ve sıfırlanmayı önler)
+# Oturum Hafızası (Session State) Kilitleri (Ekran titremesini ve sekmelerin kırılmasını önleyen ana zırh)
 if "ai_report_data" not in st.session_state: st.session_state.ai_report_data = None
 if "ai_prompt_data" not in st.session_state: st.session_state.ai_prompt_data = None
 if "ocr_result" not in st.session_state: st.session_state.ocr_result = None
@@ -62,7 +64,7 @@ def get_api_key(key_name):
 GEMINI_API_KEY = get_api_key("GEMINI_API_KEY")
 OPENROUTER_API_KEY = get_api_key("OPENROUTER_API_KEY")
 
-# 60 Kalemlik Gerçek Google & Yahoo Sembol Eşleşmeleri (Şaşırmayan Gerçek Rakamlar)
+# 60 Kalemlik Gerçek Borsa Sembol Eşleşmeleri (Sıfırlanmayan Gerçek Rakamlar)
 COMMODITY_GROUPS = {
     "Enerji": {
         "Ham Petrol (WTI)": "CL=F", "Brent Petrol": "BZ=F", "Doğalgaz": "NG=F",
@@ -102,7 +104,6 @@ COMMODITY_GROUPS = {
     }
 }
 
-# Piyasa kapalıyken veya Yahoo blok koyduğunda devreye girecek kurumsal taban fiyat havuzu
 REALISTIC_BACKUP_PRICES = {
     "CL=F": 74.50, "BZ=F": 78.20, "NG=F": 2.45, "HO=F": 2.30, "RB=F": 2.15, "MTF=F": 115.0, "CU=F": 1.60, "UX=F": 85.0, "CFI=F": 68.0,
     "GC=F": 2340.0, "SI=F": 29.50, "PL=F": 980.0, "PA=F": 1020.0, "RHO": 4750.0, "IRD": 4600.0,
@@ -113,12 +114,11 @@ REALISTIC_BACKUP_PRICES = {
     "USDTRY=X": 34.50, "EURTRY=X": 36.25, "EURUSD=X": 1.0850, "GBPUSD=X": 1.2820, "RUB=X": 92.40, "CNY=X": 7.26, "JPY=X": 158.40, "CHF=X": 0.8950
 }
 
-@st.cache_data(ttl=900)
+# SEKMELERİ KIRAN CACHE MOTORU TAMAMEN KALDIRILDI!
 def fetch_live_commodity_data():
     """
-    Sistemi dondurmayan, kararlı ve şaşırmayan tek hamlelik borsa veri çekirdeği.
+    Sistemi asla dondurmayan ve sekmeleri kırmayan esnek borsa veri çekirdeği.
     """
-    import yfinance as yf_mod
     rows = []
     tickers = []
     tk_to_name, tk_to_group = {}, {}
@@ -128,7 +128,7 @@ def fetch_live_commodity_data():
             tk_to_name[tk] = name
             tk_to_group[tk] = group
     try:
-        data = yf_mod.download(tickers, period="5d", group_by="ticker", progress=False, timeout=10)
+        data = yf.download(tickers, period="5d", group_by="ticker", progress=False, timeout=8)
         for tk in tickers:
             name = tk_to_name[tk]
             group = tk_to_group[tk]
@@ -151,9 +151,8 @@ def fetch_live_commodity_data():
             rows.append({"Grup": tk_to_group[tk], "Emtia/Kur Adı": tk_to_name[tk], "Sembol": tk, "Son Fiyat": REALISTIC_BACKUP_PRICES.get(tk, 10.0), "Günlük Değişim (%)": 0.0, "Durum": "Yedek Kanal"})
     return pd.DataFrame(rows)
 # ==========================================
-# 2. PARÇA: CANLI AI İSTİHBARAT MOTORU VE HARF SÜZGECİ
+# 2. PARÇA: DERİN AI MOTORU VE TÜRKÇE PDF SÜZGECİ
 # ==========================================
-from duckduckgo_search import DDGS
 
 def tr_to_eng_pdf(text):
     """
@@ -176,37 +175,37 @@ def extract_json_from_response(text):
 
 def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
     """
-    Canlı internet taraması yaparak, teslim şekilleri (CIF/FOB/EXW/DDP) 
-    ve kurumsal e-postalar dahil %100 gerçek ticaret istihbaratı üretir.
+    Yapay zeka format zırhını bozmadan, dış ticaret direktörünün istediği 
+    iki can alıcı senaryoya göre sayfalarca, upuzun ve dolu dolu kurumsal analiz üretir.
     """
     m_tanimi = prompt_data.get('mal_tanimi', 'Urun')
     
-    # 1. ÖZELLİK ENTEGRASYONU: Yapay Zekaya Canlı İnternet Arama Gözü Takıyoruz (DuckDuckGo Search)
+    # Canlı internet arama gözü (DuckDuckGo Entegrasyonu) aktif
     web_news = ""
     try:
         with DDGS() as ddgs:
-            search_query = f"{m_tanimi} global trade market customs tariff 2026"
-            results = [r for r in ddgs.text(search_query, max_results=2)]
-            if results:
-                web_news = " | ".join([f"{r['title']}: {r['body']}" for r in results])
-    except Exception:
-        web_news = "Canlı internet veri hatlarında anlık gecikme."
+            results = [r for r in ddgs.text(f"{m_tanimi} global trade customs tariff", max_results=2)]
+            if results: web_news = " | ".join([f"{r['title']}: {r['body']}" for r in results])
+    except Exception: 
+        web_news = "Canli internet veri hatlarinda anlik gecikme."
 
     sys_prompt = (
-        "Sen üst düzey bir küresel ticaret, gümrük mevzuatı ve emtia istihbarat analistisin. "
-        "Verilen gümrük yükleme, teslim ve mal tanımı bilgilerini analiz et. "
-        "Yedek metinleri kullanma, tamamen profesyonel, sektörel terimler içeren derin bir analiz yaz. "
-        "Yanıtında şu başlıkları kurumsal ve çok detaylı şekilde ele al:\n"
-        "- Malın GTİP bazlı gümrük vergileri, antidamping ve tarife dışı tüm engelleri\n"
-        "- Sektördeki lider küresel alıcı ve satıcı şirket yapıları, holdingler ve pazar payı dinamikleri\n"
-        "- Navlun maliyet matrisi (Konteyner/Spot), sigorta kırılımları ve liman işlem süreleri\n"
-        f"Şu anki canlı internet piyasa verilerini de rapora yedir: {web_news}. "
-        "Uydurma veri kullanma, sadece doğrulanmış bilgi sağla. Mutlaka şu JSON formatında döndür, başka hiçbir metin ekleme:\n"
-        '{"gümrük_özeti": "[Buraya şirket istihbaratları ve gümrük mevzuatını içeren çok uzun ve detaylı bir analiz yazın]", '
-        '"fiyat_matrisi": "[Buraya borsa oynaklıkları, navlun endeksleri ve fiyat kırılımlarını içeren kurumsal bir analiz yazın]", '
-        '"rotalar": ["1. Ana Güvenli Rota Açıklaması", "2. Alternatif Lojistik Koridoru Açıklaması"], '
-        '"risk_skoru": 75, '
-        '"risk_nedenleri": ["Mevzuat/Tarife değişiklikleri riski", "Jeopolitik koridor ve navlun oynaklığı riski"]}'
+        "Sen dış ticaret dünyasını domine eden, kıdemli bir küresel ticaret istihbarat baş analisti ve gümrük hukuku uzmanısın. "
+        "Sana verilen talebi bir ansiklopedi derinliğinde, en az 500'er kelimelik dev paragraflarla analiz et. "
+        "Kısa, sığ ve yuvarlak cümleler kurmayı kesinlikle reddet. 'Hesaplandı, veri yok' gibi ifadeler kullanma. "
+        "Eğer kullanıcı SADECE ürün adı girdiyse (Senaryo A): Ürünün küresel borsa fiyat trendlerini, haftalık/aylık pazar "
+        "grafik projeksiyonlarını, dünya pazar payı dinamiklerini, sektörü yöneten en az 5 adet dev lider aktör şirketi, "
+        "web sitelerini ve satis@interlock.com formatında kurumsal e-posta adreslerini raporla. "
+        "Eğer kullanıcı LİMANLARI ve TESLİM ŞEKİLLERİNİ de girdiyse (Senaryo B): Girdiğin rotaya özel EXW, FOB, CIF, DDP "
+        "maliyet matrislerini, Drewry Dünya Konteyner Endeksi (WCI) kırılımları, Kloş A emtia sigorta risk primleri, "
+        "gümrük muayene hatlarındaki (Kırmızı/Sarı Hat) tarife dışı engelleri, gümrük vergilerini, koridorda aktif en az 5 adet "
+        "lokal lojistik/gümrükleme firmasını, kurumsal web ve e-posta adreslerini satır satır dök. "
+        f"Canlı internet verilerini de rapora sonuna kadar yedir: {web_news}. "
+        "Uydurma veri kullanma, sadece doğrulanmış bilgi sağla. Yanıtını mutlaka ve sadece şu geçerli JSON şemasında döndür:\n"
+        '{"gümrük_özeti": "[Buraya gümrük mevzuatlarını, lider aktör holdingleri ve kurumsal e-postaları içeren devasa uzunlukta analizi dökün]", '
+        '"fiyat_matrisi": "[Buraya borsa trend grafiklerini, EXW/FOB/CIF/DDP navlun maliyet matrislerini içeren kurumsal analizi dökün]", '
+        '"rotalar": ["1. Birincil Güvenli Rota ve Transit Süreleri", "2. Alternatif Lojistik Koridoru Maliyetleri"], '
+        '"risk_skoru": 75, "risk_nedenleri": ["Kritik risk faktörü 1", "Kritik risk faktörü 2"]}'
     )
     
     if gemini_key:
@@ -222,20 +221,17 @@ def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
         try:
             url = "https://openrouter.ai"
             headers = {"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"}
-            payload = {
-                "model": "google/gemini-flash-1.5",
-                "messages": [{"role": "system", "content": sys_prompt}, {"role": "user", "content": str(prompt_data)}]
-            }
+            payload = {"model": "google/gemini-flash-1.5", "messages": [{"role": "system", "content": sys_prompt}, {"role": "user", "content": str(prompt_data)}]}
             res = requests.post(url, headers=headers, json=payload, timeout=15)
             if res.status_code == 200:
                 parsed = extract_json_from_response(res.json()["choices"]["message"]["content"])
                 if parsed: return parsed
         except Exception: pass
 
-    # API yoksa dürüst kurumsal teknik uyarı ve yönlendirme (Sahte veri engellendi)
+    # API'ler o an yanıt vermezse dürüst kurumsal uyarı (Sahte veri engellendi)
     return {
-        "gümrük_özeti": "⚠️ CANLI BAĞLANTI UYARISI: Küresel gümrük mevzuatı ve şirket istihbarat ağına şu anda erişilemedi. Lütfen Render panelinizdeki GEMINI_API_KEY anahtarını kontrol ediniz.",
-        "fiyat_matrisi": "⚠️ CANLI BAĞLANTI UYARISI: Haftalık/aylık borsa piyasa trend grafikleri ve teslim şekilleri (FOB/CIF) maliyet kırılımları API bağlantısı eksikliği nedeniyle yüklenemedi.",
+        "gümrük_özeti": "⚠️ CANLI İSTİHBARAT UYARISI: Küresel gümrük mevzuatı, lider üretici kartelleri ve aktör şirket e-posta veritabanı ağına şu anda erişilemedi. Lütfen Render panelinizdeki GEMINI_API_KEY anahtarını kontrol ediniz.",
+        "fiyat_matrisi": "⚠️ CANLI İSTİHBARAT UYARISI: Haftalık/aylık borsa piyasa trend grafikleri ve teslim şekilleri (EXW/FOB/CIF/DDP) maliyet kırılımları API bağlantısı eksikliği nedeniyle yüklenemedi.",
         "rotalar": ["Gerçek zamanlı güvenli sevkiyat koridorları sorgulanamadı."],
         "risk_skoru": 0, "risk_nedenleri": ["Canlı API anahtarı doğrulaması başarısız."]
     }
@@ -248,7 +244,7 @@ def generate_pdf_report(prompt_data, ai_report):
     s_st = ParagraphStyle('SSt', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=13, textColor=colors.HexColor('#2563eb'), spaceBefore=12, spaceAfter=6)
     b_st = ParagraphStyle('BSt', parent=styles['BodyText'], fontName='Helvetica', fontSize=10, leading=14, spaceAfter=8)
     
-    story.append(Paragraph("KURESEL TICARET VE EMTIA ISTIHBAT RAPORU", t_st))
+    story.append(Paragraph("KURESEL TICARET VE EMTIA ISTIHBARAT RAPORU", t_st))
     story.append(Paragraph(f"<b>Rapor Tarihi:</b> {datetime.now().strftime('%d.%m.%Y %H:%M')}", b_st))
     story.append(Spacer(1, 10))
     
@@ -257,7 +253,6 @@ def generate_pdf_report(prompt_data, ai_report):
         [Paragraph("<b>Teslim Noktasi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('teslim_limani', 'Genel Urun Aramasi')), b_st)],
         [Paragraph("<b>Urun / GTIP Tanimi:</b>", b_st), Paragraph(tr_to_eng_pdf(prompt_data.get('mal_tanimi', '-')), b_st)]
     ]
-    # DÜZELTİLEN YER: colWidths değerleri eksiksiz girildi
     t = Table(data, colWidths=[150, 350])
     t.setStyle(TableStyle([('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f3f4f6')), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d1d5db')), ('PADDING', (0,0), (-1,-1), 6)]))
     story.append(t)
@@ -277,26 +272,19 @@ def generate_pdf_report(prompt_data, ai_report):
 
 def draw_risk_chart(risk_score):
     fig, ax = plt.subplots(figsize=(6, 1.5))
-    fig.patch.set_facecolor('#0e1117')
-    ax.set_facecolor('#0e1117')
-    # Çift virgül hatası araya 100 değeri koyularak tamamen düzeltildi
+    fig.patch.set_facecolor('#0e1117'); ax.set_facecolor('#0e1117')
     ax.barh(["Risk Endeksi"], 100, color="#1f2937", height=0.4)
     color = "#00ffcc" if risk_score < 40 else "#ffcc00" if risk_score < 70 else "#ff3366"
     ax.barh(["Risk Endeksi"], [risk_score], color=color, height=0.4)
-    ax.set_xlim(0, 100)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['bottom'].set_color('#4b5563')
-    ax.tick_params(colors='#ffffff', labelsize=10)
-    ax.text(risk_score + 2, 0, f"%{risk_score}", color=color, va='center', fontweight='bold', fontsize=12)
+    ax.set_xlim(0, 100); ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False); ax.spines['left'].set_visible(False); ax.spines['bottom'].set_color('#4b5563')
+    ax.tick_params(colors='#ffffff', labelsize=10); ax.text(risk_score + 2, 0, f"%{risk_score}", color=color, va='center', fontweight='bold', fontsize=12)
     plt.tight_layout()
     return fig
 # ==========================================
 # 3. PARÇA: BLOOMBERG ŞERİDİ, PİYASA MATRİSİ VE INCOTERMS TABLOSU
 # ==========================================
 
-# Üst Bloomberg Kayan Fiyat Bandı (Ticker) İçin Veri Hazırlığı
+# Üst Bloomberg Kayan Fiyat Bandı İçin Veri Hazırlığı
 df_market = fetch_live_commodity_data()
 
 if not df_market.empty:
@@ -345,16 +333,16 @@ with tab1:
         })
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
         
-        # 3. ÖZELLİK ENTEGRASYONU: Akıllı Emtia & Kur Alarm Sistemi (Işıklar)
+        # Akıllı Emtia & Kur Alarm Sistemi (Işıklar)
         st.markdown("### 🔔 Akıllı Piyasa Eşik Radarı (Alarm Işıkları)")
         col_al1, col_al2 = st.columns(2)
         with col_al1:
             check_commodity = st.selectbox("Radara Alınacak Enstrüman:", df_market["Emtia/Kur Adı"].unique(), key="radar_comm")
             target_threshold = st.number_input("Kritik Üst Limit Eşiği:", value=100.0, key="radar_thresh")
         with col_al2:
-            current_p = float(df_market[df_market["Emtia/Kur Adı"] == check_commodity]["Son Fiyat"].values[0])
+            current_p = float(df_market[df_market["Emtia/Kur Adı"] == check_commodity]["Son Fiyat"].values)
             if current_p > target_threshold:
-                st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM TETİKLENDİ:</b> {check_commodity} fiyatı ({current_p:.2f}), belirlediğiniz {target_threshold:.2f} eşiğini aştı! Üretim ve ithalat maliyetleri risk altında!</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM TETİKLENDİ:</b> {check_commodity} fiyatı ({current_p:.2f}), belirlediğiniz {target_threshold:.2f} eşiğini aştı! Maliyetler risk altında!</div>", unsafe_allow_html=True)
             else:
                 st.markdown(f"<div style='background-color:#064e3b; padding:15px; border-radius:5px; border-left:5px solid #00ffcc; color:white;'>🟢 <b>RADAR NORMAL:</b> {check_commodity} fiyatı ({current_p:.2f}), şu an {target_threshold:.2f} güvenli sınırının altında.</div>", unsafe_allow_html=True)
     else:
@@ -373,20 +361,18 @@ with tab1:
         if source_currency != target_currency:
             ticker_search = f"{source_currency}{target_currency}=X"
             if source_currency == "TRY": ticker_search = f"{target_currency}{source_currency}=X"
-            match_row = df_market[df_market["Sembol"] == source_currency + target_currency + "=X" if source_currency != "TRY" else target_currency + source_currency + "=X"]
             
-            # Matristen canlı kur çekimi denemesi
+            # Önbellek çakışmasını önleyen doğrudan matris eşleşmesi
             if not df_market.empty:
                 try:
-                    # Alternatif düz sembol kontrolü
                     alt_search = source_currency + target_currency
                     m_row = df_market[(df_market["Sembol"] == ticker_search) | (df_market["Sembol"] == alt_search)]
                     if not m_row.empty:
-                        exchange_rate = float(m_row["Son Fiyat"].values[0])
+                        exchange_rate = float(m_row["Son Fiyat"].values)
                         if source_currency == "TRY": exchange_rate = 1.0 / exchange_rate
                         calculated_result = amount * exchange_rate
                     else:
-                        backup_rates = {"USDTRY": 34.50, "EURTRY": 36.20, "USDCNY": 7.25, "USDRUB": 92.0, "EURUSD": 1.0850}
+                        backup_rates = {"USDTRY": 34.50, "EURTRY": 36.20, "USDCNY": 7.25, "USDRUB": 92.40, "EURUSD": 1.0850}
                         exchange_rate = backup_rates.get(f"{source_currency}{target_currency}", 1.0)
                         calculated_result = amount * exchange_rate
                 except Exception:
@@ -394,7 +380,7 @@ with tab1:
         st.metric(label="Hesaplanan Dönüşüm Tutarı", value=f"{calculated_result:,.2f} {target_currency}")
         st.caption(f"Anlık Çevrim Katsayısı: 1 {source_currency} = {exchange_rate:.4f} {target_currency}")
 
-    # 2. ÖZELLİK ENTEGRASYONU: Otomatik CIF / FOB / EXW / DDP Etkileşimli Hesap Matrisi
+    # Otomatik CIF / FOB / EXW / DDP Etkileşimli Hesap Matrisi
     st.markdown("---")
     st.subheader("📊 İnteraktif Incoterms (Teslim Şekli) Maliyet Simülatörü")
     col_mat1, col_mat2 = st.columns(2)
@@ -502,7 +488,7 @@ with tab4:
         st.markdown("### 🛡️ Gümrük X-Ray Muayene İstihbaratı")
         if st.session_state.gemi_sorgu_sonuc:
             res = st.session_state.gemi_sorgu_sonuc
-            st.markdown(f"""<div style='background-color: #1f2937; padding: 15px; border-left: 5px solid #00ffcc; border-radius: 4px;'><p style='color:#ffffff; margin:0;'><b>Gemi:</b> {res['gemi_adi']}<br><b>Konum:</b> {res['mevcut_konum']}<br><b>Hız:</b> {res['hiz']}<br><span style='color:#ffcc00;'>⚠️ {res['xray_statusu']}</span></p></div>""", unsafe_allow_html=True)
+            st.markdown("""<div style='background-color: #1f2937; padding: 15px; border-left: 5px solid #00ffcc; border-radius: 4px;'><p style='color:#ffffff; margin:0;'><b>Gemi:</b> {}<br><b>Konum:</b> {}<br><b>Hız:</b> {}<br><span style='color:#ffcc00;'>⚠️ {}</span></p></div>""".format(res['gemi_adi'], res['mevcut_konum'], res['hiz'], res['xray_statusu']), unsafe_allow_html=True)
     st.markdown("### 🗺️ Küresel Lojistik Koridor ve Canlı Rota Görünümü")
     m = folium.Map(location=[24.0, 54.0], zoom_start=3, tiles="CartoDB positron")
     folium.PolyLine(locations=[[31.23, 121.47], [1.35, 103.87], [12.78, 45.01], [30.60, 32.50], [40.97, 28.72]], color="#2563eb", weight=4).add_to(m)
