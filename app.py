@@ -325,19 +325,19 @@ with tab1:
         styled_df = filtered_df.style.map(style_change, subset=['Daily Change (%)']).format({'Price': '{:,.2f}', 'Daily Change (%)': '{:+.2f}%'})
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
         
-                st.markdown("### 🔔 Akıllı Piyasa Eşik Radarı (Alarm Işıkları)")
-        col_al1, col_al2 = st.columns(2)
-        with col_al1:
-            check_commodity = st.selectbox("Radara Alınacak Enstrüman:", df_market["Asset Name"].unique(), key="radar_comm")
-            target_threshold = st.number_input("Kritik Üst Limit Eşiği:", value=100.0, key="radar_thresh")
-        with col_al2:
-            current_p_rows = df_market[df_market["Asset Name"] == check_commodity]["Price"].values
-            current_p = float(current_p_rows[0]) if len(current_p_rows) > 0 else 0.0
-            
-            if current_p > target_threshold:
-                st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM:</b> {check_commodity} ({current_p:.2f}) > {target_threshold:.2f}</div>", unsafe_allow_html=True)
-            else:
-                st.markdown(f"<div style='background-color:#064e3b; padding:15px; border-radius:5px; border-left:5px solid #00ffcc; color:white;'>🟢 <b>NORMAL:</b> {check_commodity} ({current_p:.2f}) < {target_threshold:.2f}</div>", unsafe_allow_html=True)
+                    st.markdown("### 🔔 Akıllı Piyasa Eşik Radarı (Alarm Işıkları)")
+    col_al1, col_al2 = st.columns(2)
+    with col_al1:
+        check_commodity = st.selectbox("Radara Alınacak Enstrüman:", df_market["Asset Name"].unique(), key="radar_comm")
+        target_threshold = st.number_input("Kritik Üst Limit Eşiği:", value=100.0, key="radar_thresh")
+    with col_al2:
+        current_p_rows = df_market[df_market["Asset Name"] == check_commodity]["Price"].values
+        current_p = float(current_p_rows) if len(current_p_rows) > 0 else 0.0
+        
+        if current_p > target_threshold:
+            st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM:</b> {check_commodity} ({current_p:.2f}) > {target_threshold:.2f}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div style='background-color:#064e3b; padding:15px; border-radius:5px; border-left:5px solid #00ffcc; color:white;'>🟢 <b>NORMAL:</b> {check_commodity} ({current_p:.2f}) < {target_threshold:.2f}</div>", unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader(L["calc_title"])
