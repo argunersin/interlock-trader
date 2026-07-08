@@ -277,12 +277,19 @@ def generate_pdf_report(prompt_data, ai_report):
 
 def draw_risk_chart(risk_score):
     fig, ax = plt.subplots(figsize=(6, 1.5))
-    fig.patch.set_facecolor('#0e1117'); ax.set_facecolor('#0e1117')
-    ax.barh(["Risk Endeksi"],, color="#1f2937", height=0.4)
+    fig.patch.set_facecolor('#0e1117')
+    ax.set_facecolor('#0e1117')
+    # Çift virgül hatası araya 100 değeri koyularak tamamen düzeltildi
+    ax.barh(["Risk Endeksi"], 100, color="#1f2937", height=0.4)
     color = "#00ffcc" if risk_score < 40 else "#ffcc00" if risk_score < 70 else "#ff3366"
     ax.barh(["Risk Endeksi"], [risk_score], color=color, height=0.4)
-    ax.set_xlim(0, 100); ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False); ax.spines['left'].set_visible(False); ax.spines['bottom'].set_color('#4b5563')
-    ax.tick_params(colors='#ffffff', labelsize=10); ax.text(risk_score + 2, 0, f"%{risk_score}", color=color, va='center', fontweight='bold', fontsize=12)
+    ax.set_xlim(0, 100)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_color('#4b5563')
+    ax.tick_params(colors='#ffffff', labelsize=10)
+    ax.text(risk_score + 2, 0, f"%{risk_score}", color=color, va='center', fontweight='bold', fontsize=12)
     plt.tight_layout()
     return fig
 # ==========================================
