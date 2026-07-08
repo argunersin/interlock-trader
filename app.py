@@ -340,19 +340,19 @@ with tab1:
             check_commodity = st.selectbox("Radara Alınacak Enstrüman:", df_market["Emtia/Kur Adı"].unique(), key="radar_comm")
             target_threshold = st.number_input("Kritik Üst Limit Eşiği:", value=100.0, key="radar_thresh")
         with col_al2:
-                    # --- ALARM IŞIKLARI ZIRHLI FİYAT ÇEKME BAŞLANGICI ---
-        matched_rows = df_market[df_market["Emtia/Kur Adı"] == check_commodity]["Son Fiyat"]
-        if not matched_rows.empty:
-            try:
-                # Array hatasını engellemek için ilk elemanı (.iloc[0]) alıyoruz
-                raw_val = matched_rows.iloc[0]
-                # Sayı formatı (virgül/nokta) hatasını engelliyoruz
-                current_p = float(str(raw_val).replace(",", "."))
-            except (ValueError, TypeError):
-                current_p = 0.0
-        else:
-            current_p = 0.0
-        # --- ALARM IŞIKLARI ZIRHLI FİYAT ÇEKME BİTİŞİ ---
+                            # --- ALARM IŞIKLARI ZIRHLI FİYAT ÇEKME BAŞLANGICI ---
+                matched_rows = df_market[df_market["Emtia/Kur Adı"] == check_commodity]["Son Fiyat"]
+                if not matched_rows.empty:
+                    try:
+                        # Array hatasını engellemek için ilk elemanı (.iloc[0]) alıyoruz
+                        raw_val = matched_rows.iloc[0]
+                        # Sayı formatı (virgül/nokta) hatasını engelliyoruz
+                        current_p = float(str(raw_val).replace(",", "."))
+                    except (ValueError, TypeError):
+                        current_p = 0.0
+                else:
+                    current_p = 0.0
+                # --- ALARM IŞIKLARI ZIRHLI FİYAT ÇEKME BİTİŞİ ---
 
             if current_p > target_threshold:
                 st.markdown(f"<div style='background-color:#7f1d1d; padding:15px; border-radius:5px; border-left:5px solid #ff3366; color:white;'>🚨 <b>ALARM TETİKLENDİ:</b> {check_commodity} fiyatı ({current_p:.2f}), belirlediğiniz {target_threshold:.2f} eşiğini aştı! Maliyetler risk altında!</div>", unsafe_allow_html=True)
