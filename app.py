@@ -1,5 +1,5 @@
 # ==========================================
-# 1. PARÇA: KÜTÜPHANELER, GÜVENLİK ve YAHOO FINANCE MOTORU
+# 1. PARÇA: KÜTÜPHANELER, GÜVENLİK, YAHOO MOTORU, AI RAPOR, PDF
 # ==========================================
 import streamlit as st
 import pandas as pd
@@ -21,14 +21,12 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from duckduckgo_search import DDGS
 
-# Ekran genişlik ve telefon uyumluluk ayarları
 st.set_page_config(
     page_title="Global Trade & Commodity Intelligence Terminal",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Sidebar'ı ve çakışmaları önleyen kurumsal CSS
 st.markdown("""
     <style>
         [data-testid="stSidebar"] { display: none !important; }
@@ -38,13 +36,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Oturum Hafızası (ekran titremesini önler)
 if "ai_report_data" not in st.session_state: st.session_state.ai_report_data = None
 if "ai_prompt_data" not in st.session_state: st.session_state.ai_prompt_data = None
 if "ocr_result" not in st.session_state: st.session_state.ocr_result = None
 if "gemi_sorgu_sonuc" not in st.session_state: st.session_state.gemi_sorgu_sonuc = None
 
-# Güvenli API anahtarı okuma
 def get_api_key(key_name):
     try:
         if hasattr(st, "secrets") and key_name in st.secrets: return st.secrets[key_name]
@@ -64,8 +60,6 @@ def get_api_key(key_name):
 GEMINI_API_KEY = get_api_key("GEMINI_API_KEY")
 OPENROUTER_API_KEY = get_api_key("OPENROUTER_API_KEY")
 
-# ========== YENİ: YAHOO FINANCE İLE GERÇEK ZAMANLI FİYATLAR ==========
-# Tüm emtia grupları ve Yahoo ticker'ları (gerçek, çalışan)
 COMMODITY_GROUPS = {
     "Energy": {
         "Crude Oil (WTI)": "CL=F", "Brent Oil": "BZ=F", "Natural Gas": "NG=F",
@@ -88,7 +82,6 @@ COMMODITY_GROUPS = {
     }
 }
 
-# Gerçekçi yedek fiyatlar (Yahoo çalışmazsa kullanılır, güncel)
 REALISTIC_BACKUP_PRICES = {
     "CL=F": 74.50, "BZ=F": 78.20, "NG=F": 2.45, "HO=F": 2.30, "RB=F": 2.15,
     "GC=F": 2345.0, "SI=F": 29.50, "PL=F": 980.0, "PA=F": 1020.0,
@@ -100,12 +93,8 @@ REALISTIC_BACKUP_PRICES = {
     "EURUSD=X": 1.0850, "GBPUSD=X": 1.2820
 }
 
-@st.cache_data(ttl=120)  # 2 dakikada bir tazele
+@st.cache_data(ttl=120)
 def fetch_live_commodity_data():
-    """
-    Yahoo Finance ile gerçek zamanlı fiyat çeker. 
-    Hata durumunda son bilinen gerçekçi yedek fiyatları kullanır.
-    """
     rows = []
     for group, commodities in COMMODITY_GROUPS.items():
         for name, ticker in commodities.items():
@@ -133,10 +122,6 @@ def fetch_live_commodity_data():
             })
     return pd.DataFrame(rows)
 
-# ==========================================
-# 2. PARÇA: DERİN AI MOTORU VE TÜRKÇE PDF SÜZGECİ
-# ==========================================
-
 def tr_to_eng_pdf(text):
     if not text: return ""
     src, tgt = "çğıöşüÇĞİÖŞÜ", "cgiosuCGIOSU"
@@ -158,7 +143,6 @@ def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
     yukleme = prompt_data.get('yukleme_limani', '')
     teslim = prompt_data.get('teslim_limani', '')
 
-    # DuckDuckGo ile haber araması (sadece raporu zenginleştirir)
     web_news = ""
     try:
         with DDGS() as ddgs:
@@ -167,7 +151,6 @@ def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
     except Exception:
         web_news = "Canli internet veri hatlarinda anlik gecikme."
 
-    # Dil bazlı sistem prompt'u
     lang_prompt = ""
     if s_lang == "EN": lang_prompt = "Respond in English only."
     elif s_lang == "DE": lang_prompt = "Antworte nur auf Deutsch."
@@ -194,7 +177,6 @@ def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
         f'"risk_skoru": 75, "risk_nedenleri": ["Kritik risk faktörü 1", "Kritik risk faktörü 2"]}}'
     )
 
-    # Gemini dene
     if gemini_key:
         try:
             genai.configure(api_key=gemini_key)
@@ -204,7 +186,6 @@ def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
             if parsed: return parsed
         except Exception: pass
 
-    # OpenRouter dene
     if openrouter_key:
         try:
             url = "https://openrouter.ai/api/v1/chat/completions"
@@ -219,7 +200,6 @@ def generate_intelligence_report(prompt_data, gemini_key, openrouter_key):
                 if parsed: return parsed
         except Exception: pass
 
-    # Yedek (dil uyumlu)
     fallback = {
         "EN": {
             "gümrük_özeti": "⚠️ CONNECTION ERROR: Gemini API key validation failed or rate limit reached. Please check Render Dashboard. Live data could not be pulled.",
@@ -296,12 +276,10 @@ def draw_risk_chart(risk_score):
     ax.tick_params(colors='#ffffff', labelsize=10); ax.text(risk_score + 2, 0, f"%{risk_score}", color=color, va='center', fontweight='bold', fontsize=12)
     plt.tight_layout()
     return fig
-
 # ==========================================
-# 3. PARÇA: BLOOMBERG ŞERİDİ, PİYASA MATRİSİ VE ÇOKLU DİL DESTEĞİ (TÜM METİNLER SÖZLÜKTE)
+# 2. PARÇA: BLOOMBERG ŞERİDİ, ÇOKLU DİL SÖZLÜĞÜ, TÜM SEKMELER (UI)
 # ==========================================
 
-# Üst Bloomberg kayan şerit
 df_market = fetch_live_commodity_data()
 if not df_market.empty:
     ticker_items = []
@@ -313,7 +291,7 @@ if not df_market.empty:
     ticker_text = " &nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp; ".join(ticker_items)
     st.markdown(f'<div style="background-color: #0e1117; border-bottom: 2px solid #1f2937; padding: 10px 0; overflow: hidden; white-space: nowrap; width: 100%;"><marquee behavior="scroll" direction="left" scrollamount="5" style="font-family: monospace; font-size: 14px;">{ticker_text}</marquee></div><br>', unsafe_allow_html=True)
 
-# ========== GENİŞLETİLMİŞ DİL SÖZLÜĞÜ ==========
+# Çoklu Dil Sözlüğü (TR ve EN tam, DE ve RU aynı yapıda)
 lang_labels = {
     "TR": {
         "title": "Küresel Emtia & Ticaret Paneli",
@@ -417,7 +395,6 @@ lang_labels = {
         "radar_select": "Instrument for Radar:",
         "radar_threshold": "Critical Upper Limit Threshold:"
     },
-    # DE ve RU da benzer şekilde doldurulur (burada kısaltıyorum, kod tam olarak gönderilecek)
     "DE": {
         "title": "Globales Rohstoff- & Handelsterminal",
         "sub": "Erweiterte Ein-Datei-Architektur & KI-Kammern",
@@ -530,7 +507,7 @@ st.caption(L["sub"])
 
 tab1, tab2, tab3, tab4 = st.tabs([L["tab1"], L["tab2"], L["tab3"], L["tab4"]])
 
-# === SEKME 1: CANLI PİYASA & DÖVİZ HESAP MAKİNESİ (TÜM METİNLER L SÖZLÜĞÜNDEN) ===
+# === SEKME 1: CANLI PİYASA & DÖVİZ HESAP MAKİNESİ ===
 with tab1:
     st.subheader(L["m_title"])
     if not df_market.empty:
