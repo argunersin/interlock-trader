@@ -123,11 +123,9 @@ def fmt_d(d):
 # KAYAN REUTERS / BLOOMBERG TARZI FİYAT ŞERİDİ
 # ============================================================
 st.markdown(
-    f"""
-    <marquee behavior="scroll" direction="left" style="color: #00ffcc; font-size: 14px; font-weight: bold; background-color: #050a1c; padding: 10px; border-bottom: 2px solid #1c2440; margin-bottom: 15px;">
-        💵 USD/TRY: {usd_try:.2f} ({fmt_d(usd_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 💶 EUR/TRY: {eur_try:.2f} ({fmt_d(eur_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 💱 EUR/USD: {eur_usd:.4f} &nbsp;&nbsp;&nbsp;&nbsp; 🪙 ONS ALTIN: \${gold_val:,.1f} ({fmt_d(gold_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 🛢️ BRENT PETROL: \${brent_val:.2f} ({fmt_d(brent_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 🌾 BUĞDAY: \${wheat_val:.1f} ({fmt_d(wheat_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 🍫 KAKAO: \${cocoa_val:,.0f} ({fmt_d(cocoa_d)})
-    </marquee>
-    """, 
+    f'<marquee behavior="scroll" direction="left" style="color: #00ffcc; font-size: 14px; font-weight: bold; background-color: #050a1c; padding: 10px; border-bottom: 2px solid #1c2440; margin-bottom: 15px;">'
+    f'💵 USD/TRY: {usd_try:.2f} ({fmt_d(usd_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 💶 EUR/TRY: {eur_try:.2f} ({fmt_d(eur_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 💱 EUR/USD: {eur_usd:.4f} &nbsp;&nbsp;&nbsp;&nbsp; 🪙 ONS ALTIN: ${gold_val:,.1f} ({fmt_d(gold_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 🛢️ BRENT PETROL: ${brent_val:.2f} ({fmt_d(brent_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 🌾 BUĞDAY: ${wheat_val:.1f} ({fmt_d(wheat_d)}) &nbsp;&nbsp;&nbsp;&nbsp; 🍫 KAKAO: ${cocoa_val:,.0f} ({fmt_d(cocoa_d)})'
+    f'</marquee>',
     unsafe_allow_html=True
 )
 # ============================================================
@@ -296,25 +294,27 @@ def call_openrouter_free(prompt: str) -> str:
 # 6) KADRANLARIN EKLEME VE İŞLEME ALANI
 # ============================================================
 def render_group_card(group_name: str, group_data: dict):
-    cards_html = ""
+    card_parts = []
     for name, ticker in group_data["items"]:
         val, d, is_real = get_live_rate(ticker, random.uniform(100, 1500))
         d_class = "flap-delta-up" if d >= 0 else "flap-delta-down"
         arrow = "▲" if d >= 0 else "▼"
         tag = "" if is_real else '<div class="flap-tag">gösterge</div>'
-        cards_html += f"""
-        <div class="flap-card">
-            <div class="flap-symbol">{name}</div>
-            <div class="flap-value">{val:,.2f}</div>
-            <div class="{d_class}">{arrow} {abs(d)}%</div>
-            {tag}
-        </div>"""
-    st.markdown(f"""
-    <div class="group-card">
-        <div class="group-title">{group_data['icon']} {group_name}</div>
-        <div class="scroll-row">{cards_html}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        # ÖNEMLİ: tek satır, girintisiz HTML — Streamlit'in markdown ayrıştırıcısı
+        # 4+ boşlukla başlayan satırları "kod bloğu" sanıp olduğu gibi (etiketleriyle
+        # birlikte) metin olarak basıyor. Çok satırlı/girintili f-string bu yüzden
+        # ikinci karttan itibaren bozuk görünüme sebep oluyordu.
+        card_parts.append(
+            f'<div class="flap-card"><div class="flap-symbol">{name}</div>'
+            f'<div class="flap-value">{val:,.2f}</div>'
+            f'<div class="{d_class}">{arrow} {abs(d)}%</div>{tag}</div>'
+        )
+    cards_html = "".join(card_parts)
+    html = (
+        f'<div class="group-card"><div class="group-title">{group_data["icon"]} {group_name}</div>'
+        f'<div class="scroll-row">{cards_html}</div></div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
 
 @st.fragment
 def render_ticker_wall():
