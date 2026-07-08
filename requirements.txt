@@ -1,10 +1,12 @@
 streamlit
-yfinance
 pandas
+numpy
+matplotlib
+google-generativeai
 folium
 streamlit-folium
+requests
+duckduckgo-search
+yfinance
 reportlab
-google-generativeai
-matplotlib
-reportlab
-duckduckgo_search
+Pillow
