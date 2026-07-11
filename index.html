@@ -346,7 +346,7 @@
         async function fetchMarketData() {
             try {
                 // Buradaki URL'i ileride Render'daki görünmez FastAPI adresimize bağlayacağız [1.2]
-                let res = await fetch('/api/live-prices');
+                let res = await fetch('https://onrender.com');
                 let json = await res.json();
                 if(json.status === "success") {
                     renderMarketUI(json.data);
@@ -414,7 +414,7 @@
                     teslim_limani: document.getElementById("ai-deliv").value,
                     target_language: document.getElementById("lang-selector").value
                 };
-                let res = await fetch('/api/generate-report', {
+                let res = await fetch('https://onrender.com', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
