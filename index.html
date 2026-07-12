@@ -165,9 +165,19 @@
 
     // ===== FETCH MARKET DATA (CANLI FİYATLAR) =====
     async function fetchMarketData() {
-        try {
-            let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
-            let json = await res.json();
-            if(json.status === "success") renderMarketUI(json.data);
-        } catch(e) {
-            // Yedek Veri (
+    try {
+        let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
+        let json = await res.json();
+        console.log("Veri geldi:", json); // Tarayıcı konsoluna yazdır
+        if(json.status === "success") {
+            renderMarketUI(json.data);
+        } else {
+            console.error("API hata döndü:", json);
+        }
+    } catch(e) {
+        console.error("Hata:", e);
+        // Yedek Veri
+        let backup = [ {asset:"Altın", group:"Precious Metals", price:2400, change:0.5} ];
+        renderMarketUI(backup);
+    }
+}
