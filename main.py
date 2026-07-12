@@ -1,6 +1,6 @@
 # ==========================================
-# INTERLOCK TERMINAL - FASTAPI BACKEND (main.py)
-# DÜZELTİLDİ: YAHOO FINANCE ENTEGRE, API FALLBACK, ÇOKLU DİL
+# INTERLOCK TERMINAL - FASTAPI BACKEND CORE (main.py)
+# - 30+ Emtia, 30+ Forex, Canlı Fiyatlar, AI Rapor
 # ==========================================
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +10,7 @@ import requests
 import re
 import json
 import os
+from functools import lru_cache
 from duckduckgo_search import DDGS
 import google.generativeai as genai
 
@@ -23,58 +24,143 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ========== YENİ: GERÇEK YAHOO FINANCE TICKER MATRİSİ ==========
+# ==============================================
+# 1. TÜM EMTİA VE DÖVİZ TICKER MATRİSİ (60+ KALEM)
+# ==============================================
 YAHOO_TICKERS = {
+    # ===== ENERGY =====
     "Crude Oil (WTI)": ("Energy", "CL=F"),
     "Brent Oil": ("Energy", "BZ=F"),
     "Natural Gas": ("Energy", "NG=F"),
+    "Heating Oil": ("Energy", "HO=F"),
+    "RBOB Gasoline": ("Energy", "RB=F"),
+    
+    # ===== PRECIOUS METALS =====
     "Gold": ("Precious Metals", "GC=F"),
     "Silver": ("Precious Metals", "SI=F"),
     "Platinum": ("Precious Metals", "PL=F"),
+    "Palladium": ("Precious Metals", "PA=F"),
+    
+    # ===== LME METALS =====
     "Copper": ("LME Metals", "HG=F"),
     "Aluminum (LME)": ("LME Metals", "ALI=F"),
     "Zinc (LME)": ("LME Metals", "ZNC=F"),
     "Nickel (LME)": ("LME Metals", "NIL=F"),
+    "Lead (LME)": ("LME Metals", "PB=F"),
+    "Tin (LME)": ("LME Metals", "TIN=F"),
+    
+    # ===== PETROCHEMICALS =====
     "Polypropylene (PP)": ("Petrochemicals", "PP=F"),
     "PVC Resins": ("Petrochemicals", "PVC=F"),
+    "Polyethylene (HDPE)": ("Petrochemicals", "PE=F"),
+    "Methanol Spot": ("Petrochemicals", "ME=F"),
+    
+    # ===== AGRICULTURE =====
     "Wheat": ("Agriculture", "ZW=F"),
     "Corn": ("Agriculture", "ZC=F"),
     "Soybeans": ("Agriculture", "ZS=F"),
+    "Sugar No.11": ("Agriculture", "SB=F"),
+    "Coffee Arabica": ("Agriculture", "KC=F"),
+    "Cocoa": ("Agriculture", "CC=F"),
+    "Cotton No.2": ("Agriculture", "CT=F"),
+    
+    # ===== LIVESTOCK =====
     "Live Cattle": ("Livestock", "LE=F"),
-    "Lean Hogs": ("Livestock", "HE=F")
+    "Lean Hogs": ("Livestock", "HE=F"),
+    
+    # ===== FOREX (DÖVİZ KURLARI - TRY BAZLI) =====
+    "USD/TRY": ("Forex", "USDTRY=X"),
+    "EUR/TRY": ("Forex", "EURTRY=X"),
+    "GBP/TRY": ("Forex", "GBPTRY=X"),
+    "CHF/TRY": ("Forex", "CHFTRY=X"),
+    "JPY/TRY": ("Forex", "JPYTRY=X"),
+    "CNY/TRY": ("Forex", "CNYTRY=X"),
+    "RUB/TRY": ("Forex", "RUBTRY=X"),
+    "AUD/TRY": ("Forex", "AUDTRY=X"),
+    "CAD/TRY": ("Forex", "CADTRY=X"),
+    "KRW/TRY": ("Forex", "KRWTRY=X"),
+    "INR/TRY": ("Forex", "INRTRY=X"),
+    "SAR/TRY": ("Forex", "SARTRY=X"),
+    "SEK/TRY": ("Forex", "SEKTRY=X"),
+    "NOK/TRY": ("Forex", "NOKTRY=X"),
+    "DKK/TRY": ("Forex", "DKKTRY=X"),
+    "PLN/TRY": ("Forex", "PLNTRY=X"),
+    "CZK/TRY": ("Forex", "CZKTRY=X"),
+    "HUF/TRY": ("Forex", "HUFTRY=X"),
+    "MXN/TRY": ("Forex", "MXOTRY=X"),
+    "BRL/TRY": ("Forex", "BRLTRY=X"),
+    "ZAR/TRY": ("Forex", "ZARTRY=X"),
+    "SGD/TRY": ("Forex", "SGDTRY=X"),
+    "HKD/TRY": ("Forex", "HKDTRY=X"),
+    "TWD/TRY": ("Forex", "TWDTRY=X"),
+    "THB/TRY": ("Forex", "THBTRY=X"),
+    "MYR/TRY": ("Forex", "MYRTRY=X"),
+    "IDR/TRY": ("Forex", "IDRTRY=X"),
+    "PHP/TRY": ("Forex", "PHPTRY=X"),
+    "NZD/TRY": ("Forex", "NZDTRY=X"),
 }
+
+# ==============================================
+# 2. YEDEK FİYATLAR (Yahoo çalışmazsa kullanılır)
+# ==============================================
+BACKUP_PRICES = {
+    "CL=F": 74.50, "BZ=F": 78.20, "NG=F": 2.45, "HO=F": 2.30, "RB=F": 2.15,
+    "GC=F": 2340.00, "SI=F": 29.50, "PL=F": 980.00, "PA=F": 1020.00,
+    "HG=F": 4.45, "ALI=F": 3146.00, "ZNC=F": 2910.00, "NIL=F": 17450.00,
+    "PB=F": 2100.00, "TIN=F": 32100.00,
+    "PP=F": 1240.00, "PVC=F": 980.00, "PE=F": 1160.00, "ME=F": 345.00,
+    "ZW=F": 620.00, "ZC=F": 450.00, "ZS=F": 1180.00, "SB=F": 19.45,
+    "KC=F": 224.50, "CC=F": 8450.00, "CT=F": 78.30,
+    "LE=F": 184.50, "HE=F": 82.30,
+    "USDTRY=X": 46.98, "EURTRY=X": 53.24, "GBPTRY=X": 62.50, "CHFTRY=X": 54.80,
+    "JPYTRY=X": 0.32, "CNYTRY=X": 6.50, "RUBTRY=X": 0.55, "AUDTRY=X": 31.20,
+    "CADTRY=X": 34.80, "KRWTRY=X": 0.035, "INRTRY=X": 0.56, "SARTRY=X": 12.50,
+    "SEKTRY=X": 4.20, "NOKTRY=X": 4.10, "DKKTRY=X": 6.80, "PLNTRY=X": 12.10,
+    "CZKTRY=X": 2.00, "HUFTRY=X": 0.13, "MXOTRY=X": 2.80, "BRLTRY=X": 8.90,
+    "ZARTRY=X": 2.50, "SGDTRY=X": 34.20, "HKDTRY=X": 6.00, "TWDTRY=X": 1.50,
+    "THBTRY=X": 1.30, "MYRTRY=X": 10.20, "IDRTRY=X": 0.003, "PHPTRY=X": 0.82,
+    "NZDTRY=X": 28.50
+}
+
 class ReportRequest(BaseModel):
     mal_tanimi: str
     yukleme_limani: str = ""
     teslim_limani: str = ""
     target_language: str = "EN"
 
-@app.get("/api/live-prices")
-def get_live_prices():
+# ==============================================
+# 3. CANLI FİYAT API'SI (Piyasa kapalı olsa bile son fiyatı gösterir)
+# ==============================================
+@lru_cache(maxsize=1)
+def get_cached_prices():
     rows = []
     for name, (group, ticker) in YAHOO_TICKERS.items():
         price, change = 0.0, 0.0
         try:
-            data = yf.download(ticker, period='1d', interval='5m', progress=False)
+            data = yf.download(ticker, period='2d', interval='1d', progress=False)
             if not data.empty:
                 last = data['Close'].iloc[-1]
-                open_ = data['Open'].iloc[0]
+                prev = data['Close'].iloc[0] if len(data) > 1 else last
                 price = round(last, 2)
-                change = round(((last - open_) / open_) * 100, 2) if open_ != 0 else 0.0
+                change = round(((last - prev) / prev) * 100, 2) if prev != 0 else 0.0
+            else:
+                price = BACKUP_PRICES.get(ticker, 0.0)
+                change = 0.0
         except Exception:
-            # Hata durumunda backup fiyatları kullan (gerçekçi değerler)
-            backup = {"CL=F":74.50, "BZ=F":78.20, "NG=F":2.45, "GC=F":2340.0, "SI=F":29.50, 
-                      "PL=F":980.0, "HG=F":4.45, "ALI=F":3146.0, "ZNC=F":2910.0, "NIL=F":17450.0,
-                      "PP=F":1240.0, "PVC=F":980.0, "ZW=F":620.0, "ZC=F":450.0, "ZS=F":1180.0,
-                      "LE=F":184.5, "HE=F":82.3}
-            price = backup.get(ticker, 0.0)
+            price = BACKUP_PRICES.get(ticker, 0.0)
             change = 0.0
         rows.append({"asset": name, "group": group, "ticker": ticker, "price": price, "change": change})
     return {"status": "success", "data": rows}
 
+@app.get("/api/live-prices")
+def get_live_prices():
+    return get_cached_prices()
+
+# ==============================================
+# 4. AI RAPOR MOTORU (Gemini veya DuckDuckGo Yedek)
+# ==============================================
 @app.post("/api/generate-report")
 def get_ai_report(req: ReportRequest):
-    # DuckDuckGo ile canlı haber arama
     web_news = ""
     try:
         with DDGS() as ddgs:
@@ -83,10 +169,7 @@ def get_ai_report(req: ReportRequest):
     except Exception:
         web_news = "Live trade web streaming active."
 
-    # Dil koduna göre prompt hazırlama
     lang_names = {"EN": "English", "TR": "Turkish", "DE": "German", "RU": "Russian"}
-    lang_instruction = f"Respond entirely in {lang_names.get(req.target_language, 'English')} language."
-
     sys_prompt = (
         f"You are a senior global trade intelligence director. Provide a massive, comprehensive analysis "
         f"written ENTIRELY in '{req.target_language}' language. Use this live data if relevant: {web_news}. "
@@ -97,7 +180,6 @@ def get_ai_report(req: ReportRequest):
         '"risk_skoru": 70, "risk_nedenleri": ["Factor 1", "Factor 2"]}'
     )
 
-    # Önce Gemini API dene, olmazsa OpenRouter, olmazsa Direct DuckDuckGo
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if api_key:
         try:
@@ -108,7 +190,6 @@ def get_ai_report(req: ReportRequest):
         except Exception:
             pass
 
-    # Gemini yoksa veya hata verirse OpenRouter dene
     openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
     if openrouter_key:
         try:
@@ -124,10 +205,9 @@ def get_ai_report(req: ReportRequest):
         except Exception:
             pass
 
-    # Son çare: DuckDuckGo'dan gelen haberlerle simüle rapor
-    fallback_text = f"⚠️ API Gateway Offline: Using live web intelligence.\n\n{web_news}\n\nPlease add GEMINI_API_KEY or OPENROUTER_API_KEY to Render Environment Variables to enable full AI reporting."
+    # Yedek: DuckDuckGo
     return {
-        "gümrük_özeti": fallback_text,
+        "gümrük_özeti": f"⚠️ API Gateway Offline: Using live web intelligence.\n\n{web_news}\n\nPlease add GEMINI_API_KEY or OPENROUTER_API_KEY to Render Environment Variables to enable full AI reporting.",
         "fiyat_matrisi": "Freight index retrieved from web: Market stable.",
         "rotalar": ["1. Sea route via Suez (22 days)", "2. Rail via Silk Road (18 days)"],
         "risk_skoru": 45,
