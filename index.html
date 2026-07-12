@@ -4,49 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Trade Terminal</title>
-    <link href="https://googleapis.com" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-main: #0e1117; --bg-card: #1f2937; --text-main: #ffffff; --text-muted: #9ca3af; --accent-green: #00ffcc; --accent-red: #ff3366; --border-color: #374151; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); padding-bottom: 50px; overflow-x: hidden; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding-bottom: 50px; max-width: 100% !important; overflow-x: hidden; padding: 0 !important; }
+        
+        /* ===== DÜZELTİLEN 1: Bloomberg Şeridi (120 saniye) ===== */
         .ticker-wrap { background: #000; border-bottom: 2px solid var(--border-color); padding: 10px 0; overflow: hidden; width: 100%; white-space: nowrap; }
-        .ticker { display: inline-block; animation: marquee 30s linear infinite; font-family: monospace; font-size: 14px; }
+        .ticker { display: inline-block; animation: marquee 120s linear infinite; font-family: monospace; font-size: 14px; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
         .ticker-item { display: inline-block; margin-right: 30px; }
-        .header-container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
-        .brand-zone h1 { font-size: 26px; font-weight: 700; }
-        .lang-select { background: var(--bg-card); color: white; border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 6px; cursor: pointer; }
-        .tabs-nav { max-width: 1400px; margin: 10px auto; padding: 0 20px; display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); }
-        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 15px 25px; font-size: 16px; font-weight: 600; cursor: pointer; position: relative; }
-        .tab-btn.active { color: var(--text-main); }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: var(--accent-green); }
-        .tab-content { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: none; }
-        .tab-content.active { display: block; }
-        .matrix-grid { display: grid; grid-template-rows: auto auto; gap: 25px; margin-bottom: 30px; }
-        .matrix-row-tier { display: flex; gap: 20px; width: 100%; }
-        .group-card { flex: 1; min-width: 320px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
-        .group-card h3 { font-size: 13px; color: var(--accent-green); font-weight: 700; margin-bottom: 5px; }
-        .card-carousel-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
-        .card-carousel-slider::-webkit-scrollbar { display: none; }
-        .slide-item { min-width: 100%; flex-shrink: 0; scroll-snap-align: start; padding: 10px 0; }
-        .slide-asset-name { font-size: 14px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
-        .slide-price-display { font-size: 32px; font-weight: 700; font-family: monospace; display: flex; align-items: baseline; }
+
+        /* ===== DÜZELTİLEN 2: Tam Ekran Genişliği ===== */
+        .header-container, .tabs-nav, .tab-content { max-width: 100% !important; padding: 0 20px; margin: 10px auto; }
+        .matrix-row-tier { display: flex; gap: 20px; flex-wrap: wrap; width: 100%; }
+        .group-card { flex: 1; min-width: 280px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin-top: 20px; }
+
+        /* ===== DÜZELTİLEN 3: Input'lar Artık Kilitli Değil ===== */
+        .form-control { width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: white; padding: 10px 12px; border-radius: 6px; }
+        .form-control:focus { outline: 2px solid var(--accent-green); }
+
+        .slide-item { padding: 10px 0; }
+        .slide-price-display { font-size: 32px; font-weight: 700; font-family: monospace; }
         .change-tag { font-size: 14px; margin-left: 10px; padding: 2px 6px; border-radius: 4px; }
         .tag-up { background: rgba(0,255,204,0.1); color: var(--accent-green); }
         .tag-down { background: rgba(255,51,102,0.1); color: var(--accent-red); }
-        .card-indicators { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
-        .dot { width: 6px; height: 6px; background: var(--border-color); border-radius: 50%; }
-        .dot.active { background: var(--accent-green); }
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 25px; margin-top: 20px; }
-        .card-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
-        .card-panel h2 { font-size: 18px; margin-bottom: 15px; border-left: 4px solid var(--accent-green); padding-left: 10px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
-        .form-control { width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: white; padding: 10px 12px; border-radius: 6px; }
         .btn-action { background: var(--accent-green); color: #000; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; }
         .result-box { background: var(--bg-main); border-left: 4px solid var(--accent-green); padding: 15px; margin-top: 15px; font-size: 14px; }
         .matrix-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .matrix-table th, .matrix-table td { padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 14px; text-align: left; }
+        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 15px 25px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .tab-btn.active { color: var(--text-main); border-bottom: 2px solid var(--accent-green); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .lang-select { background: var(--bg-card); color: white; border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -54,28 +47,29 @@
     <div class="ticker-wrap"><div class="ticker" id="bloomberg-ticker">Loading Feed...</div></div>
 
     <div class="header-container">
-        <div class="brand-zone"><h1 id="lbl-title">Global Trade Terminal</h1><p id="lbl-sub">Real-Time Logistics Grid</p></div>
-        <select class="lang-select" id="lang-selector" onchange="changeLanguage()"><option value="TR">TR</option><option value="EN" selected>EN</option></select>
+        <div class="brand-zone"><h1>Global Trade Terminal</h1><p>Real-Time Logistics Grid</p></div>
+        <select class="lang-select" id="lang-selector"><option value="TR">TR</option><option value="EN" selected>EN</option></select>
     </div>
 
     <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab(event, 'tab-market')" id="btn-tab1">📊 Live Market</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-ai')" id="btn-tab2">🧠 AI Chamber</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-ocr')" id="btn-tab3">📝 OCR</button>
+        <button class="tab-btn active" onclick="switchTab(event, 'tab-market')">📊 Live Market</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🧠 AI Chamber</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-ocr')">📝 OCR</button>
     </div>
 
     <div id="tab-market" class="tab-content active">
-        <div class="matrix-grid"><div class="matrix-row-tier" id="tier-top"></div><div class="matrix-row-tier" id="tier-bottom"></div></div>
+        <div class="matrix-row-tier" id="tier-top"></div>
+        <div class="matrix-row-tier" id="tier-bottom"></div>
         <div class="grid-2">
             <div class="card-panel">
-                <h2 id="lbl-calc-title">🧮 Multi-Currency Calculator</h2>
+                <h2>🧮 Multi-Currency Calculator</h2>
                 <div class="form-group"><select class="form-control" id="calc-source" oninput="calculateCurrency()"><option value="USD">USD</option><option value="EUR">EUR</option><option value="TRY">TRY</option></select></div>
                 <div class="form-group"><input type="number" class="form-control" id="calc-amount" value="100" oninput="calculateCurrency()"></div>
                 <div class="form-group"><select class="form-control" id="calc-target" oninput="calculateCurrency()"><option value="TRY">TRY</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
                 <div class="result-box"><strong id="calc-result-text">Calculating...</strong><br><small id="calc-rate-text"></small></div>
             </div>
             <div class="card-panel">
-                <h2 id="lbl-inc-title">📊 Interactive Incoterms Cost Simulator</h2>
+                <h2>📊 Interactive Incoterms Cost Simulator</h2>
                 <div class="form-group"><input type="number" class="form-control" id="inc-exw" value="50000" oninput="runIncoterms()"></div>
                 <div class="form-group"><input type="number" class="form-control" id="inc-nav" value="3500" oninput="runIncoterms()"></div>
                 <div class="form-group"><input type="number" class="form-control" id="inc-local" value="1200" oninput="runIncoterms()"></div>
@@ -87,11 +81,11 @@
 
     <div id="tab-ai" class="tab-content">
         <div class="card-panel">
-            <h2 id="lbl-ai-title">🧠 AI Trade Intelligence Chamber</h2>
+            <h2>🧠 AI Trade Intelligence Chamber</h2>
             <div class="form-group"><input type="text" class="form-control" id="ai-load" placeholder="Port of Loading"></div>
             <div class="form-group"><input type="text" class="form-control" id="ai-deliv" placeholder="Port of Delivery"></div>
             <div class="form-group"><input type="text" class="form-control" id="ai-desc" value="aluminum"></div>
-            <button class="btn-action" id="btn-generate" onclick="generateAIReport()">🚀 Generate Intelligence Report</button>
+            <button class="btn-action" onclick="generateAIReport()">🚀 Generate Intelligence Report</button>
             <div id="ai-loading" style="display:none; color:var(--accent-green); margin-top:15px;">🔄 Loading Real-Time Data Nodes...</div>
             <div class="grid-2" id="ai-report-results" style="display:none; margin-top:20px;">
                 <div class="card-panel" style="background:var(--bg-main)"><h3>🛃 Customs</h3><div id="res-customs" style="font-size:14px; white-space:pre-wrap;"></div></div>
@@ -101,16 +95,15 @@
     </div>
 
     <div id="tab-ocr" class="tab-content"><div class="card-panel"><h2>📝 Document OCR</h2><p style="color:var(--text-muted); margin-top:10px;">Pipeline active.</p></div></div>
+
     <script>
         function switchTab(evt, tabId) {
-            let contents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-            let tabs = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-            document.getElementById(tabId).classList.add("active");
-            evt.currentTarget.classList.add("active");
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            evt.currentTarget.classList.add('active');
         }
-        let liveGlobalRates = { USD: 1, EUR: 0.8824, TRY: 46.98 }; 
+
         function runIncoterms() {
             let exw = parseFloat(document.getElementById("inc-exw").value) || 0;
             let nav = parseFloat(document.getElementById("inc-nav").value) || 0;
@@ -123,6 +116,7 @@
             }
             document.getElementById("incoterms-rows").innerHTML = html;
         }
+
         function calculateCurrency() {
             let src = document.getElementById("calc-source").value; let tgt = document.getElementById("calc-target").value; let amt = parseFloat(document.getElementById("calc-amount").value) || 0;
             let exactRatesInTry = { USD: 46.98, EUR: 53.24, TRY: 1.00 };
@@ -130,23 +124,26 @@
             document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${res.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
             document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(4)} ${tgt}`;
         }
+
         async function fetchMarketData() {
             try {
-                let res = await fetch('https://onrender.com');
+                let res = await fetch('https://interlock-backend.onrender.com/api/live-prices');
                 let json = await res.json();
-                if(json.status === "success") { renderMarketUI(json.data); }
+                if(json.status === "success") renderMarketUI(json.data);
             } catch(e) {
+                // Backup veriler (çökme olursa diye)
                 let backup = [
-                    {asset:"Crude Oil (WTI)", group:"Energy", price:74.50, change:1.2}, {asset:"Brent Oil", group:"Energy", price:78.20, change:0.8}, {asset:"Natural Gas", group:"Energy", price:2.45, change:-2.1}, {asset:"Heating Oil", group:"Energy", price:2.35, change:0.4}, {asset:"RBOB Gasoline", group:"Energy", price:2.28, change:-0.9}, {asset:"Carbon Emissions", group:"Energy", price:68.40, change:1.5},
-                    {asset:"Gold Spot", group:"Precious Metals", price:2340.00, change:0.5}, {asset:"Silver Spot", group:"Precious Metals", price:29.50, change:1.4}, {asset:"Platinum", group:"Precious Metals", price:980.00, change:-0.3}, {asset:"Palladium", group:"Precious Metals", price:1020.00, change:0.8},
-                    {asset:"Aluminum (LME)", group:"LME Metals", price:3146.00, change:1.8}, {asset:"Copper Spot", group:"LME Metals", price:4.45, change:-0.4}, {asset:"Zinc (LME)", group:"LME Metals", price:2910.00, change:0.7}, {asset:"Lead (LME)", group:"LME Metals", price:2150.00, change:-0.2}, {asset:"Nickel (LME)", group:"LME Metals", price:17450.00, change:1.1}, {asset:"Tin (LME)", group:"LME Metals", price:32100.00, change:0.5}, {asset:"Steel Scrap (Turkey)", group:"LME Metals", price:377.00, change:-1.2},
-                    {asset:"Polypropylene (PP)", group:"Petrochemicals", price:1240.00, change:1.1}, {asset:"PVC Resins", group:"Petrochemicals", price:980.00, change:-0.6}, {asset:"Polyethylene (HDPE)", group:"Petrochemicals", price:1160.00, change:0.4}, {asset:"Methanol Spot", group:"Petrochemicals", price:345.00, change:-1.2}, {asset:"Ethanol Futures", group:"Petrochemicals", price:1.74, change:0.3}, {asset:"Rubber Smoked Sheets", group:"Petrochemicals", price:210.00, change:0.9},
-                    {asset:"Wheat Futures", group:"Agriculture", price:620.00, change:-1.1}, {asset:"Corn Futures", group:"Agriculture", price:450.00, change:0.3}, {asset:"Soybeans", group:"Agriculture", price:1180.00, change:0.5}, {asset:"US Sugar No.11", group:"Agriculture", price:19.45, change:1.2}, {asset:"Coffee Arabica", group:"Agriculture", price:224.50, change:-2.4}, {asset:"Cocoa Futures", group:"Agriculture", price:8450.00, change:4.2}, {asset:"Cotton No.2", group:"Agriculture", price:78.30, change:-0.5}, {asset:"Rough Rice", group:"Agriculture", price:14.80, change:0.2},
-                    {asset:"Live Cattle", group:"Livestock", price:184.50, change:0.6}, {asset:"Feeder Cattle", group:"Livestock", price:242.30, change:0.9}, {asset:"Lean Hogs", group:"Livestock", price:82.30, change:-0.4}, {asset:"Poultry Index", group:"Livestock", price:342.10, change:0.1}
+                    {asset:"Crude Oil (WTI)", group:"Energy", price:74.50, change:1.2}, {asset:"Brent Oil", group:"Energy", price:78.20, change:0.8}, {asset:"Natural Gas", group:"Energy", price:2.45, change:-2.1},
+                    {asset:"Gold", group:"Precious Metals", price:2340.00, change:0.5}, {asset:"Silver", group:"Precious Metals", price:29.50, change:1.4}, {asset:"Platinum", group:"Precious Metals", price:980.00, change:-0.3},
+                    {asset:"Copper", group:"LME Metals", price:4.45, change:-0.4}, {asset:"Aluminum (LME)", group:"LME Metals", price:3146.00, change:1.8}, {asset:"Zinc (LME)", group:"LME Metals", price:2910.00, change:0.7},
+                    {asset:"Polypropylene (PP)", group:"Petrochemicals", price:1240.00, change:1.1}, {asset:"PVC Resins", group:"Petrochemicals", price:980.00, change:-0.6},
+                    {asset:"Wheat", group:"Agriculture", price:620.00, change:-1.1}, {asset:"Corn", group:"Agriculture", price:450.00, change:0.3}, {asset:"Soybeans", group:"Agriculture", price:1180.00, change:0.5},
+                    {asset:"Live Cattle", group:"Livestock", price:184.50, change:0.6}, {asset:"Lean Hogs", group:"Livestock", price:82.30, change:-0.4}
                 ];
                 renderMarketUI(backup);
             }
         }
+
         function renderMarketUI(data) {
             let tickerHtml = data.map(r => `<span class="ticker-item"><b>${r.asset}:</b> <span style="color:${r.change>=0?'var(--accent-green)':'var(--accent-red)'}">${r.price.toFixed(2)} (${r.change>=0?'+':''}${r.change.toFixed(2)}%)</span></span>`).join(" | ");
             document.getElementById("bloomberg-ticker").innerHTML = tickerHtml + " | " + tickerHtml;
@@ -157,8 +154,7 @@
             for(let gName in groups) {
                 let cardHtml = `<div class="group-card"><h3>📈 ${gName.toUpperCase()}</h3><div class="card-carousel-slider">`;
                 groups[gName].forEach(r => {
-                    let fPrice = (r.asset === "Aluminum (LME)" && r.price === 0) ? 3146.00 : r.price;
-                    cardHtml += `<div class="slide-item"><div class="slide-asset-name">${r.asset}</div><div class="slide-price-display">${fPrice.toLocaleString(undefined,{minimumFractionDigits:2})} <span class="change-tag ${r.change>=0?'tag-up':'tag-down'}">${r.change>=0?'+':''}${r.change.toFixed(2)}%</span></div></div>`;
+                    cardHtml += `<div class="slide-item"><div class="slide-asset-name">${r.asset}</div><div class="slide-price-display">${r.price.toLocaleString(undefined,{minimumFractionDigits:2})} <span class="change-tag ${r.change>=0?'tag-up':'tag-down'}">${r.change>=0?'+':''}${r.change.toFixed(2)}%</span></div></div>`;
                 });
                 cardHtml += `</div><div class="card-indicators">`;
                 groups[gName].forEach((_, idx) => { cardHtml += `<div class="dot ${idx===0?'active':''}"></div>`; });
@@ -167,12 +163,13 @@
             }
             document.getElementById("tier-top").innerHTML = topHtml; document.getElementById("tier-bottom").innerHTML = bottomHtml;
         }
+
         async function generateAIReport() {
             let desc = document.getElementById("ai-desc").value; if(!desc) return alert("Please fill description!");
             document.getElementById("ai-loading").style.display = "block"; document.getElementById("ai-report-results").style.display = "none";
             try {
                 let payload = { mal_tanimi: desc, yukleme_limani: document.getElementById("ai-load").value, teslim_limani: document.getElementById("ai-deliv").value, target_language: document.getElementById("lang-selector").value };
-                let res = await fetch('https://onrender.com', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                let res = await fetch('https://interlock-backend.onrender.com/api/generate-report', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                 let json = await res.json();
                 document.getElementById("res-customs").innerText = json.gümrük_özeti; document.getElementById("res-matrix").innerText = json.fiyat_matrisi;
                 document.getElementById("ai-report-results").style.display = "grid";
