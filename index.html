@@ -48,7 +48,6 @@
         .dot.active { background: var(--accent-green); }
         .ai-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         @media (max-width: 768px) { .ai-result-grid { grid-template-columns: 1fr; } .slide-price-display { font-size: 22px; } }
-        /* Hata mesajı stili */
         #error-message { color: #ff6b6b; background: #2a0a0a; padding: 10px; margin: 10px; border-radius: 6px; font-family: monospace; border-left: 4px solid #ff6b6b; }
         #error-message.success { color: #00ffcc; background: #0a2a1a; border-left-color: #00ffcc; }
     </style>
@@ -68,7 +67,6 @@
     <button class="tab-btn" onclick="switchTab(event, 'tab-ocr')">📝 OCR</button>
 </div>
 
-<!-- ===== TAB 1: CANLI PİYASA ===== -->
 <div id="tab-market" class="tab-content active">
     <div id="error-message"></div>
     <div class="matrix-row-tier" id="tier-top"></div>
@@ -92,7 +90,6 @@
     </div>
 </div>
 
-<!-- ===== TAB 2: AI CHAMBER ===== -->
 <div id="tab-ai" class="tab-content">
     <div class="card-panel">
         <h2>🧠 AI Trade Intelligence Chamber</h2>
@@ -110,11 +107,9 @@
     </div>
 </div>
 
-<!-- ===== TAB 3: OCR ===== -->
 <div id="tab-ocr" class="tab-content"><div class="card-panel"><h2>📝 Document OCR</h2><p style="color:var(--text-muted); margin-top:10px;">Pipeline active. Upload your commercial documents for AI extraction.</p></div></div>
 
 <script>
-    // ===== TAB SWITCH =====
     function switchTab(evt, tabId) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
@@ -122,7 +117,6 @@
         evt.currentTarget.classList.add('active');
     }
 
-    // ===== INCOTERMS SIMULATOR =====
     function runIncoterms() {
         let exw = parseFloat(document.getElementById("inc-exw").value) || 0;
         let nav = parseFloat(document.getElementById("inc-nav").value) || 0;
@@ -139,7 +133,6 @@
         document.getElementById("incoterms-rows").innerHTML = html;
     }
 
-    // ===== CURRENCY CALCULATOR =====
     async function calculateCurrency() {
         let src = document.getElementById("calc-source").value;
         let tgt = document.getElementById("calc-target").value;
@@ -172,13 +165,10 @@
         }
     }
 
-    // ===== RENDER MARKET UI (Fiyatları ekrana basar) =====
     function renderMarketUI(data) {
-        // Bloomberg şeridini güncelle
         let tickerHtml = data.map(r => `<span class="ticker-item"><b>${r.asset}:</b> <span style="color:${r.change>=0?'var(--accent-green)':'var(--accent-red)'}">${r.price.toFixed(2)} (${r.change>=0?'+':''}${r.change.toFixed(2)}%)</span></span>`).join(" | ");
         document.getElementById("bloomberg-ticker").innerHTML = tickerHtml + " | " + tickerHtml;
 
-        // Gruplara göre kartları oluştur
         let groups = {};
         data.forEach(r => { if(!groups[r.group]) groups[r.group] = []; groups[r.group].push(r); });
         let topHtml = "", bottomHtml = "";
@@ -196,7 +186,6 @@
         document.getElementById("tier-top").innerHTML = topHtml;
         document.getElementById("tier-bottom").innerHTML = bottomHtml;
         
-        // Hata mesajını temizle
         let errorDiv = document.getElementById("error-message");
         if (errorDiv) {
             errorDiv.innerHTML = "✅ Veri başarıyla yüklendi!";
@@ -204,7 +193,6 @@
         }
     }
 
-    // ===== FETCH MARKET DATA (Canlı fiyatları çeker) =====
     async function fetchMarketData() {
         let errorDiv = document.getElementById("error-message");
         if (!errorDiv) {
@@ -222,7 +210,6 @@
             } else {
                 errorDiv.innerHTML = "⚠️ API hata döndü: " + JSON.stringify(json);
                 errorDiv.className = "";
-                // Yedek veri göster
                 const backup = [
                     {asset:"Gold", group:"Precious Metals", price:2340.00, change:0.5},
                     {asset:"Silver", group:"Precious Metals", price:29.50, change:1.2},
@@ -234,7 +221,6 @@
             errorDiv.innerHTML = "❌ HATA: " + error.message;
             errorDiv.className = "";
             console.error("Hata detayı:", error);
-            // Yedek veri göster
             const backup = [
                 {asset:"Gold", group:"Precious Metals", price:2340.00, change:0.5},
                 {asset:"Silver", group:"Precious Metals", price:29.50, change:1.2},
@@ -244,7 +230,6 @@
         }
     }
 
-    // ===== GENERATE AI REPORT =====
     async function generateAIReport() {
         let desc = document.getElementById("ai-desc").value;
         if (!desc) return alert("Please fill product description!");
@@ -273,7 +258,6 @@
         }
     }
 
-    // ===== SAYFA YÜKLENİNCE ÇALIŞTIR =====
     document.addEventListener('DOMContentLoaded', fetchMarketData);
     setInterval(fetchMarketData, 30000);
 </script>
