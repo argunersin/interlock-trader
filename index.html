@@ -118,7 +118,7 @@
         evt.currentTarget.classList.add('active');
     }
 
-    // ===== INCOTERMS SIMULATOR =====
+    // ===== INCOTERMS SIMULATOR (Düzeltildi) =====
     function runIncoterms() {
         let exw = parseFloat(document.getElementById("inc-exw").value) || 0;
         let nav = parseFloat(document.getElementById("inc-nav").value) || 0;
@@ -145,9 +145,9 @@
             let json = await res.json();
             let data = json.data;
             
-            // TRY bazlı kurları bul (Backend'den gelen verilerde asset adı "EUR/TRY" formatında)
-            let srcAsset = data.find(r => r.asset === src + "/TRY");
-            let tgtAsset = data.find(r => r.asset === tgt + "/TRY");
+            // TRY bazlı kurları bul (Her iki formatı da dene)
+            let srcAsset = data.find(r => r.asset === src + "/TRY" || r.asset === src + "TRY");
+            let tgtAsset = data.find(r => r.asset === tgt + "/TRY" || r.asset === tgt + "TRY");
             
             let srcRate = 1, tgtRate = 1;
             if (src === "TRY") srcRate = 1;
