@@ -43,7 +43,6 @@ YAHOO_TICKERS = {
     "Live Cattle": ("Livestock", "LE=F"),
     "Lean Hogs": ("Livestock", "HE=F")
 }
-
 class ReportRequest(BaseModel):
     mal_tanimi: str
     yukleme_limani: str = ""
