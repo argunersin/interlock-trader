@@ -165,19 +165,41 @@
 
     // ===== FETCH MARKET DATA (CANLI FİYATLAR) =====
     async function fetchMarketData() {
+    const statusDiv = document.getElementById("ticker-status");
+    if (!statusDiv) {
+        // Ticker'ın üstüne küçük bir durum yazısı ekleyelim
+        const tickerWrap = document.querySelector(".ticker-wrap");
+        if (tickerWrap) {
+            const status = document.createElement("div");
+            status.id = "ticker-status";
+            status.style.cssText = "color: #ffcc00; font-size: 12px; text-align: center; padding: 2px;";
+            tickerWrap.parentNode.insertBefore(status, tickerWrap.nextSibling);
+        }
+    }
+
     try {
-        let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
-        let json = await res.json();
-        console.log("Veri geldi:", json); // Tarayıcı konsoluna yazdır
-        if(json.status === "success") {
+        const response = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
+        const json = await response.json();
+        
+        // Başarılı cevabı ekrana yaz
+        document.getElementById("ticker-status").innerHTML = "✅ Backend bağlantısı başarılı! Veri alındı.";
+        
+        if (json.status === "success") {
             renderMarketUI(json.data);
         } else {
-            console.error("API hata döndü:", json);
+            document.getElementById("ticker-status").innerHTML = "⚠️ API hata döndü: " + JSON.stringify(json);
         }
-    } catch(e) {
-        console.error("Hata:", e);
-        // Yedek Veri
-        let backup = [ {asset:"Altın", group:"Precious Metals", price:2400, change:0.5} ];
+    } catch (error) {
+        // Hatayı ekranda göster
+        document.getElementById("ticker-status").innerHTML = "❌ HATA: " + error.message;
+        console.error("Hata detayı:", error);
+        
+        // Yedek veri göster
+        const backup = [
+            {asset:"Gold", group:"Precious Metals", price:2340.00, change:0.5},
+            {asset:"Silver", group:"Precious Metals", price:29.50, change:1.2},
+            {asset:"Crude Oil", group:"Energy", price:74.50, change:0.8}
+        ];
         renderMarketUI(backup);
     }
 }
