@@ -157,7 +157,7 @@ def get_live_prices():
     return get_cached_prices()
 
 # ==============================================
-# 4. AI RAPOR MOTORU (Gemini veya DuckDuckGo Yedek)
+# 4. AI RAPOR MOTORU (Gemini + OpenRouter + DuckDuckGo Yedek)
 # ==============================================
 @app.post("/api/generate-report")
 def get_ai_report(req: ReportRequest):
@@ -180,16 +180,18 @@ def get_ai_report(req: ReportRequest):
         '"risk_skoru": 70, "risk_nedenleri": ["Factor 1", "Factor 2"]}'
     )
 
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if api_key:
+    # Önce Gemini API dene
+    gemini_key = os.environ.get("GEMINI_API_KEY", "")
+    if gemini_key:
         try:
-            genai.configure(api_key=api_key)
+            genai.configure(api_key=gemini_key)
             model = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
             res = model.generate_content(sys_prompt)
             return json.loads(res.text)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Gemini hatası: {e}")  # Log'a yaz
 
+    # Sonra OpenRouter dene
     openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
     if openrouter_key:
         try:
@@ -202,10 +204,10 @@ def get_ai_report(req: ReportRequest):
             res = requests.post(url, headers=headers, json=payload, timeout=15)
             if res.status_code == 200:
                 return json.loads(res.json()["choices"][0]["message"]["content"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"OpenRouter hatası: {e}")  # Log'a yaz
 
-    # Yedek: DuckDuckGo
+    # Son çare: DuckDuckGo'dan gelen haberlerle simüle rapor
     return {
         "gümrük_özeti": f"⚠️ API Gateway Offline: Using live web intelligence.\n\n{web_news}\n\nPlease add GEMINI_API_KEY or OPENROUTER_API_KEY to Render Environment Variables to enable full AI reporting.",
         "fiyat_matrisi": "Freight index retrieved from web: Market stable.",
