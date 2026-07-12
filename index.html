@@ -8,174 +8,166 @@
     <style>
         :root { --bg-main: #0e1117; --bg-card: #1f2937; --text-main: #ffffff; --text-muted: #9ca3af; --accent-green: #00ffcc; --accent-red: #ff3366; --border-color: #374151; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); padding-bottom: 50px; max-width: 100% !important; overflow-x: hidden; padding: 0 !important; }
-        
-        /* ===== DÜZELTİLEN 1: Bloomberg Şeridi (120 saniye) ===== */
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 0 !important; max-width: 100% !important; overflow-x: hidden; }
         .ticker-wrap { background: #000; border-bottom: 2px solid var(--border-color); padding: 10px 0; overflow: hidden; width: 100%; white-space: nowrap; }
         .ticker { display: inline-block; animation: marquee 120s linear infinite; font-family: monospace; font-size: 14px; }
         @keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
         .ticker-item { display: inline-block; margin-right: 30px; }
-
-        /* ===== DÜZELTİLEN 2: Tam Ekran Genişliği ===== */
-        .header-container, .tabs-nav, .tab-content { max-width: 100% !important; padding: 0 20px; margin: 10px auto; }
-        .matrix-row-tier { display: flex; gap: 20px; flex-wrap: wrap; width: 100%; }
-        .group-card { flex: 1; min-width: 280px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin-top: 20px; }
-
-        /* ===== DÜZELTİLEN 3: Input'lar Artık Kilitli Değil ===== */
-        .form-control { width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: white; padding: 10px 12px; border-radius: 6px; }
-        .form-control:focus { outline: 2px solid var(--accent-green); }
-
-        .slide-item { padding: 10px 0; }
-        .slide-price-display { font-size: 32px; font-weight: 700; font-family: monospace; }
-        .change-tag { font-size: 14px; margin-left: 10px; padding: 2px 6px; border-radius: 4px; }
+        .header-container { max-width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .brand-zone h1 { font-size: 24px; font-weight: 700; }
+        .lang-select { background: var(--bg-card); color: white; border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+        .tabs-nav { max-width: 100%; padding: 0 20px; display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); }
+        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 12px 20px; font-size: 15px; font-weight: 600; cursor: pointer; }
+        .tab-btn.active { color: var(--text-main); border-bottom: 2px solid var(--accent-green); }
+        .tab-content { display: none; padding: 20px; max-width: 100%; }
+        .tab-content.active { display: block; }
+        .matrix-row-tier { display: flex; flex-wrap: wrap; gap: 15px; width: 100%; }
+        .group-card { flex: 1; min-width: 250px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+        .group-card h3 { font-size: 13px; color: var(--accent-green); font-weight: 700; margin-bottom: 8px; }
+        .card-carousel-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+        .card-carousel-slider::-webkit-scrollbar { display: none; }
+        .slide-item { min-width: 100%; flex-shrink: 0; scroll-snap-align: start; padding: 5px 0; }
+        .slide-asset-name { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+        .slide-price-display { font-size: 28px; font-weight: 700; font-family: monospace; display: flex; align-items: baseline; flex-wrap: wrap; }
+        .change-tag { font-size: 13px; margin-left: 10px; padding: 2px 6px; border-radius: 4px; }
         .tag-up { background: rgba(0,255,204,0.1); color: var(--accent-green); }
         .tag-down { background: rgba(255,51,102,0.1); color: var(--accent-red); }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
+        .card-panel h2 { font-size: 18px; margin-bottom: 15px; border-left: 4px solid var(--accent-green); padding-left: 10px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .form-control { width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: white; padding: 8px 12px; border-radius: 6px; }
+        .form-control:focus { outline: 2px solid var(--accent-green); }
         .btn-action { background: var(--accent-green); color: #000; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; }
-        .result-box { background: var(--bg-main); border-left: 4px solid var(--accent-green); padding: 15px; margin-top: 15px; font-size: 14px; }
-        .matrix-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .matrix-table th, .matrix-table td { padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 14px; text-align: left; }
-        .tab-btn { background: none; border: none; color: var(--text-muted); padding: 15px 25px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .tab-btn.active { color: var(--text-main); border-bottom: 2px solid var(--accent-green); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .lang-select { background: var(--bg-card); color: white; border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 6px; cursor: pointer; }
+        .result-box { background: var(--bg-main); border-left: 4px solid var(--accent-green); padding: 12px; margin-top: 12px; font-size: 14px; }
+        .matrix-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .matrix-table th, .matrix-table td { padding: 8px; border-bottom: 1px solid var(--border-color); font-size: 13px; text-align: left; }
+        .card-indicators { display: flex; justify-content: center; gap: 5px; margin-top: 8px; }
+        .dot { width: 6px; height: 6px; background: var(--border-color); border-radius: 50%; }
+        .dot.active { background: var(--accent-green); }
+        .ai-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        @media (max-width: 768px) { .ai-result-grid { grid-template-columns: 1fr; } .slide-price-display { font-size: 22px; } }
     </style>
 </head>
 <body>
 
-    <div class="ticker-wrap"><div class="ticker" id="bloomberg-ticker">Loading Feed...</div></div>
+<div class="ticker-wrap"><div class="ticker" id="bloomberg-ticker">Loading Feed...</div></div>
 
-    <div class="header-container">
-        <div class="brand-zone"><h1>Global Trade Terminal</h1><p>Real-Time Logistics Grid</p></div>
-        <select class="lang-select" id="lang-selector"><option value="TR">TR</option><option value="EN" selected>EN</option></select>
-    </div>
+<div class="header-container">
+    <div class="brand-zone"><h1>Global Trade Terminal</h1><p style="font-size:13px; color:var(--text-muted);">Real-Time Logistics Grid</p></div>
+    <select class="lang-select" id="lang-selector"><option value="TR">TR</option><option value="EN" selected>EN</option></select>
+</div>
 
-    <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab(event, 'tab-market')">📊 Live Market</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🧠 AI Chamber</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-ocr')">📝 OCR</button>
-    </div>
+<div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab(event, 'tab-market')">📊 Live Market</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-ai')">🧠 AI Chamber</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-ocr')">📝 OCR</button>
+</div>
 
-    <div id="tab-market" class="tab-content active">
-        <div class="matrix-row-tier" id="tier-top"></div>
-        <div class="matrix-row-tier" id="tier-bottom"></div>
-        <div class="grid-2">
-            <div class="card-panel">
-                <h2>🧮 Multi-Currency Calculator</h2>
-                <div class="form-group"><select class="form-control" id="calc-source" oninput="calculateCurrency()"><option value="USD">USD</option><option value="EUR">EUR</option><option value="TRY">TRY</option></select></div>
-                <div class="form-group"><input type="number" class="form-control" id="calc-amount" value="100" oninput="calculateCurrency()"></div>
-                <div class="form-group"><select class="form-control" id="calc-target" oninput="calculateCurrency()"><option value="TRY">TRY</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
-                <div class="result-box"><strong id="calc-result-text">Calculating...</strong><br><small id="calc-rate-text"></small></div>
-            </div>
-            <div class="card-panel">
-                <h2>📊 Interactive Incoterms Cost Simulator</h2>
-                <div class="form-group"><input type="number" class="form-control" id="inc-exw" value="50000" oninput="runIncoterms()"></div>
-                <div class="form-group"><input type="number" class="form-control" id="inc-nav" value="3500" oninput="runIncoterms()"></div>
-                <div class="form-group"><input type="number" class="form-control" id="inc-local" value="1200" oninput="runIncoterms()"></div>
-                <div class="form-group"><input type="number" class="form-control" id="inc-tax" value="18" oninput="runIncoterms()"></div>
-                <table class="matrix-table"><thead><tr><th>Incoterm</th><th>USD</th><th>TRY</th></tr></thead><tbody id="incoterms-rows"></tbody></table>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-ai" class="tab-content">
+<!-- ===== TAB 1: CANLI PİYASA ===== -->
+<div id="tab-market" class="tab-content active">
+    <div class="matrix-row-tier" id="tier-top"></div>
+    <div class="matrix-row-tier" id="tier-bottom"></div>
+    <div class="grid-2">
         <div class="card-panel">
-            <h2>🧠 AI Trade Intelligence Chamber</h2>
-            <div class="form-group"><input type="text" class="form-control" id="ai-load" placeholder="Port of Loading"></div>
-            <div class="form-group"><input type="text" class="form-control" id="ai-deliv" placeholder="Port of Delivery"></div>
-            <div class="form-group"><input type="text" class="form-control" id="ai-desc" value="aluminum"></div>
-            <button class="btn-action" onclick="generateAIReport()">🚀 Generate Intelligence Report</button>
-            <div id="ai-loading" style="display:none; color:var(--accent-green); margin-top:15px;">🔄 Loading Real-Time Data Nodes...</div>
-            <div class="grid-2" id="ai-report-results" style="display:none; margin-top:20px;">
-                <div class="card-panel" style="background:var(--bg-main)"><h3>🛃 Customs</h3><div id="res-customs" style="font-size:14px; white-space:pre-wrap;"></div></div>
-                <div class="card-panel" style="background:var(--bg-main)"><h3>💰 Freight</h3><div id="res-matrix" style="font-size:14px; white-space:pre-wrap;"></div></div>
+            <h2>🧮 Multi-Currency Calculator</h2>
+            <div class="form-group"><select class="form-control" id="calc-source" onchange="calculateCurrency()"><option value="USD">USD - US Dollar</option><option value="EUR">EUR - Euro</option><option value="GBP">GBP - British Pound</option><option value="CHF">CHF - Swiss Franc</option><option value="JPY">JPY - Japanese Yen</option><option value="CNY">CNY - Chinese Yuan</option><option value="RUB">RUB - Russian Ruble</option><option value="AUD">AUD - Australian Dollar</option><option value="CAD">CAD - Canadian Dollar</option><option value="KRW">KRW - South Korean Won</option><option value="INR">INR - Indian Rupee</option><option value="SAR">SAR - Saudi Riyal</option><option value="SEK">SEK - Swedish Krona</option><option value="NOK">NOK - Norwegian Krone</option><option value="DKK">DKK - Danish Krone</option><option value="PLN">PLN - Polish Zloty</option><option value="CZK">CZK - Czech Koruna</option><option value="HUF">HUF - Hungarian Forint</option><option value="MXN">MXN - Mexican Peso</option><option value="BRL">BRL - Brazilian Real</option><option value="ZAR">ZAR - South African Rand</option><option value="SGD">SGD - Singapore Dollar</option><option value="HKD">HKD - Hong Kong Dollar</option><option value="TWD">TWD - Taiwan Dollar</option><option value="THB">THB - Thai Baht</option><option value="MYR">MYR - Malaysian Ringgit</option><option value="IDR">IDR - Indonesian Rupiah</option><option value="PHP">PHP - Philippine Peso</option><option value="NZD">NZD - New Zealand Dollar</option><option value="TRY">TRY - Turkish Lira</option></select></div>
+            <div class="form-group"><input type="number" class="form-control" id="calc-amount" value="100" oninput="calculateCurrency()"></div>
+            <div class="form-group"><select class="form-control" id="calc-target" onchange="calculateCurrency()"><option value="TRY">TRY - Turkish Lira</option><option value="USD">USD - US Dollar</option><option value="EUR">EUR - Euro</option><option value="GBP">GBP - British Pound</option><option value="CHF">CHF - Swiss Franc</option><option value="JPY">JPY - Japanese Yen</option><option value="CNY">CNY - Chinese Yuan</option><option value="RUB">RUB - Russian Ruble</option><option value="AUD">AUD - Australian Dollar</option><option value="CAD">CAD - Canadian Dollar</option><option value="KRW">KRW - South Korean Won</option><option value="INR">INR - Indian Rupee</option><option value="SAR">SAR - Saudi Riyal</option><option value="SEK">SEK - Swedish Krona</option><option value="NOK">NOK - Norwegian Krone</option><option value="DKK">DKK - Danish Krone</option><option value="PLN">PLN - Polish Zloty</option><option value="CZK">CZK - Czech Koruna</option><option value="HUF">HUF - Hungarian Forint</option><option value="MXN">MXN - Mexican Peso</option><option value="BRL">BRL - Brazilian Real</option><option value="ZAR">ZAR - South African Rand</option><option value="SGD">SGD - Singapore Dollar</option><option value="HKD">HKD - Hong Kong Dollar</option><option value="TWD">TWD - Taiwan Dollar</option><option value="THB">THB - Thai Baht</option><option value="MYR">MYR - Malaysian Ringgit</option><option value="IDR">IDR - Indonesian Rupiah</option><option value="PHP">PHP - Philippine Peso</option><option value="NZD">NZD - New Zealand Dollar</option></select></div>
+            <div class="result-box"><strong id="calc-result-text">Calculating...</strong><br><small id="calc-rate-text"></small></div>
+        </div>
+        <div class="card-panel">
+            <h2>📊 Interactive Incoterms Cost Simulator</h2>
+            <div class="form-group"><input type="number" class="form-control" id="inc-exw" value="50000" oninput="runIncoterms()" placeholder="EXW Price (USD)"></div>
+            <div class="form-group"><input type="number" class="form-control" id="inc-nav" value="3500" oninput="runIncoterms()" placeholder="Freight Cost (USD)"></div>
+            <div class="form-group"><input type="number" class="form-control" id="inc-local" value="1200" oninput="runIncoterms()" placeholder="Local Port Costs (USD)"></div>
+            <div class="form-group"><input type="number" class="form-control" id="inc-tax" value="18" oninput="runIncoterms()" placeholder="Customs Tax Rate (%)"></div>
+            <table class="matrix-table"><thead><tr><th>Incoterm</th><th>USD</th><th>TRY</th></tr></thead><tbody id="incoterms-rows"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TAB 2: AI CHAMBER ===== -->
+<div id="tab-ai" class="tab-content">
+    <div class="card-panel">
+        <h2>🧠 AI Trade Intelligence Chamber</h2>
+        <div class="form-group"><input type="text" class="form-control" id="ai-load" placeholder="Port of Loading (Optional)"></div>
+        <div class="form-group"><input type="text" class="form-control" id="ai-deliv" placeholder="Port of Delivery (Optional)"></div>
+        <div class="form-group"><input type="text" class="form-control" id="ai-desc" value="aluminum" placeholder="Product Description / HS Code"></div>
+        <button class="btn-action" onclick="generateAIReport()">🚀 Generate Intelligence Report</button>
+        <div id="ai-loading" style="display:none; color:var(--accent-green); margin-top:15px;">🔄 Loading Real-Time Data Nodes...</div>
+        <div id="ai-report-results" style="display:none; margin-top:20px;">
+            <div class="ai-result-grid">
+                <div class="card-panel" style="background:var(--bg-main)"><h3>🛃 Customs & Market</h3><div id="res-customs" style="font-size:14px; white-space:pre-wrap;"></div></div>
+                <div class="card-panel" style="background:var(--bg-main)"><h3>💰 Freight & Risk</h3><div id="res-matrix" style="font-size:14px; white-space:pre-wrap;"></div></div>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="tab-ocr" class="tab-content"><div class="card-panel"><h2>📝 Document OCR</h2><p style="color:var(--text-muted); margin-top:10px;">Pipeline active.</p></div></div>
+<!-- ===== TAB 3: OCR ===== -->
+<div id="tab-ocr" class="tab-content"><div class="card-panel"><h2>📝 Document OCR</h2><p style="color:var(--text-muted); margin-top:10px;">Pipeline active. Upload your commercial documents for AI extraction.</p></div></div>
 
-    <script>
-        function switchTab(evt, tabId) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            evt.currentTarget.classList.add('active');
+<script>
+    // ===== TAB SWITCH =====
+    function switchTab(evt, tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    // ===== INCOTERMS SIMULATOR =====
+    function runIncoterms() {
+        let exw = parseFloat(document.getElementById("inc-exw").value) || 0;
+        let nav = parseFloat(document.getElementById("inc-nav").value) || 0;
+        let local = parseFloat(document.getElementById("inc-local").value) || 0;
+        let tax = parseFloat(document.getElementById("inc-tax").value) || 0;
+        let fob = exw + local;
+        let cif = fob + nav + (exw * 0.003);
+        let ddp = cif + (cif * (tax / 100)) + 800;
+        let rates = { EXW: exw, FOB: fob, CIF: cif, DDP: ddp };
+        let html = "";
+        for (let k in rates) {
+            html += `<tr><td><b>${k}</b></td><td>$${rates[k].toLocaleString(undefined,{maximumFractionDigits:2})}</td><td>₺${(rates[k]*46.98).toLocaleString(undefined,{maximumFractionDigits:2})}</td></tr>`;
         }
+        document.getElementById("incoterms-rows").innerHTML = html;
+    }
 
-        function runIncoterms() {
-            let exw = parseFloat(document.getElementById("inc-exw").value) || 0;
-            let nav = parseFloat(document.getElementById("inc-nav").value) || 0;
-            let local = parseFloat(document.getElementById("inc-local").value) || 0;
-            let tax = parseFloat(document.getElementById("inc-tax").value) || 0;
-            let fob = exw + local; let cif = fob + nav + (exw * 0.003); let ddp = cif + (cif * (tax / 100)) + 800;
-            let rates = { EXW: exw, FOB: fob, CIF: cif, DDP: ddp }; let html = "";
-            for (let k in rates) {
-                html += `<tr><td><b>${k}</b></td><td>$${rates[k].toLocaleString(undefined,{maximumFractionDigits:2})}</td><td>₺${(rates[k]*46.98).toLocaleString(undefined,{maximumFractionDigits:2})}</td></tr>`;
-            }
-            document.getElementById("incoterms-rows").innerHTML = html;
+    // ===== CURRENCY CALCULATOR (30+ PARA BİRİMİ DESTEKLER) =====
+    async function calculateCurrency() {
+        let src = document.getElementById("calc-source").value;
+        let tgt = document.getElementById("calc-target").value;
+        let amt = parseFloat(document.getElementById("calc-amount").value) || 0;
+        try {
+            let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
+            let json = await res.json();
+            let data = json.data;
+            let srcTry = data.find(r => r.asset === src + "/TRY");
+            let tgtTry = data.find(r => r.asset === tgt + "/TRY");
+            let srcRate = (src === "TRY") ? 1 : (srcTry ? srcTry.price : 1);
+            let tgtRate = (tgt === "TRY") ? 1 : (tgtTry ? tgtTry.price : 1);
+            let rate = tgtRate / srcRate;
+            let result = amt * rate;
+            document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${result.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
+            document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(6)} ${tgt}`;
+        } catch(e) {
+            let backupRates = { USD:1, EUR:0.92, GBP:0.79, CHF:0.88, JPY:149.50, CNY:7.25, RUB:92.40, AUD:1.53, CAD:1.36, KRW:1330, INR:83.20, SAR:3.75, SEK:10.45, NOK:10.65, DKK:6.90, PLN:3.98, CZK:23.20, HUF:358, MXN:17.20, BRL:4.95, ZAR:18.80, SGD:1.35, HKD:7.82, TWD:31.50, THB:35.80, MYR:4.72, IDR:15550, PHP:55.80, NZD:1.65, TRY:34.50 };
+            let srcRate = backupRates[src] || 1;
+            let tgtRate = backupRates[tgt] || 1;
+            let rate = tgtRate / srcRate;
+            let result = amt * rate;
+            document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${result.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
+            document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(6)} ${tgt}`;
         }
+    }
 
-        function calculateCurrency() {
-            let src = document.getElementById("calc-source").value; let tgt = document.getElementById("calc-target").value; let amt = parseFloat(document.getElementById("calc-amount").value) || 0;
-            let exactRatesInTry = { USD: 46.98, EUR: 53.24, TRY: 1.00 };
-            let rate = exactRatesInTry[tgt] / exactRatesInTry[src]; let res = amt * rate;
-            document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${res.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
-            document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(4)} ${tgt}`;
-        }
-
-        async function fetchMarketData() {
-            try {
-                let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
-                let json = await res.json();
-                if(json.status === "success") renderMarketUI(json.data);
-            } catch(e) {
-                // Backup veriler (çökme olursa diye)
-                let backup = [
-                    {asset:"Crude Oil (WTI)", group:"Energy", price:74.50, change:1.2}, {asset:"Brent Oil", group:"Energy", price:78.20, change:0.8}, {asset:"Natural Gas", group:"Energy", price:2.45, change:-2.1},
-                    {asset:"Gold", group:"Precious Metals", price:2340.00, change:0.5}, {asset:"Silver", group:"Precious Metals", price:29.50, change:1.4}, {asset:"Platinum", group:"Precious Metals", price:980.00, change:-0.3},
-                    {asset:"Copper", group:"LME Metals", price:4.45, change:-0.4}, {asset:"Aluminum (LME)", group:"LME Metals", price:3146.00, change:1.8}, {asset:"Zinc (LME)", group:"LME Metals", price:2910.00, change:0.7},
-                    {asset:"Polypropylene (PP)", group:"Petrochemicals", price:1240.00, change:1.1}, {asset:"PVC Resins", group:"Petrochemicals", price:980.00, change:-0.6},
-                    {asset:"Wheat", group:"Agriculture", price:620.00, change:-1.1}, {asset:"Corn", group:"Agriculture", price:450.00, change:0.3}, {asset:"Soybeans", group:"Agriculture", price:1180.00, change:0.5},
-                    {asset:"Live Cattle", group:"Livestock", price:184.50, change:0.6}, {asset:"Lean Hogs", group:"Livestock", price:82.30, change:-0.4}
-                ];
-                renderMarketUI(backup);
-            }
-        }
-
-        function renderMarketUI(data) {
-            let tickerHtml = data.map(r => `<span class="ticker-item"><b>${r.asset}:</b> <span style="color:${r.change>=0?'var(--accent-green)':'var(--accent-red)'}">${r.price.toFixed(2)} (${r.change>=0?'+':''}${r.change.toFixed(2)}%)</span></span>`).join(" | ");
-            document.getElementById("bloomberg-ticker").innerHTML = tickerHtml + " | " + tickerHtml;
-            let groups = {};
-            data.forEach(r => { if(!groups[r.group]) groups[r.group] = []; groups[r.group].push(r); });
-            let topHtml = "", bottomHtml = "";
-            let topGroups = ["Energy", "Precious Metals", "LME Metals"];
-            for(let gName in groups) {
-                let cardHtml = `<div class="group-card"><h3>📈 ${gName.toUpperCase()}</h3><div class="card-carousel-slider">`;
-                groups[gName].forEach(r => {
-                    cardHtml += `<div class="slide-item"><div class="slide-asset-name">${r.asset}</div><div class="slide-price-display">${r.price.toLocaleString(undefined,{minimumFractionDigits:2})} <span class="change-tag ${r.change>=0?'tag-up':'tag-down'}">${r.change>=0?'+':''}${r.change.toFixed(2)}%</span></div></div>`;
-                });
-                cardHtml += `</div><div class="card-indicators">`;
-                groups[gName].forEach((_, idx) => { cardHtml += `<div class="dot ${idx===0?'active':''}"></div>`; });
-                cardHtml += `</div></div>`;
-                if(topGroups.includes(gName)) topHtml += cardHtml; else bottomHtml += cardHtml;
-            }
-            document.getElementById("tier-top").innerHTML = topHtml; document.getElementById("tier-bottom").innerHTML = bottomHtml;
-        }
-
-        async function generateAIReport() {
-            let desc = document.getElementById("ai-desc").value; if(!desc) return alert("Please fill description!");
-            document.getElementById("ai-loading").style.display = "block"; document.getElementById("ai-report-results").style.display = "none";
-            try {
-                let payload = { mal_tanimi: desc, yukleme_limani: document.getElementById("ai-load").value, teslim_limani: document.getElementById("ai-deliv").value, target_language: document.getElementById("lang-selector").value };
-                let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/generate-report', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                let json = await res.json();
-                document.getElementById("res-customs").innerText = json.gümrük_özeti; document.getElementById("res-matrix").innerText = json.fiyat_matrisi;
-                document.getElementById("ai-report-results").style.display = "grid";
-            } catch(e) { alert("AI Chamber online."); } finally { document.getElementById("ai-loading").style.display = "none"; }
-        }
-        fetchMarketData(); setInterval(fetchMarketData, 30000);
-    </script>
-</body>
-</html>
+    // ===== FETCH MARKET DATA (CANLI FİYATLAR) =====
+    async function fetchMarketData() {
+        try {
+            let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
+            let json = await res.json();
+            if(json.status === "success") renderMarketUI(json.data);
+        } catch(e) {
+            // Yedek Veri (
