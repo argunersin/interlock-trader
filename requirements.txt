@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 requests
+yfinance
 google-generativeai
 duckduckgo-search
 pydantic
