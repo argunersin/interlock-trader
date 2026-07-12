@@ -127,7 +127,7 @@
 
         async function fetchMarketData() {
             try {
-                let res = await fetch('https://interlock-backend.onrender.com/api/live-prices');
+                let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
                 let json = await res.json();
                 if(json.status === "success") renderMarketUI(json.data);
             } catch(e) {
@@ -169,7 +169,7 @@
             document.getElementById("ai-loading").style.display = "block"; document.getElementById("ai-report-results").style.display = "none";
             try {
                 let payload = { mal_tanimi: desc, yukleme_limani: document.getElementById("ai-load").value, teslim_limani: document.getElementById("ai-deliv").value, target_language: document.getElementById("lang-selector").value };
-                let res = await fetch('https://interlock-backend.onrender.com/api/generate-report', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/generate-report', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                 let json = await res.json();
                 document.getElementById("res-customs").innerText = json.gümrük_özeti; document.getElementById("res-matrix").innerText = json.fiyat_matrisi;
                 document.getElementById("ai-report-results").style.display = "grid";
