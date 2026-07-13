@@ -135,38 +135,65 @@
         document.getElementById("incoterms-rows").innerHTML = html;
     }
 
-    // ===== CURRENCY CALCULATOR =====
-    async function calculateCurrency() {
-        let src = document.getElementById("calc-source").value;
-        let tgt = document.getElementById("calc-target").value;
-        let amt = parseFloat(document.getElementById("calc-amount").value) || 0;
-        try {
-            let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
-            let json = await res.json();
-            let data = json.data;
-            let srcTry = data.find(r => r.asset === src + "/TRY" || r.asset === src + "TRY");
-            let tgtTry = data.find(r => r.asset === tgt + "/TRY" || r.asset === tgt + "TRY");
-            let srcRate = (src === "TRY") ? 1 : (srcTry ? srcTry.price : 1);
-            let tgtRate = (tgt === "TRY") ? 1 : (tgtTry ? tgtTry.price : 1);
-            if (srcRate === 1 && src !== "TRY") {
-                let backupRates = { USD:1, EUR:0.92, GBP:0.79, CHF:0.88, JPY:149.50, CNY:7.25, RUB:92.40, AUD:1.53, CAD:1.36, KRW:1330, INR:83.20, SAR:3.75, SEK:10.45, NOK:10.65, DKK:6.90, PLN:3.98, CZK:23.20, HUF:358, MXN:17.20, BRL:4.95, ZAR:18.80, SGD:1.35, HKD:7.82, TWD:31.50, THB:35.80, MYR:4.72, IDR:15550, PHP:55.80, NZD:1.65, TRY:34.50 };
-                srcRate = backupRates[src] || 1;
-                tgtRate = backupRates[tgt] || 1;
-            }
-            let rate = tgtRate / srcRate;
-            let result = amt * rate;
-            document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${result.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
-            document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(6)} ${tgt}`;
-        } catch(e) {
+   // ===== DÜZELTİLMİŞ CURRENCY CALCULATOR =====
+async function calculateCurrency() {
+    let src = document.getElementById("calc-source").value;
+    let tgt = document.getElementById("calc-target").value;
+    let amt = parseFloat(document.getElementById("calc-amount").value) || 0;
+    try {
+        // Backend'den canlı kurları çek
+        let res = await fetch('https://interlock-backend-fiiw.onrender.com/api/live-prices');
+        let json = await res.json();
+        let data = json.data;
+        
+        // TRY bazlı kurları bul
+        let srcAsset = data.find(r => r.asset === src + "/TRY" || r.asset === src + "TRY");
+        let tgtAsset = data.find(r => r.asset === tgt + "/TRY" || r.asset === tgt + "TRY");
+        
+        let srcRate = (src === "TRY") ? 1 : (srcAsset ? srcAsset.price : 1);
+        let tgtRate = (tgt === "TRY") ? 1 : (tgtAsset ? tgtAsset.price : 1);
+        
+        // Eğer kur bulunamadıysa backup kullan
+        if (srcRate === 1 && src !== "TRY") {
             let backupRates = { USD:1, EUR:0.92, GBP:0.79, CHF:0.88, JPY:149.50, CNY:7.25, RUB:92.40, AUD:1.53, CAD:1.36, KRW:1330, INR:83.20, SAR:3.75, SEK:10.45, NOK:10.65, DKK:6.90, PLN:3.98, CZK:23.20, HUF:358, MXN:17.20, BRL:4.95, ZAR:18.80, SGD:1.35, HKD:7.82, TWD:31.50, THB:35.80, MYR:4.72, IDR:15550, PHP:55.80, NZD:1.65, TRY:34.50 };
-            let srcRate = backupRates[src] || 1;
-            let tgtRate = backupRates[tgt] || 1;
-            let rate = tgtRate / srcRate;
-            let result = amt * rate;
-            document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${result.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
-            document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(6)} ${tgt}`;
+            srcRate = backupRates[src] || 1;
+            tgtRate = backupRates[tgt] || 1;
         }
+        
+        let rate = tgtRate / srcRate;
+        let result = amt * rate;
+        document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${result.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
+        document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(6)} ${tgt}`;
+    } catch(e) {
+        // Hata durumunda backup kullan
+        let backupRates = { USD:1, EUR:0.92, GBP:0.79, CHF:0.88, JPY:149.50, CNY:7.25, RUB:92.40, AUD:1.53, CAD:1.36, KRW:1330, INR:83.20, SAR:3.75, SEK:10.45, NOK:10.65, DKK:6.90, PLN:3.98, CZK:23.20, HUF:358, MXN:17.20, BRL:4.95, ZAR:18.80, SGD:1.35, HKD:7.82, TWD:31.50, THB:35.80, MYR:4.72, IDR:15550, PHP:55.80, NZD:1.65, TRY:34.50 };
+        let srcRate = backupRates[src] || 1;
+        let tgtRate = backupRates[tgt] || 1;
+        let rate = tgtRate / srcRate;
+        let result = amt * rate;
+        document.getElementById("calc-result-text").innerText = `${amt.toLocaleString()} ${src} = ${result.toLocaleString(undefined,{maximumFractionDigits:2})} ${tgt}`;
+        document.getElementById("calc-rate-text").innerText = `Rate: 1 ${src} = ${rate.toFixed(6)} ${tgt}`;
     }
+}
+
+// ===== DÜZELTİLMİŞ INCOTERMS SIMULATOR =====
+function runIncoterms() {
+    let exw = parseFloat(document.getElementById("inc-exw").value) || 0;
+    let nav = parseFloat(document.getElementById("inc-nav").value) || 0;
+    let local = parseFloat(document.getElementById("inc-local").value) || 0;
+    let tax = parseFloat(document.getElementById("inc-tax").value) || 0;
+    
+    let fob = exw + local;
+    let cif = fob + nav + (exw * 0.003);
+    let ddp = cif + (cif * (tax / 100)) + 800;
+    
+    let rates = { EXW: exw, FOB: fob, CIF: cif, DDP: ddp };
+    let html = "";
+    for (let k in rates) {
+        html += `<tr><td><b>${k}</b></td><td>$${rates[k].toLocaleString(undefined,{maximumFractionDigits:2})}</td><td>₺${(rates[k]*46.98).toLocaleString(undefined,{maximumFractionDigits:2})}</td></tr>`;
+    }
+    document.getElementById("incoterms-rows").innerHTML = html;
+}
 
     // ===== RENDER MARKET UI =====
     function renderMarketUI(data) {
