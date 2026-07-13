@@ -82,41 +82,75 @@ class ReportRequest(BaseModel):
     target_language: str = "EN"
 
 # ==============================================
-# 2. CANLI FİYAT API'SI
+# 2. CANLI FİYAT API'SI (Finnhub + 4 Katmanlı Yedek)
 # ==============================================
 @lru_cache(maxsize=1)
 def get_cached_prices():
     rows = []
     finnhub_key = os.environ.get("FINNHUB_API_KEY", "")
+    alpha_key = os.environ.get("ALPHA_VANTAGE_KEY", "")
+    twelve_key = os.environ.get("TWELVEDATA_API_KEY", "")
     
     for name, (group, ticker, finnhub_symbol) in ASSET_LIST.items():
         price, change = 0.0, 0.0
+        source = "Backup"
+        
+        # 1. Finnhub dene
         if finnhub_key and finnhub_symbol:
             try:
                 url = f"https://finnhub.io/api/v1/quote?symbol={finnhub_symbol}&token={finnhub_key}"
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, timeout=3)
                 if response.status_code == 200:
                     data = response.json()
                     if data and 'c' in data:
                         price = data['c']
                         change = data['dp'] if 'dp' in data else 0.0
+                        source = "Finnhub"
             except Exception:
                 pass
         
+        # 2. Alpha Vantage dene (Finnhub başarısızsa)
+        if price == 0.0 and alpha_key:
+            try:
+                url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker.replace('=F', '').replace('=X', '')}&apikey={alpha_key}"
+                response = requests.get(url, timeout=3)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "Global Quote" in data and data["Global Quote"]:
+                        price = float(data["Global Quote"].get("05. price", 0))
+                        change = float(data["Global Quote"].get("10. change percent", "0%").replace("%", ""))
+                        source = "Alpha Vantage"
+            except Exception:
+                pass
+        
+        # 3. Twelve Data dene
+        if price == 0.0 and twelve_key:
+            try:
+                symbol = ticker.replace('=F', '').replace('=X', '')
+                url = f"https://api.twelvedata.com/price?symbol={symbol}&apikey={twelve_key}"
+                response = requests.get(url, timeout=3)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "price" in data:
+                        price = float(data["price"])
+                        change = 0.0
+                        source = "Twelve Data"
+            except Exception:
+                pass
+        
+        # 4. Backup (sabit fiyat)
         if price == 0.0:
             price = BACKUP_PRICES.get(ticker, 0.0)
             change = 0.0
+            source = "Backup"
             
-        rows.append({"asset": name, "group": group, "price": price, "change": change})
+        rows.append({"asset": name, "group": group, "price": price, "change": change, "source": source})
     
+    # Forex (Backup'tan)
     for name, price in FOREX_BACKUP.items():
-        rows.append({"asset": name, "group": "Forex", "price": price, "change": 0.0})
+        rows.append({"asset": name, "group": "Forex", "price": price, "change": 0.0, "source": "Backup"})
     
     return {"status": "success", "data": rows}
-
-@app.get("/api/live-prices")
-def get_live_prices():
-    return get_cached_prices()
 
 # ==============================================
 # 3. AI RAPOR MOTORU
